@@ -86,7 +86,6 @@ para liberar vaga e seguir regras de reembolso definidas pela política.
 ---
 
 **Como aluno quero avaliar professores ao final da aula**
-para dar feedback estruturado e contribuir para melhorias.
 **Regra de negócio:** Avaliação só pode ser registrada por quem participou da aula, e cada aluno pode avaliar apenas uma vez por aula.
 **Responsável:** Gustavo Mourato
 
@@ -114,14 +113,12 @@ com etapas liberadas conforme nível e avaliações.
 ---
 
 **Como aluno quero participar de uma Liga de Amigos**
-para competir de forma amigável em pontos semanais.
 **Regra de negócio:** Cada presença/treino concluído gera pontos; ranking é zerado a cada rodada semanal.
 **Responsável:** Paulo Rosado
 
 ---
 
 **Como administrador da liga quero configurar estratégias de pontuação e conceder conquistas**
-para deixar a competição mais justa e motivadora.
 **Regra de negócio:** Estratégia define como pontos são calculados (Strategy), e conquistas são concedidas no fechamento da rodada conforme desempenho.
 **Responsável:** Paulo Rosado
 

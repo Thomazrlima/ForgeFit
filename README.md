@@ -154,6 +154,9 @@ com etapas liberadas conforme nível e avaliações.
   <img src="https://contrib.rocks/image?repo=Thomazrlima/ForgeFit" />
 </a>
 
+<br>
+<br>
+
 <div align="center">
   💪 <strong>Na ForgeFit nós não apenas levantamos Ferro, NÓS FORJAMOS FORÇA!</strong> 💪
 </div>

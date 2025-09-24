@@ -28,7 +28,7 @@ Scenario: Tentativa de cancelamento fora do prazo parcial
 
 Scenario: Cancelamento fora do prazo sem reembolso
   Given existe uma reserva confirmada para o dia "12/09/2025"
-  When o aluno solicita o cancelamento em "11/09/2025 22:00"
+  When o aluno solicita o cancelamento em "11/09/2025"
   Then o sistema informa "cancelamento realizado sem direito a reembolso"
 
 Scenario: Tentativa de cancelar reserva inexistente

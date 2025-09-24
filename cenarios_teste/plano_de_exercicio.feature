@@ -1,46 +1,48 @@
 Feature: Criação e Gerenciamento de Treinos
 
   # Regra de negócio 1: Registrar exercícios, cargas e ciclos
-  Scenario: Exercício registrado com sucesso
-    Dado que um aluno possui um plano de treino ativo
-    E deseja adicionar um novo exercício
-    Quando o aluno informa o exercício, sua carga e ciclos
-    Então o exercício é registrado no plano de treino
-    E o sistema confirma o registro do exercício
 
-  Scenario: Falha ao registrar exercício sem informações completas
-    Dado que um aluno possui um plano de treino ativo
-    E deseja adicionar um novo exercício
-    Quando o aluno não informa todas as informações necessárias (carga ou ciclos)
-    Então o sistema informa que o exercício não pôde ser registrado
-    E solicita o preenchimento de todas as informações obrigatórias
+ #  Sucesso
+Scenario: Exercício registrado com sucesso
+    Given que um aluno possui um plano de treino ativo
+    And o seu professor vai adicionar um exercício a ele
+    When o professor informa o exercício "Supino Máquina", sua carga de "20kg" e ciclos "3"
+    Then o sistema informa "O exercício foi registrado com sucesso!"
 
-  # Regra de negócio 2: Conclusão de exercício após repetições
-  Scenario: Exercício concluído após repetições
-    Dado que um aluno possui um plano de treino ativo
-    E o exercício possui uma quantidade definida de repetições
-    Quando o aluno realiza o exercício até atingir a quantidade definida
-    Então o exercício é marcado como concluído
-    E o sistema registra a conclusão no histórico do aluno
+# Falha
+Scenario: Falha ao registrar exercício sem informações completas
+    Given que um aluno possui um plano de treino ativo
+    And o seu professor vai adicionar um exercício a ele
+    When o professor informa o exercício "Supino Máquina", sua carga de "20kg"
+    Then o sistema informa "É necessário preencher todas as métricas do exercício"
 
-  Scenario: Exercício não concluído por não atingir repetições
-    Dado que um aluno possui um plano de treino ativo
-    E o exercício possui uma quantidade definida de repetições
-    Quando o aluno não realiza todas as repetições necessárias
-    Então o exercício permanece em andamento
-    E o sistema informa que ainda não foi concluído
+# Regra de negócio 2: Conclusão de exercício após repetições
 
-  # Regra de negócio 3: Liberação de próximo conjunto de exercícios
-  Scenario: Novo conjunto de exercícios liberado
-    Dado que um aluno possui um plano de treino ativo
-    E completou todos os exercícios do conjunto atual
-    Quando o sistema verifica o status do plano
-    Então o próximo conjunto de exercícios é liberado
-    E o histórico de evolução do aluno é atualizado
+# Sucesso
+Scenario: Exercício concluído após repetições
+    Given que um aluno possui um plano de treino ativo
+    When o aluno realiza o exercício "Cadeira Adutora" até atingir a quantidade definida "3" ciclos
+    Then o sistema informa "Exercício concluido"
 
-  Scenario: Conjunto de exercícios não liberado
-    Dado que um aluno possui um plano de treino ativo
-    E ainda não concluiu todos os exercícios do conjunto atual
-    Quando o sistema verifica o status do plano
-    Então o próximo conjunto de exercícios não é liberado
-    E o sistema informa que ainda há exercícios pendentes
+# Falha
+Scenario: Exercício não concluído por não atingir repetições
+    Given que um aluno possui um plano de treino ativo
+    When o aluno realiza "2" ciclos do exercício "Cadeira Adutora" que tem uma meta de "3" ciclos
+    Then o sistema informa "Ciclos totais do exercício não atingido"
+
+# Regra de negócio 3: Liberação de próximo conjunto de exercícios
+
+# Sucesso
+Scenario: Novo conjunto de exercícios liberado
+    Given que um aluno possui um plano de treino ativo
+    And completou todos os exercícios do conjunto atual
+    When o sistema verifica que todos os exercícios do plano estão completos
+    Then o sistema informa "Plano de exercícios concluido"
+    And o histórico de evolução do aluno é atualizado
+
+# Falha
+Scenario: Conjunto de exercícios não liberado
+    Given que um aluno possui um plano de treino ativo
+    And ainda não concluiu todos os exercícios do conjunto atual
+    When o sistema verifica que todos os exercícios do plano estão completos
+    Then o sistema informa "É necessário concluir todos os exercícios para terminar o plano de exercícios"

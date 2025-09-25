@@ -1,26 +1,37 @@
 Feature: Cancelamento de reserva com política de reembolso
 
-Scenario: Cancelamento com antecedência suficiente para reembolso total
-  Given um aluno possui uma reserva confirmada
-  And ele cancela a reserva dentro do prazo para reembolso total
-  When o cancelamento é processado
-  Then o aluno recebe 100% do valor em crédito ou estorno
+# Regra 1 — Cancelamento com antecedência suficiente (reembolso total em até 15 dias)
 
-Scenario: Cancelamento com antecedência parcial
-  Given um aluno possui uma reserva confirmada
-  And ele cancela a reserva dentro do prazo para reembolso parcial
-  When o cancelamento é processado
-  Then o aluno recebe o percentual de reembolso correspondente
+Scenario: Cancelamento com reembolso total processado
+  Given existe uma reserva confirmada para o dia "10/09/2025"
+  When o aluno solicita o cancelamento em "20/08/2025"
+  Then o sistema informa "cancelamento aprovado, reembolso integral em processamento"
 
-Scenario: Cancelamento fora do prazo
-  Given um aluno possui uma reserva confirmada
-  And ele cancela a reserva após o prazo permitido
-  When o cancelamento é processado
-  Then o aluno não recebe reembolso
+Scenario: Tentativa de cancelamento após prazo de reembolso total
+  Given existe uma reserva confirmada para o dia "10/09/2025"
+  When o aluno solicita o cancelamento em "01/09/2025"
+  Then o sistema informa "cancelamento aprovado, reembolso parcial em processamento"
 
-Scenario: Promoção de lista de espera após cancelamento
-  Given uma aula possui alunos na lista de espera
-  And um aluno cancela sua reserva
-  When o cancelamento é processado
-  Then o primeiro aluno da lista de espera recebe a vaga automaticamente
-  And é notificado para aceitar ou recusar dentro do prazo definido
+# Regra 2 — Cancelamento com antecedência parcial (reembolso parcial em até 7 dias)
+
+Scenario: Cancelamento com reembolso parcial processado
+  Given existe uma reserva confirmada para o dia "15/09/2025"
+  When o aluno solicita o cancelamento em "10/09/2025"
+  Then o sistema informa "cancelamento aprovado, reembolso parcial em processamento"
+
+Scenario: Tentativa de cancelamento fora do prazo parcial
+  Given existe uma reserva confirmada para o dia "15/09/2025"
+  When o aluno solicita o cancelamento em "14/09/2025"
+  Then o sistema informa "cancelamento realizado sem direito a reembolso"
+
+# Regra 3 — Cancelamento fora do prazo (sem reembolso em menos de 1 dia)
+
+Scenario: Cancelamento fora do prazo sem reembolso
+  Given existe uma reserva confirmada para o dia "12/09/2025"
+  When o aluno solicita o cancelamento em "11/09/2025"
+  Then o sistema informa "cancelamento realizado sem direito a reembolso"
+
+Scenario: Tentativa de cancelar reserva inexistente
+  Given não existe reserva confirmada para o aluno na data "10/09/2025"
+  When o aluno solicita o cancelamento em "05/09/2025"
+  Then o sistema informa "nenhuma reserva encontrada para cancelamento"

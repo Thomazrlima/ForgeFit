@@ -51,76 +51,72 @@ https://github.com/user-attachments/assets/db85e843-5f2e-4016-97b2-3882f07513c1
 > [!WARNING]
 > As demais funcionalidades serão detalhadas com o decorrer do período
 
-## 📋 Histórias de Usuário (User Stories)
+## 📋 **Distribuição das Funcionalidades**
 
-<details>
 
-<summary>Histórias</summary>
+<details> 
+  
+<summary>Lista das Funcionalidades</summary>
 
-**Como coordenador quero cadastrar/editar aulas de modalidade vinculadas a professores**
-para manter a grade atualizada sem choques de agenda.
+**Cadastrar/Editar Aula da Modalidade com conflito de agenda**
 **Regra de negócio:** Não pode haver duas aulas no mesmo horário com o mesmo professor ou na mesma sala.
 **Responsável:** Leonardo Matos
 
 ---
 
-**Como aluno quero reservar uma aula**
-para garantir minha participação sem risco de lotação.
+**Reserva de Aula com Lista de Espera e promoção automática**
 **Regra de negócio:** Caso a turma esteja cheia, entrar em lista de espera e ser promovido automaticamente em caso de desistência.
 **Responsável:** Vinícius de Andrade
 
 ---
 
-**Como administrador quero oferecer cupons ou benefícios empilháveis**
-para estimular a adesão a modalidades.
+**Cupom/Benefícios empilháveis**
 **Regra de negócio:** Um aluno pode aplicar múltiplos cupons, e o cálculo deve ser feito por ordem de aplicação (Decorator).
 **Responsável:** Vinícius de Andrade
 
 ---
 
-**Como aluno quero cancelar uma reserva**
-para liberar vaga e seguir regras de reembolso definidas pela política.
+**Cancelamento de Reserva com política de reembolso**
 **Regra de negócio:** O valor ou crédito devolvido depende do tempo de antecedência em relação ao início da aula (Template Method).
 **Responsável:** Thomaz Lima
 
 ---
 
-**Como aluno quero avaliar professores ao final da aula**
+**Avaliação de Professores**
 **Regra de negócio:** Avaliação só pode ser registrada por quem participou da aula, e cada aluno pode avaliar apenas uma vez por aula.
 **Responsável:** Gustavo Mourato
 
 ---
 
-**Como coordenador quero criar aulas recorrentes em lote**
-para agilizar a programação semanal/mensal.
+**Criação em Lote de Aulas Recorrentes por Modalidade**
 **Regra de negócio:** A criação em lote deve percorrer um intervalo de dias e horários aplicando as mesmas regras de conflito de agenda.
 **Responsável:** Leonardo Matos
 
 ---
 
-**Como administrador quero controlar a frequência dos alunos**
-para aplicar política de bloqueio em caso de faltas recorrentes.
+**Controle de frequência e política de bloqueio por faltas**
 **Regra de negócio:** Se o aluno acumular 3 faltas consecutivas sem cancelamento prévio, seu acesso às reservas fica bloqueado por 7 dias.
 **Responsável:** Thomaz Lima
 
 ---
 
-**Como professor quero criar plano de treino individual para alunos**
-com etapas liberadas conforme nível e avaliações.
+**Criação e Gerenciamento de Treinos**
 **Regra de negócio:** O aluno só pode avançar de fase se cumprir requisitos de exercícios e avaliação mínima do professor.
 **Responsável:** Gustavo Mourato
 
 ---
 
-**Como aluno quero participar de uma Liga de Amigos**
+**Gestão e Participação em Guildas**
 **Regra de negócio:** Cada presença/treino concluído gera pontos; ranking é zerado a cada rodada semanal.
 **Responsável:** Paulo Rosado
 
 ---
 
-**Como administrador da liga quero configurar estratégias de pontuação e conceder conquistas**
+**Pontuação e Torneios de Guilda**
 **Regra de negócio:** Estratégia define como pontos são calculados (Strategy), e conquistas são concedidas no fechamento da rodada conforme desempenho.
 **Responsável:** Paulo Rosado
+
+---
 
 </details>
 
@@ -153,6 +149,9 @@ com etapas liberadas conforme nível e avaliações.
 <a href="https://github.com/Thomazrlima/ForgeFit/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=Thomazrlima/ForgeFit" />
 </a>
+
+<br>
+<br>
 
 <div align="center">
   💪 <strong>Na ForgeFit nós não apenas levantamos Ferro, NÓS FORJAMOS FORÇA!</strong> 💪

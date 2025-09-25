@@ -13,13 +13,13 @@ Scenario: Registrar falta do aluno na aula
 
 # Regra 2 — Aplicar bloqueio por excesso de faltas
 Scenario: Aplicar bloqueio ao aluno por excesso de faltas
-  Given o aluno possui "3" faltas não justificadas nos últimos "30" dias
+  Given o aluno possui "3" faltas nos últimos "30" dias
   And o status do aluno está "ativo"
   When o aluno tenta reservar uma aula no dia "20/09/2025"
   Then o sistema rejeita a reserva e informa "aluno bloqueado por excesso de faltas"
 
 Scenario: Aluno tenta reservar sem atingir limite de faltas
-  Given o aluno possui "1" falta não justificada nos últimos "30" dias
+  Given o aluno possui "1" falta nos últimos "30" dias
   And o status do aluno está "ativo"
   When o aluno tenta reservar uma aula no dia "20/09/2025"
   Then o sistema confirma a reserva e informa "aluno permanece ativo"

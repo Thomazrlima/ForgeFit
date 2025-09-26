@@ -120,6 +120,85 @@ https://github.com/user-attachments/assets/db85e843-5f2e-4016-97b2-3882f07513c1
 
 </details>
 
+<details> 
+  
+<summary>Domínio de Negócio da Academia</summary>
+
+A rotina da academia organiza-se em torno de aulas, treinos e da interação entre seus membros, com regras claras para garantir a previsibilidade e a evolução de cada aluno.
+
+---
+
+## 📚 Criação de Aulas
+A aula é uma sessão agendada de uma modalidade, conduzida por um professor em um espaço com capacidade definida.  
+A criação de aulas respeita o conflito de agenda, onde um professor ou espaço não pode ser alocado em horários sobrepostos.  
+O professor pode oferecer aulas recorrentes, podendo cancelar uma recorrência ou todas.
+
+---
+
+## 📝 Reserva de Aula, Lista de Espera e Promoção
+A reserva garante a vaga do aluno em uma aula.  
+Quando a capacidade máxima de uma aula é atingida, os próximos alunos interessados integram uma **lista de espera ordenada**.  
+Sempre que uma vaga é liberada, a promoção ocorre de forma automática:  
+- O primeiro aluno da fila é convidado a ocupar a vaga dentro de uma janela de tempo para aceite.  
+- Se o prazo expirar, o convite é estendido ao próximo da lista.  
+
+---
+
+## ❌ Cancelamento de Reserva e Política de Reembolso
+Caso um aluno cancele sua reserva, a **política de reembolso** define o percentual de crédito a ser devolvido, com base na antecedência.  
+Uma vaga liberada por cancelamento reativa o processo de **promoção na lista de espera**, visando manter a ocupação da aula.
+
+---
+
+## 📊 Frequência e Política de Bloqueio por Faltas
+A frequência de cada aluno em uma aula é registrada como **presença** ou **falta**.  
+Um padrão de ausências recorrentes dentro de uma janela móvel aciona a **política de bloqueio por faltas**, que restringe temporariamente a possibilidade de novas reservas para aquele aluno.
+
+---
+
+## 🏋️ Criação e Gerenciamento de Treinos
+O **plano de treino** é elaborado por um professor para um aluno específico.  
+Ele detalha a rotina a ser seguida, organizada por dia, especificando quais exercícios devem ser realizados e em quantas repetições.  
+
+O professor pode associar ao plano uma sugestão de validade, indicando o período em que aquela rotina de treinos é recomendada.  
+A atualização do treino ocorre quando o professor cria um novo plano para o aluno; neste momento, o novo plano substitui o anterior, que é mantido no histórico de evolução do aluno.
+
+---
+
+## ⚖️ Acompanhamento de Bioimpedância
+O acompanhamento físico consiste no registro periódico das avaliações dos alunos.  
+São registrados tanto os dados da **bioimpedância** (como percentual de gordura e massa muscular) quanto medidas corporais, como a circunferência de braços, cintura e outras.  
+
+O conjunto desses dados compõe um **histórico completo**, permitindo que o próprio aluno acompanhe sua evolução física ao longo do tempo. 
+
+---
+
+## ⭐ Avaliação de Professores
+Após cada aula, os alunos podem avaliar os professores com base em métricas de **didática**, **atenção** e **pontualidade**, além de poderem deixar comentários.  
+Esse retorno é um insumo para a **gestão de qualidade da academia**.
+
+---
+
+## 🛡️ Formação e Participação em Guildas
+As **guildas** são grupos formados por alunos, que funcionam como um mecanismo de **check-in social** para treinos e aulas.  
+Os alunos podem criar suas próprias guildas ou entrar em grupos existentes.
+
+---
+
+## 🏆 Pontuação e Torneios de Guilda
+Cada **presença confirmada (check-in)** gera uma pontuação fixa para o aluno e, consequentemente, para sua guilda.  
+Essa pontuação alimenta um histórico que define quem mais acumulou pontos na semana e no mês.  
+
+A academia pode lançar **torneios entre as guildas**, com ranking e premiações para os grupos de maior destaque.
+
+---
+
+## 📈 Ranking de Alunos
+O **ranking de alunos** é uma classificação geral baseada no engajamento e na performance.  
+A pontuação, acumulada através da frequência nas aulas, da participação nas guildas e da avaliação de performance concedida pelos professores, posiciona os alunos em **classificações semanais e mensais**, incentivando a consistência e a participação ativa.
+
+</details>
+
 ## 👥 Contribuintes 
 
 <ul>

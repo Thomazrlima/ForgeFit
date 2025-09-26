@@ -58,65 +58,41 @@ https://github.com/user-attachments/assets/db85e843-5f2e-4016-97b2-3882f07513c1
   
 <summary>Lista das Funcionalidades</summary>
 
-**Cadastrar/Editar Aula da Modalidade com conflito de agenda**
-**Regra de negócio:** Não pode haver duas aulas no mesmo horário com o mesmo professor ou na mesma sala.
-**Responsável:** Leonardo Matos
+- **Reserva de Aula com Lista de Espera e Promoção Automática**  
+  **Responsável:** Vinícius de Andrade  
 
----
+- **Cupom/Benefícios Empilháveis**  
+  **Responsável:** Vinícius de Andrade  
 
-**Reserva de Aula com Lista de Espera e promoção automática**
-**Regra de negócio:** Caso a turma esteja cheia, entrar em lista de espera e ser promovido automaticamente em caso de desistência.
-**Responsável:** Vinícius de Andrade
+- **Cancelamento de Reserva com Política de Reembolso**  
+  **Responsável:** Thomaz Lima  
 
----
+- **Avaliação de Professores**  
+  **Responsável:** Gustavo Mourato  
 
-**Cupom/Benefícios empilháveis**
-**Regra de negócio:** Um aluno pode aplicar múltiplos cupons, e o cálculo deve ser feito por ordem de aplicação (Decorator).
-**Responsável:** Vinícius de Andrade
+- **Criação em Lote de Aulas Recorrentes por Modalidade**  
+  **Responsável:** Leonardo Matos  
 
----
+- **Controle de Frequência e Política de Bloqueio por Faltas**  
+  **Responsável:** Thomaz Lima  
 
-**Cancelamento de Reserva com política de reembolso**
-**Regra de negócio:** O valor ou crédito devolvido depende do tempo de antecedência em relação ao início da aula (Template Method).
-**Responsável:** Thomaz Lima
+- **Criação e Gerenciamento de Treinos**  
+  **Responsável:** Gustavo Mourato  
 
----
+- **Gestão e Participação em Guildas**  
+  **Responsável:** Paulo Rosado  
 
-**Avaliação de Professores**
-**Regra de negócio:** Avaliação só pode ser registrada por quem participou da aula, e cada aluno pode avaliar apenas uma vez por aula.
-**Responsável:** Gustavo Mourato
+- **Pontuação e Torneios de Guilda**  
+  **Responsável:** Paulo Rosado  
 
----
+- **Acompanhamento de Bioimpedância**  
+  **Responsável:** Gustavo Mourato  
 
-**Criação em Lote de Aulas Recorrentes por Modalidade**
-**Regra de negócio:** A criação em lote deve percorrer um intervalo de dias e horários aplicando as mesmas regras de conflito de agenda.
-**Responsável:** Leonardo Matos
+- **Sistema de Ranking de Alunos**  
+  **Responsável:** Vinícius de Andrade  
 
----
-
-**Controle de frequência e política de bloqueio por faltas**
-**Regra de negócio:** Se o aluno acumular 3 faltas consecutivas sem cancelamento prévio, seu acesso às reservas fica bloqueado por 7 dias.
-**Responsável:** Thomaz Lima
-
----
-
-**Criação e Gerenciamento de Treinos**
-**Regra de negócio:** O aluno só pode avançar de fase se cumprir requisitos de exercícios e avaliação mínima do professor.
-**Responsável:** Gustavo Mourato
-
----
-
-**Gestão e Participação em Guildas**
-**Regra de negócio:** Cada presença/treino concluído gera pontos; ranking é zerado a cada rodada semanal.
-**Responsável:** Paulo Rosado
-
----
-
-**Pontuação e Torneios de Guilda**
-**Regra de negócio:** Estratégia define como pontos são calculados (Strategy), e conquistas são concedidas no fechamento da rodada conforme desempenho.
-**Responsável:** Paulo Rosado
-
----
+- **Criação de Aulas**  
+  **Responsável:** Leonardo Matos  
 
 </details>
 

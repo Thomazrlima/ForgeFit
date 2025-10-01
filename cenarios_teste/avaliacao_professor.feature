@@ -1,46 +1,30 @@
 Feature: Avaliação de Professores
 
   # Regra de negócio 1: Avaliar professor com métricas obrigatórias
+
+  # Sucesso
   Scenario: Avaliação realizada com sucesso
-    Dado que um aluno teve aula com o professor
-    E o professor está disponível para avaliação
-    Quando o aluno preenche as métricas de didática, atenção e pontualidade
-    Então a avaliação é registrada com sucesso
-    E o sistema confirma a avaliação do professor
+    Given que um aluno teve aula com o professor do CPF "149.811.150-59"
+    When o aluno preenche as métricas de didática com "5" estrelas, atenção com "4" estrelas e pontualidade com "1" estrela
+    Then o sistema informa "A avaliação foi registrada com sucesso"
 
+  # Falha
   Scenario: Avaliação não realizada por falta de métricas
-    Dado que um aluno teve aula com o professor
-    E o professor está disponível para avaliação
-    Quando o aluno não preenche todas as métricas obrigatórias
-    Então o sistema informa que a avaliação não pôde ser concluída
-    E solicita que todas as métricas sejam preenchidas
-
+    Given que um aluno teve aula com o professor do CPF "873.870.480-37"
+    When o aluno não preenche todas as métricas obrigatórias
+    Then o sistema informa "É necessário preencher todas as métricas de avaliação"
+    
   # Regra de negócio 2: Inserir comentário opcional
+
+  # Sucesso
   Scenario: Comentário adicional incluído
-    Dado que um aluno teve aula com o professor
-    E o professor está disponível para avaliação
-    Quando o aluno insere um comentário junto com as métricas
-    Então o comentário é armazenado com sucesso
-    E a avaliação é concluída corretamente
+    Given que um aluno teve aula com o professor do CPF "842.729.330-51"
+    When o aluno insere um comentário falando "Me ajudou muito a me adaptar a academia" junto com as métricas
+    Then o comentário "Me ajudou muito a me adaptar a academia" é armazenado com sucesso
 
+  # Sucesso
   Scenario: Comentário vazio
-    Dado que um aluno teve aula com o professor
-    E o professor está disponível para avaliação
-    Quando o aluno não insere comentário
-    Então a avaliação é registrada apenas com as métricas
-    E o sistema informa que o comentário é opcional
-
-  # Regra de negócio 3: Avaliação anônima configurável
-  Scenario: Avaliação anônima ativada
-    Dado que um aluno teve aula com o professor
-    E a opção de anonimato está ativada
-    Quando o aluno realiza a avaliação
-    Então a avaliação é registrada sem identificação do aluno
-    E o professor recebe apenas as métricas e comentários
-
-  Scenario: Avaliação anônima desativada
-    Dado que um aluno teve aula com o professor
-    E a opção de anonimato está desativada
-    Quando o aluno realiza a avaliação
-    Então a avaliação é registrada com a identificação do aluno
-    E o professor recebe as métricas, comentários e autor da avaliação
+    Given que um aluno teve aula com o professor do CPF "815.350.700-13"
+    When o aluno preenche as métricas de didática com "3" estrelas, atenção com "3" estrelas e pontualidade com "5" estrela
+    And o aluno não insere comentário
+    Then a avaliação é registrada apenas com as métricas e informa "A avaliação foi registrada com sucesso"

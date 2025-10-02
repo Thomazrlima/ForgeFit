@@ -25,8 +25,31 @@ Feature: Criação de aulas
     Then Todos a mesma "aula" é marcada "15" vezes para as "quartas-feira"s atuais e seguintes
 
 
-     Scenario: Criar aula
+    Scenario: Criar aula
     Given o professor está na plataforma
     When o professor cria uma aula recorrente e o dia "08/02/2022" de "quarta-feira" choca com alguma aula presente ou futura
     Then a aula não é salva no sistema
+
+
+    #Regre 3 - editar aula
+
+    Given o professor quer editar a "aula de boxe"
+    When o professor altera o status do dia "08/02/2022" de "quarta-feira"  para "09/02/2022" de "quinta-feira"
+    Then a "aula" é atualizada e lançada no sistema com as "novas datas"
+    And os alunos são notificados
+
+
+    Given o professor quer editar a "aula de boxe" 
+    When o professor altera o status do dia "08/02/2022" de "quarta-feira"  para "09/02/2022" de "quinta-feira"
+    And a "quinta-feira" já está preenchida no horario e dia escolhido por outra aula
+    Then não é possivel salvar a alterção da "aula"
+
+
+#regra 4 - excluir aula
+
+
+    Given o professor quer excluir a "aula de boxe"
+    When o professor aseleciona a "lixeira" na sua "tela de gerenciamento"
+    Then a "aula" é excluida com sucesso
+    And o horario é liberado para ser preenchido por novas aulas, sem problema de conflito 
 

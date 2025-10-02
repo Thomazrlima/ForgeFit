@@ -1,5 +1,3 @@
-# 💪 ForgeFit - Sistema de Gestão Acadêmica
-
 <p align="center">
   <img src="https://img.shields.io/badge/Status-Em%20desenvolvimento-green?style=for-the-badge&logo=github" alt="Status" />
   <img src="https://img.shields.io/github/repo-size/Thomazrlima/ForgeFit?style=for-the-badge&logo=github" alt="Repository Size" />

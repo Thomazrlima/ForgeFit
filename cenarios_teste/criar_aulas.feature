@@ -1,13 +1,32 @@
-Feature: Criação em Lote de Aulas Recorrentes por Modalidade
+#Regra 1 -- Criar aula
 
-  Scenario: Criar aulas recorrentes em lote com sucesso
-    Given um usuário autenticado deseja criar aulas recorrentes de uma modalidade
-    When o usuário informa dados válidos e não há conflitos de agenda
-    Then as aulas recorrentes são criadas com sucesso
-    And o sistema confirma a criação em lote
+Feature: Criação de aulas
+  Como professor
+  Quero criar aulas na plataforma
+  Para que os alunos possam participar e visualizar
 
-  Scenario: Tentativa de criar aula recorrentes em lote com conflito
-    Given um usuário autenticado deseja criar aulas recorrentes de uma modalidade
-    When o usuário informa dados que geram conflito com aulas já existentes
-    Then as aulas não são criadas
-    And o sistema informa sobre o conflito de agenda
+  Scenario: Criar aula
+    Given o professor está na plataforma 
+    When o professor cria uma "aula de boxe" informando nome, horário "19:00", dia "quarta-feira" e data "08/02/2022"
+    Then a aula é salva no sistema
+    ##And a aula fica disponível para edições
+
+  Scenario: Tentativa de criar aula com conflito
+    Given o professor está na plataforma
+    When o professor tenta criar uma "aula de boxe" no horário "19:00" do dia "quarta-feira" em "08/02/2022", já ocupado
+    #Then a aula não é criada
+    Then o sistema informa conflito de agenda com a mensagem: "08/02/2022 às 19:00 já está ocupado para aula de boxe"
+
+  #Regra 2 - aulas recorrentes
+
+    Scenario: Criar aula
+    Given o professor está na plataforma
+    When o professor cria uma "aula de boxe" para o o dia "08/02/2022" de "quarta-feira" e seleciona "sim" para "aulas recorrentes", com "15" repetições
+    Then Todos a mesma "aula" é marcada "15" vezes para as "quartas-feira"s atuais e seguintes
+
+
+     Scenario: Criar aula
+    Given o professor está na plataforma
+    When o professor cria uma aula recorrente e o dia "08/02/2022" de "quarta-feira" choca com alguma aula presente ou futura
+    Then a aula não é salva no sistema
+

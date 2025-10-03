@@ -1,14 +1,13 @@
-Feature: Cadastrar e Editar Aula da Modalidade com Conflito de Agenda
+Feature: Personaização de treinos
 
-  Scenario: Cadastrar ou editar aula sem conflito de agenda
-    Given um  usuárioProfessor autenticado deseja cadastrar ou editar uma aula de modalidade
-    When o usuárioProfessor informa dados válidos e não há conflito de agenda do usuárioProfessor
-    Then a aula é cadastrada ou atualizada com sucesso
-    And o sistema confirma a operação
+  Scenario: Personaização do treino do aluno
+    Given o professor seleciona um aluno com treinos "A" e "B", Disponiveis
+    When o treino "B" é selecionado, é direcionado a escolher o tipo e os exercicios que irao compor o treino daqele aluno
+    Then o treino é cadastrado/atualizado
+    And o aluno ja pode utilizar seu novo conjunto que compõe o treino "B'"
 
-  Scenario: Tentativa de cadastrar ou editar aula com conflito de agenda
-    Given um usuárioProfessor  autenticado deseja cadastrar ou editar uma aula de modalidade
-    When o usuárioProfessor informa dados que geram conflito na agenda do usuárioProfessor
-    Then a aula não é cadastrada ou atualizada
-    And o sistema informa sobre o conflito de agenda 
+  Scenario: Tentativa de editar ou deletar p treini
+    Given o professor seleciona um aluno com treinos "A", "B", "C", "D", "E","F" e "G ", Disponiveis
+    When o Professor decide adicionar um novo treino("J")
+    Then o treino não é cadastrado pois superou o numero de dias da semana
 

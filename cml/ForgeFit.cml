@@ -1,0 +1,279 @@
+Domain Academia {
+    Subdomain CoreAcademia {
+        type = CORE_DOMAIN
+    }
+}
+
+BoundedContext AcademiaContext implements CoreAcademia {
+
+    Aggregate Aula {
+        Entity Aula {
+            aggregateRoot
+            
+            -AulaId id
+            -ProfessorId professorId
+            
+            Modalidade modalidade
+            Espaco espaco
+            int capacidade
+
+            Date inicio
+            Date fim
+            
+            Recorrencia recorrencia
+            List<OcorrenciaExcecao> excecoes
+            List<Reserva> reservas
+            List<PosicaoListaDeEspera> listaDeEspera
+        }
+
+        ValueObject AulaId { int id }
+        
+        ValueObject Reserva {
+            -Cpf alunoId
+            Date dataDaReserva
+            StatusReserva status
+        }
+        
+        enum StatusReserva { CONFIRMADA, CANCELADA_PELO_ALUNO, CANCELADA_PELA_ACADEMIA }
+
+        ValueObject PosicaoListaDeEspera {
+            -Cpf alunoId
+            Date timestampDeEntrada
+        }
+        
+        enum Modalidade {
+            MUSCULACAO, SPINNING, YOGA, BOXE, CROSSFIT, PILATES, ZUMBA,
+            FUNCIONAL, JIUJITSU, MUAYTHAI, DANCA
+        }
+        
+        enum Espaco {
+            SALA01_MULTIUSO, SALA02_MULTIUSO, SALA03_SPINNING, ESTUDIO_PILATES,
+            AREA_DE_LUTAS, AREA_DE_PESO_LIVRE
+        }
+
+        ValueObject Recorrencia {
+            TipoRecorrencia tipo
+            List<DiaDaSemana> diasDaSemana
+            Date dataFimRecorrencia
+        }
+        
+        Entity OcorrenciaExcecao {
+           -Date dataOriginalDaOcorrencia
+           boolean cancelada
+           Date novoInicio
+           Date novoFim
+        }
+
+        enum TipoRecorrencia { SEMANAL, MENSAL, ANUAL }
+        enum DiaDaSemana { DOMINGO, SEGUNDA, TERCA, QUARTA, QUINTA, SEXTA, SABADO }
+    }
+
+    Aggregate Aluno {
+        Entity Aluno {
+            aggregateRoot
+            
+            -Cpf cpf
+            -Matricula matricula
+            String nome
+            Date dataNascimento
+            int pontuacaoTotal
+            
+            List<AvaliacaoFisica> historicoDeAvaliacoes
+            List<PlanoDeTreino> historicoDePlanos
+            List<Frequencia> historicoDeFrequencia
+        }
+        
+        ValueObject Frequencia {
+            -AulaId aulaId
+            Date dataDaOcorrencia
+            StatusFrequencia status
+        }
+        
+        enum StatusFrequencia { PRESENTE, FALTA }
+
+        ValueObject Cpf { String valor }
+        ValueObject Matricula { String valor }
+        
+        ValueObject AvaliacaoFisica {
+            -Date dataDaAvaliacao
+            -ProfessorId professorResponsavel
+            double massaGordaPercentual
+            double massaGordaKg
+            double massaMagraKg
+            double massaMuscularEsqueleticaKg
+            double aguaCorporalTotalPercentual
+            int gorduraVisceralNivel
+            int taxaMetabolicaBasalKcal
+            double massaOsseaKg
+            double indiceDeMassaCorporal
+            double bracoRelaxadoCm
+            double bracoContraidoCm
+            double antebracoCm
+            double toraxPeitoralCm
+            double cinturaCm
+            double abdomenCm
+            double quadrilCm
+            double coxaCm
+            double panturrilhaCm
+        }
+        
+        Entity PlanoDeTreino {
+            -PlanoDeTreinoId id
+            -ProfessorId professorResponsavel
+            Date dataCriacao
+            Date dataValidadeSugerida
+            List<TreinoDiario> treinosDaSemana
+        }
+        
+        Entity TreinoDiario {
+            -LetraDoTreino letra
+            TipoDoTreino tipo
+            List<ItemDeExercicio> exercicios
+        }
+        
+        enum LetraDoTreino { A, B, C, D, E, F, G }
+        
+        ValueObject ItemDeExercicio {
+            Exercicio exercicio
+            Repeticao repeticao
+        }
+        
+        ValueObject Repeticao {
+            int series
+            String contagem
+        }
+        
+        enum TipoDoTreino {
+            SUPERIORES, INFERIORES, CORPO_INTEIRO, PUSH, PULL, PERNAS,
+            PEITO_E_TRICEPS, COSTAS_E_BICEPS, OMBROS_E_TRAPEZIO, BRACOS_COMPLETOS,
+            PEITO_E_BICEPS, COSTAS_E_TRICEPS, FOCO_PEITO, FOCO_COSTAS, FOCO_OMBROS,
+            FOCO_GLUTEOS, ABDOMEN_E_CORE, PANTURRILHAS, CARDIO
+        }
+        
+        enum Exercicio {
+            SUPINO_RETO, SUPINO_INCLINADO, SUPINO_DECLINADO, CRUCIFIXO_COM_HALTERES,
+            VOADOR_PECK_DECK, CROSSOVER_NA_POLIA, FLEXAO_DE_BRACO, BARRA_FIXA,
+            PUXADA_ALTA_PULLEY_FRENTE, REMADA_CURVADA_COM_BARRA, REMADA_CAVALINHO,
+            REMADA_UNILATERAL_SERROTE, REMADA_SENTADA_NA_POLIA, PULLDOWN_NA_POLIA,
+            AGACHAMENTO_LIVRE_COM_BARRA, LEG_PRESS_45, CADEIRA_EXTENSORA, AGACHAMENTO_HACK,
+            AFUNDO_AVANCO, LEVANTAMENTO_TERRA, STIFF_COM_BARRA, MESA_FLEXORA, CADEIRA_FLEXORA,
+            ELEVACAO_PELVICA, CADEIRA_ABDUTORA, GLUTEO_NA_POLIA_COICE, PANTURRILHA_EM_PE_GEMEOS,
+            PANTURRILHA_SENTADO_SOLEO, DESENVOLVIMENTO_MILITAR_COM_BARRA, DESENVOLVIMENTO_COM_HALTERES,
+            ELEVACAO_LATERAL_COM_HALTERES, ELEVACAO_FRONTAL, CRUCIFIXO_INVERTIDO, REMADA_ALTA,
+            ROSCA_DIRETA_COM_BARRA, ROSCA_ALTERNADA_COM_HALTERES, ROSCA_MARTELO, ROSCA_SCOTT,
+            ROSCA_CONCENTRADA, TRICEPS_PULLEY_COM_BARRA, TRICEPS_PULLEY_COM_CORDA, TRICEPS_TESTA,
+            TRICEPS_FRANCES, MERGULHO_NO_BANCO, PARALELAS, PRANCHA_ISOMETRICA, ABDOMINAL_SUPRA_CRUNCH,
+            ABDOMINAL_INFRA_NA_PARALELA, ELEVACAO_DE_PERNAS_DEITADO, RODA_ABDOMINAL_AB_WHEEL
+        }
+
+        ValueObject ProfessorId { int id }
+        ValueObject PlanoDeTreinoId { int id }
+    }
+
+    Aggregate Professor {
+        Entity Professor {
+            aggregateRoot
+            -Cpf cpf
+            -Matricula matricula
+            String nome
+            Date dataNascimento
+        }
+
+        ValueObject Cpf { String valor }
+        ValueObject Matricula { String valor }
+    }
+
+    Aggregate Guilda {
+        Entity Guilda {
+            aggregateRoot
+            -GuildaId id
+            String nome
+            String descricao
+            -CodigoConvite codigoConvite
+            -Cpf mestreDaGuilda
+            List<Cpf> membros
+            int pontuacaoTotal
+        }
+
+        ValueObject GuildaId { int id }
+        ValueObject CodigoConvite { String valor }
+        ValueObject Cpf { String valor }
+    }
+
+    Aggregate Torneio {
+        Entity Torneio {
+            aggregateRoot
+            -TorneioId id
+            String nome
+            Premio premio
+            Date dataInicio
+            Date dataFim
+            List<PosicaoRanking> rankingFinal
+        }
+
+        ValueObject TorneioId { int id }
+        ValueObject Premio {
+            String nome
+            String descricao
+            String urlImagem
+        }
+
+        ValueObject PosicaoRanking {
+            int posicao
+            -GuildaId guildaId
+            int pontuacaoNoTorneio
+        }
+
+        ValueObject GuildaId { int id }
+    }
+
+    Aggregate Avaliacao {
+        Entity Avaliacao {
+            aggregateRoot
+            -AvaliacaoId id
+            -Cpf alunoId
+            -ProfessorId professorId
+            -AulaId aulaId
+            Date dataDaOcorrenciaDaAula
+            Notas notas
+            String comentario
+            Date dataDaAvaliacao
+        }
+
+        ValueObject AvaliacaoId { int id }
+        ValueObject Notas { int pontualidade, int didatica, int atencao }
+        ValueObject Cpf { String valor }
+        ValueObject ProfessorId { int id }
+        ValueObject AulaId { int id }
+    }
+
+    Aggregate Checkin {
+        Entity Checkin {
+            aggregateRoot
+            -CheckinId id
+            -Cpf alunoId
+            -GuildaId guildaId
+            Date dataDoCheckin
+            int pontuacaoGerada
+            String mensagem
+            String urlImagem
+            ContextoDoCheckin contexto
+        }
+
+        ValueObject CheckinId { int id }
+
+        ValueObject ContextoDoCheckin {
+            TipoDeCheckin tipo
+            -AulaId aulaId
+            -PlanoDeTreinoId planoDeTreinoId 
+            -LetraDoTreino letraDoTreino
+        }
+
+        enum TipoDeCheckin { AULA, TREINO }
+        ValueObject Cpf { String valor }
+        ValueObject GuildaId { int id }
+        ValueObject AulaId { int id }
+        ValueObject PlanoDeTreinoId { int id }
+        enum LetraDoTreino { A, B, C, D, E, F, G }
+    }
+}

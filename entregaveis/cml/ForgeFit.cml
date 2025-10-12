@@ -19,11 +19,34 @@ BoundedContext AcademiaContext implements CoreAcademia {
 
             Date inicio
             Date fim
+
+            StatusAula status
             
             Recorrencia recorrencia
             List<OcorrenciaExcecao> excecoes
             List<Reserva> reservas
             List<PosicaoListaDeEspera> listaDeEspera
+
+            Repository AulaRepository {
+                void salvar(@Aula aula);
+                @Aula obterPorId(@AulaId aulaId);
+                List<@Aula> buscarPorEspacoEPeriodo(@Espaco espaco, Date inicio, Date fim);
+                List<@Aula> buscarPorProfessorEPeriodo(@ProfessorId professorId, Date inicio, Date fim);
+            }
+        }
+
+        Service AulaService {
+            @Aula criarAulaUnica(@ProfessorId professorId, @Modalidade modalidade, @Espaco espaco, int capacidade, Date inicio, Date fim);
+            @Aula criarAulaRecorrente(@ProfessorId professorId, @Modalidade modalidade, @Espaco espaco, int capacidade, Date inicio, @Recorrencia recorrencia);
+            void alterarHorarioPrincipal(@AulaId aulaId, Date novoInicio, Date novoFim);
+            void reagendarOcorrenciaUnica(@AulaId aulaId, Date dataOriginal, Date novoInicio, Date novoFim);
+            void cancelarOcorrenciaUnica(@AulaId aulaId, Date dataDaOcorrencia);
+            void cancelarAulaDefinitivamente(@AulaId aulaId);
+        }
+
+        Service ReservaService {
+            @Reserva reservarVaga(@Cpf alunoId, @AulaId aulaId);
+            void cancelarReserva(@Cpf alunoId, @AulaId aulaId);
         }
 
         ValueObject AulaId { int id }
@@ -33,7 +56,9 @@ BoundedContext AcademiaContext implements CoreAcademia {
             Date dataDaReserva
             StatusReserva status
         }
-        
+
+        enum StatusAula { ATIVA, CANCELADA }
+
         enum StatusReserva { CONFIRMADA, CANCELADA_PELO_ALUNO, CANCELADA_PELA_ACADEMIA }
 
         ValueObject PosicaoListaDeEspera {
@@ -58,13 +83,16 @@ BoundedContext AcademiaContext implements CoreAcademia {
         }
         
         Entity OcorrenciaExcecao {
-           -Date dataOriginalDaOcorrencia
-           boolean cancelada
-           Date novoInicio
-           Date novoFim
+            -OcorrenciaExcecaoId id
+            -Date dataOriginalDaOcorrencia
+            boolean cancelada
+            Date novoInicio
+            Date novoFim
         }
 
-        enum TipoRecorrencia { SEMANAL, MENSAL, ANUAL }
+        ValueObject OcorrenciaExcecaoId { int id }
+
+        enum TipoRecorrencia { SEMANAL, MENSAL, SEMESTRAL, ANUAL }
         enum DiaDaSemana { DOMINGO, SEGUNDA, TERCA, QUARTA, QUINTA, SEXTA, SABADO }
     }
 
@@ -77,10 +105,33 @@ BoundedContext AcademiaContext implements CoreAcademia {
             String nome
             Date dataNascimento
             int pontuacaoTotal
+            double creditos
+            StatusAluno status
             
             List<AvaliacaoFisica> historicoDeAvaliacoes
             List<PlanoDeTreino> historicoDePlanos
             List<Frequencia> historicoDeFrequencia
+
+            Repository AlunoRepository {
+                void salvar(@Aluno aluno);
+                @Aluno obterPorCpf(@Cpf cpf);
+            }
+        }
+
+        Service TreinoService {
+            @PlanoDeTreino criarPlanoDeTreino(@Cpf alunoCpf, @ProfessorId professorId, Date validadeSugerida, List<@TreinoDiario> treinos);
+        }
+
+        Service AvaliacaoFisicaService {
+            @AvaliacaoFisica registrarAvaliacaoFisica(@Cpf alunoCpf, @ProfessorId professorId, @AvaliacaoFisica novaAvaliacao);
+        }
+
+        Service ReembolsoService {
+            double calcularCreditoDeReembolso(@AulaId aulaId);
+        }
+
+        Service FrequenciaService {
+            @Frequencia registrarFrequencia(@Cpf alunoId, @AulaId aulaId, Date data);
         }
         
         ValueObject Frequencia {
@@ -90,6 +141,8 @@ BoundedContext AcademiaContext implements CoreAcademia {
         }
         
         enum StatusFrequencia { PRESENTE, FALTA }
+
+        enum StatusAluno { ATIVO, BLOQUEADO }
 
         ValueObject Cpf { String valor }
         ValueObject Matricula { String valor }
@@ -189,12 +242,30 @@ BoundedContext AcademiaContext implements CoreAcademia {
             -GuildaId id
             String nome
             String descricao
+            String imagemURL
+            StatusGuilda status
             -CodigoConvite codigoConvite
             -Cpf mestreDaGuilda
             List<Cpf> membros
             int pontuacaoTotal
         }
 
+        Repository GuildaRepository {
+            void salvar(@Guilda guilda);
+            @Guilda obterPorId(@GuildaId id);
+            List<@Guilda> listarGuildas();
+            @Guilda buscarPorCodigoConvite(@CodigoConvite codigo);
+        }
+
+        Service GuildaService {
+            @Guilda criarGuilda(@Cpf mestreId, String nome, String descricao, String imagemURL);
+            void alterarDadosGuilda(@GuildaId guildaId, String novoNome, String novaDescricao, String novaImagemURL);
+            void excluirGuilda(@GuildaId guildaId);
+            void entrarEmGuilda(@Cpf alunoId, @CodigoConvite codigo);
+            void sairDaGuilda(@Cpf alunoId, @GuildaId guildaId);
+        }
+
+        enum StatusGuilda { ATIVA, INATIVA }
         ValueObject GuildaId { int id }
         ValueObject CodigoConvite { String valor }
         ValueObject Cpf { String valor }
@@ -205,16 +276,46 @@ BoundedContext AcademiaContext implements CoreAcademia {
             aggregateRoot
             -TorneioId id
             String nome
-            Premio premio
+            @Premio premioPrimeiroLugar
+            @Premio premioSegundoLugar
+            @Premio premioTerceiroLugar
+            StatusTorneio status
             Date dataInicio
             Date dataFim
             List<PosicaoRanking> rankingFinal
+
+            Repository TorneioRepository {
+                void salvar(@Torneio torneio);
+                @Torneio obterPorId(@TorneioId id);
+                @Torneio buscarTorneioAtivo(Date dataAtual);
+                List<@Torneio> listarTorneios();
+            }
+        }
+
+        Service TorneioService {
+            @Torneio criarTorneio(String nome, Date dataInicio, Date dataFim, @Premio p1, @Premio p2, @Premio p3);
+            void editarTorneio(@TorneioId torneioId, String novoNome, Date novaDataInicio, Date novaDataFim, @Premio novoP1, @Premio novoP2, @Premio novoP3);
+            void cancelarTorneio(@TorneioId torneioId);
+            @Premio definirPremioDoPodio(@TorneioId torneioId, @PosicaoDoPodio posicao, @Premio premio);
+        }
+
+        enum PosicaoDoPodio {
+            PRIMEIRO_LUGAR,
+            SEGUNDO_LUGAR,
+            TERCEIRO_LUGAR
+        }
+
+        enum StatusTorneio {
+            PLANEJADO,
+            ATIVO,
+            FINALIZADO,
+            CANCELADO
         }
 
         ValueObject TorneioId { int id }
+
         ValueObject Premio {
             String nome
-            String descricao
             String urlImagem
         }
 
@@ -238,6 +339,17 @@ BoundedContext AcademiaContext implements CoreAcademia {
             Notas notas
             String comentario
             Date dataDaAvaliacao
+
+            Repository AvaliacaoRepository {
+                void salvar(@Avaliacao avaliacao);
+                @Avaliacao obterPorId(@AvaliacaoId id);
+                List<@Avaliacao> buscarPorProfessor(@ProfessorId professorId);
+                boolean existeAvaliacao(@Cpf alunoId, @AulaId aulaId, Date dataDaOcorrencia);
+            }
+        }
+
+        Service AvaliacaoService {
+            void criarAvaliacao(@Cpf alunoId, @ProfessorId professorId, @AulaId aulaId, Date dataDaOcorrencia, @Notas notas, String comentario);
         }
 
         ValueObject AvaliacaoId { int id }
@@ -258,6 +370,15 @@ BoundedContext AcademiaContext implements CoreAcademia {
             String mensagem
             String urlImagem
             ContextoDoCheckin contexto
+
+            Repository CheckinRepository {
+                salvar(@Checkin checkin);
+                List<@Checkin> buscarPorAluno(@Cpf alunoId);
+            }
+        }
+
+        Service CheckinService {
+            Checkin realizarCheckinDeTreino(@Cpf alunoId, @GuildaId guildaId, @PlanoDeTreinoId planoDeTreinoId, @LetraDoTreino letraDoTreino, String mensagem, String urlImagem);
         }
 
         ValueObject CheckinId { int id }

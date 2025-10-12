@@ -10,7 +10,7 @@ BoundedContext AcademiaContext implements CoreAcademia {
         Entity Aula {
             aggregateRoot
             
-            -AulaId id
+            -AulaId aulaId
             -ProfessorId professorId
             
             Modalidade modalidade

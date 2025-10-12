@@ -1,131 +1,107 @@
-Feature: Cupom/Benefícios Empilháveis
+Feature: Ranking de Alunos
 
-  # Regra de negócio: Elegibilidade do benefício
-  Scenario: Aplicar benefício quando aluno é elegível
-    Given que o aluno atenda às condições do benefício ativo
-    When o aluno reservar a aula e aplicar o benefício
-    Then o sistema aplica o benefício ao subtotal
-    And registra o uso do benefício para esse aluno
+  #Regra de negócio: Acúmulo de pontos
+  Scenario: Acumular pontos por frequência nas aulas
+    Given que o aluno João tenha comparecido à aula de Cross Training no dia 15/10/2025 às 18h00
+    When o sistema registrar a presença do aluno
+    Then o aluno recebe 10 pontos por frequência
+    And o total de pontos é atualizado no ranking geral
 
-  Scenario: Rejeitar benefício quando aluno não é elegível
-    Given que o aluno não atenda às condições do benefício ativo
-    When o aluno tentar aplicar o benefício na reserva
-    Then o sistema recusa a aplicação
-    And informa o motivo de inelegibilidade
+  Scenario: Acumular pontos por participação em guilda
+    Given que a aluna Maria tenha participado da atividade coletiva da guilda Fênix no dia 16/10/2025
+    When o sistema registrar a contribuição
+    Then a aluna recebe 15 pontos de engajamento
+    And o ranking da guilda e o ranking geral são atualizados
 
-  # Regra de negócio: Teto de desconto
-  Scenario: Empilhar benefícios respeitando o teto de desconto
-    Given que haja dois benefícios empilháveis e um teto de 30% de desconto
-    When o aluno aplicar ambos na mesma reserva
-    Then o sistema limita o total ao teto de 30%
-    And exibe o cálculo detalhado ao aluno
+  Scenario: Acumular pontos por avaliação de performance
+    Given que o professor tenha avaliado o aluno Pedro com nota 9,5 na aula de Yoga do dia 17/10/2025
+    When a avaliação for registrada
+    Then o sistema converte a nota em 20 pontos de performance
+    And adiciona esses pontos ao total acumulado do aluno
 
-  Scenario: Bloquear empilhamento que excede o teto
-    Given que o somatório dos benefícios aplicados ultrapasse o teto definido
-    When o aluno tentar confirmar a reserva
-    Then o sistema ajusta automaticamente ao teto e bloqueia excesso
-    And informa que o limite máximo de desconto foi atingido
+  #Regra de negócio: Atualização e Ppríodo de Ranking
 
-  # Regra de negócio: Limite de uso por aluno
-  Scenario: Respeitar limite de uso por aluno
-    Given que o benefício tenha limite de 3 usos por aluno
-    And o aluno tenha usado o benefício 2 vezes
-    When o aluno aplicar o benefício novamente
-    Then o sistema autoriza o terceiro uso
+  Scenario: Atualização semanal do ranking
+    Given que a semana vigente termine no dia 20/10/2025
+    When o sistema executar o fechamento semanal
+    Then o ranking semanal é recalculado com base nas pontuações acumuladas até essa data
+    And os 10 primeiros alunos são destacados no painel principal
 
-  Scenario: Recusar uso acima do limite por aluno
-    Given que o benefício tenha limite de 3 usos por aluno
-    And o aluno já tenha usado o benefício 3 vezes
-    When o aluno tentar aplicar o benefício
-    Then o sistema recusa a aplicação
+  Scenario: Atualização mensal do ranking
+    Given que o mês de outubro de 2025 tenha sido encerrado
+    When o sistema consolidar as pontuações mensais
+    Then o ranking mensal é gerado
+    And os alunos com mais de 500 pontos recebem uma medalha digital de consistência
 
-  # Regra de negócio: Validade do benefício
-  Scenario: Validar janela de validade do benefício
-    Given que o benefício esteja dentro do período de validade
-    When o aluno aplicar o benefício na reserva
-    Then o sistema aceita o benefício
-    And registra a data e hora da aplicação
+  #Regra de negócio: Critérios de desempate
 
-  Scenario: Recusar benefício expirado
-    Given que o benefício esteja fora do período de validade
-    When o aluno tentar aplicá-lo
-    Then o sistema recusa a aplicação
-    And informa que o benefício está expirado
+  Scenario: Desempate por maior frequência em aulas
+    Given que dois alunos tenham a mesma pontuação total no ranking
+    And o aluno A tenha participado de 12 aulas
+    And o aluno B tenha participado de 10 aulas
+    When o sistema aplicar o critério de desempate
+    Then o aluno A é classificado à frente do aluno B
 
-  # Regra de negócio: Tipos de benefícios
-  Scenario: Combinar tipos compatíveis (percentual + cashback)
-    Given que os tipos percentual e cashback sejam empilháveis
-    When o aluno aplicar um cupom de 10% e um cashback de R$ 5
-    Then o sistema aplica primeiro o desconto e depois calcula o cashback
-    And mantém a transparência do cálculo no resumo da reserva
+  Scenario: Desempate por média de performance
+    Given que dois alunos empatem em pontuação e frequência
+    And o aluno C tenha média de 9,0 em performance
+    And o aluno D tenha média de 8,5
+    When o sistema recalcular o ranking
+    Then o aluno C assume a posição superior
 
-  Scenario: Impedir combinação de tipos não compatíveis (dois percentuais)
-    Given que cupons percentuais não sejam empilháveis entre si
-    When o aluno tentar aplicar dois cupons percentuais
-    Then o sistema mantém apenas o melhor benefício
-    And informa que cupons do mesmo tipo não podem ser combinados
+  #Regra de negócio: Penalidades e ajustes
 
-  # Regra de negócio: Prioridade de aplicação
-  Scenario: Prioridade de aplicação (fixo → percentual → cashback)
-    Given que a regra de prioridade seja desconto fixo, depois percentual, depois cashback
-    When o aluno aplicar R$ 20 fixo, 10% e cashback de R$ 5
-    Then o sistema aplica os benefícios nessa ordem definida
-    And apresenta o valor final consistente com a prioridade
+  Scenario: Perda de pontos por falta não justificada
+    Given que o aluno Rafael tenha falta não justificada na aula do dia 18/10/2025 às 19h00
+    When o sistema processar a ausência
+    Then o aluno perde 5 pontos no ranking semanal
+    And o histórico de faltas é atualizado
 
-  Scenario: Corrigir ordem incorreta de aplicação
-    Given que a mesma regra de prioridade esteja vigente
-    When uma ordem diferente seja tentada pelo usuário
-    Then o sistema reordena automaticamente para a prioridade correta
-    And informa a ordem aplicada no detalhamento
+  Scenario: Ajuste manual de pontos pelo administrador
+    Given que a administradora Ana precise corrigir a pontuação de um aluno
+    When ela registrar o ajuste de -10 pontos no sistema
+    Then o total de pontos do aluno é atualizado imediatamente
+    And o log de auditoria registra o motivo do ajuste
 
-  # Regra de negócio: Valor mínimo de compra
-  Scenario: Respeitar valor mínimo da compra para o benefício
-    Given que o benefício exija valor mínimo de R$ 100
-    And a reserva do aluno some R$ 120
-    When o aluno aplicar o benefício
-    Then o sistema aceita a aplicação
+  #Regra de negócio: Premiações e recompensas
 
-  Scenario: Rejeitar benefício por não atingir valor mínimo
-    Given que o benefício exija valor mínimo de R$ 100
-    And a reserva do aluno some R$ 80
-    When o aluno tentar aplicar o benefício
-    Then o sistema recusa a aplicação
+  Scenario: Premiação semanal dos melhores colocados
+    Given que o ranking semanal tenha sido finalizado
+    When o sistema identificar os 3 primeiros colocados
+    Then cada aluno recebe um cupom de R$ 20 de desconto em reservas
+    And os alunos são notificados por aplicativo e e-mail
 
-  # Regra de negócio: Reserva antecipada
-  Scenario: Incentivo a reserva antecipada dentro da janela
-    Given que o benefício de reserva antecipada exija 48 horas de antecedência
-    And a aula comece em 72 horas
-    When o aluno aplicar o benefício
-    Then o sistema concede o desconto de reserva antecipada
+  Scenario: Recompensa mensal por engajamento contínuo
+    Given que o aluno Lucas tenha mantido presença em todas as semanas do mês
+    And acumulado mais de 400 pontos de engajamento
+    When o sistema gerar o ranking mensal
+    Then o aluno recebe o título de Aluno Destaque do Mês
+    And é exibido no mural principal do aplicativo
 
-  Scenario: Negar benefício de reserva antecipada fora da janela
-    Given que o benefício exija 48 horas de antecedência
-    And a aula comece em 24 horas
-    When o aluno tentar aplicar o benefício
-    Then o sistema recusa a aplicação
+  #Regra de negócio: Transparência e visualização
 
-  # Regra de negócio: Compatibilidade com aulas promocionais
-  Scenario: Não empilhar com aula já promocional; manter o melhor
-    Given que a aula já tenha preço promocional não empilhável
-    When o aluno aplicar um cupom adicional
-    Then o sistema compara e mantém o melhor entre preço promocional e cupom
-    And informa que não há empilhamento para essa aula
+  Scenario: Exibir detalhamento da pontuação no painel do aluno
+    Given que o aluno acesse seu painel de desempenho
+    When o sistema carregar o histórico
+    Then exibe o detalhamento de pontos por categoria (frequência, guilda, performance)
+    And mostra a posição atual no ranking semanal e mensal
 
-  Scenario: Bloquear empilhamento proibido em aula promocional
-    Given que a aula esteja marcada como “não empilhável”
-    When o aluno tentar combinar qualquer cupom com a promoção
-    Then o sistema bloqueia a combinação
-    And exibe mensagem sobre a restrição de empilhamento
+  Scenario: Exibir evolução histórica de posições
+    Given que o aluno possua histórico de ranking das últimas 4 semanas
+    When ele acessar a aba Minha Evolução
+    Then o sistema apresenta um gráfico de progresso com variação de posições
+    And destaca conquistas e marcos alcançados
 
-  # Regra de negócio: Cancelamento com benefícios
-  Scenario: Cancelamento reverte cashback e devolve contagem de uso
-    Given que a reserva tenha sido concluída com cashback e seja cancelada conforme política
-    When o cancelamento for processado
-    Then o sistema estorna o cashback pendente e devolve 1 uso do benefício ao aluno
-    And atualiza o histórico financeiro da reserva
+  #Regra de negócio: Reset de pontos e novo ciclo
 
-  Scenario: Cancelamento fora da política não devolve benefícios
-    Given que a reserva seja cancelada fora das regras de reembolso
-    When o cancelamento for processado
-    Then o sistema não restitui cashback nem libera contagem de uso
-    And informa as regras aplicadas ao aluno
+  Scenario: Reset de ranking no início de novo ciclo mensal
+    Given que o mês de outubro encerre no dia 31/10/2025
+    When o sistema iniciar o novo ciclo em 01/11/2025
+    Then o ranking semanal é zerado
+    And os pontos passam a ser acumulados para o ciclo de novembro
+
+  Scenario: Preservar histórico após o reset mensal
+    Given que o ranking de outubro tenha sido encerrado
+    When o sistema iniciar o novo ciclo
+    Then o histórico de outubro é arquivado
+    And pode ser consultado na seção Histórico de rankings

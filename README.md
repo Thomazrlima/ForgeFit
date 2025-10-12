@@ -108,10 +108,10 @@ Sistema de pontuação por participação, com rankings semanais e mensais para 
 ## 🎨 **Prototipagem**
 
 ### **Protótipo de Baixa Fidelidade**
-<img width="1913" height="674" alt="Protótipo" src="https://github.com/Thomazrlima/ForgeFit/blob/main/prototipo/Prototipo_de_baixa.svg" />
+<img width="1913" height="674" alt="Protótipo" src="https://github.com/Thomazrlima/ForgeFit/blob/main/entregaveis/prototipo/Prototipo_de_baixa.svg" />
 
 ### **Mapa de Histórias**
-<img width="1913" height="674" alt="Mapa de Histórias" src="https://github.com/Thomazrlima/ForgeFit/blob/main/mapa/ForgeFit%20-%20Mapa%20de%20Hist%C3%B3rias%20do%20Usu%C3%A1rio%20(2025-10-02%2001-08-36).png" />
+<img width="1913" height="674" alt="Mapa de Histórias" src="https://github.com/Thomazrlima/ForgeFit/blob/main/entregaveis/mapa/ForgeFit%20-%20Mapa%20de%20Hist%C3%B3rias%20do%20Usu%C3%A1rio%20(2025-10-02%2001-08-36).png" />
 
 ---
 

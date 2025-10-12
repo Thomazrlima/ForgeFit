@@ -25,7 +25,7 @@ Feature: Personaização de treinos
     When o professor tenta criar um novo treino do tipo "braço" e escolhe os exercicios "Rosca Direta", "Rosca Martelo" e "Tríceps Testa"
     Then o treino não é cadastrado pois superou o numero de dias da semana, impossibilitando a criação do treino "H"
 
-    #REGRA 4 - Excluisão treino
+    #REGRA 3 - Excluisão treino
 
   Scenario: Excluir treino "B"
     Given o aluno "Alan Patrick" com CPF "123.456.789-00" e com treinos "A", "B", "C", "D", "E","F" e "G" já definidos

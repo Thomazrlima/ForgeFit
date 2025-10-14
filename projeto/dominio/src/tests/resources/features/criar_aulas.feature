@@ -53,3 +53,16 @@ Feature: Criação de aulas
     Then a "aula" é excluida com sucesso
     And o horario é liberado para ser preenchido por novas aulas, sem problema de conflito 
 
+#Regra 5 - alterar recorrencia de aula
+
+    Given o professor quer alterar a recorrencia da "aula de boxe"
+    When o professor altera a recorrencia de "SEMANAL" para "MENSAL"
+    Then a recorrencia é alterada com sucesso
+    And as aulas que ultrapassam o novo limite são excluidas do sistema
+   
+
+    Given o professor quer alterar a recorrencia da "aula de boxe"
+    When o professor altera a recorrencia de "SEMANAL" para "MENSAL"
+    Then a recorrencia é alterada com sucesso
+    And são criadas novas aulas até atingir o novo limite
+   

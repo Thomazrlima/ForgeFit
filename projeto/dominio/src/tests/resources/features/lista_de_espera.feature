@@ -1,17 +1,17 @@
 Feature: Reserva de Aula com Lista de Espera e Promoção Automática
 
-  # Regra de negócio: Publicação e disponibilidade da aula
-  Scenario: Aula publicada fica disponível para reserva
-    Given que exista uma aula publicada marcada para o dia 15/10/2025 às 18h00, com capacidade de 15 alunos e 10 vagas disponíveis
-    When um aluno acessar a aula e solicitar a reserva
-    Then a reserva é criada e a vaga do aluno é garantida
-    And o sistema notifica o aluno e o professor sobre a nova reserva
+  # Regra de negócio: Aula ativa e com vagas disponíveis pode ser reservada
+  Scenario: Aula ativa fica disponível para reserva
+    Given que exista uma aula ATIVA marcada para 15/10/2025 18:00 com capacidade 15 e 10 reservas confirmadas
+    When um aluno solicitar a reserva
+    Then a reserva é criada com status CONFIRMADA
+    And o sistema registra a nova reserva para essa ocorrência
 
-  Scenario: Aula não publicada não pode ser reservada
-    Given que exista uma aula marcada para o dia 16/10/2025 às 19h00, ainda não publicada
+  Scenario: Aula cancelada não pode ser reservada
+    Given que exista uma aula com status CANCELADA marcada para 16/10/2025 19:00
     When um aluno tentar reservar essa aula
     Then o sistema recusa a reserva
-    And o aluno é informado de que a aula ainda não está disponível para reservas
+    And o aluno é informado de que a aula está cancelada
 
   # Regra de negócio: Garantia e duplicidade de reservas
   Scenario: Reserva efetivada enquanto há vagas

@@ -3,14 +3,19 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
          https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  
+
   <groupId>br.com.forgefit</groupId>
   <artifactId>forgefit-dominio</artifactId>
   <version>0.0.1-SNAPSHOT</version>
 
-  <!-- Versão centralizada do Cucumber -->
+  <!-- Versões centralizadas -->
   <properties>
+    <java.version>21</java.version>
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
     <cucumber.version>7.18.0</cucumber.version>
+    <junit.jupiter.version>5.10.2</junit.jupiter.version>
+    <junit.platform.version>1.10.2</junit.platform.version>
   </properties>
 
   <!-- Gerenciamento de dependências do Cucumber -->
@@ -27,8 +32,7 @@
   </dependencyManagement>
 
   <dependencies>
-
-    <!-- Dependências de Teste -->
+    <!-- Dependências do Cucumber -->
     <dependency>
       <groupId>io.cucumber</groupId>
       <artifactId>cucumber-java</artifactId>
@@ -41,22 +45,37 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- JUnit 5 -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
+      <version>${junit.jupiter.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.junit.platform</groupId>
       <artifactId>junit-platform-suite</artifactId>
+      <version>${junit.platform.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
 
-  <!-- Plugin do Surefire para rodar os testes com o JUnit 5 -->
+  <!-- Plugins -->
   <build>
     <plugins>
+      <!-- Compilador Java -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+        </configuration>
+      </plugin>
+
+      <!-- Plugin do Surefire -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>

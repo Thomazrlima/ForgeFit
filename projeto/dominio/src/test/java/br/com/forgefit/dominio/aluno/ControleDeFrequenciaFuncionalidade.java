@@ -7,10 +7,15 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 import br.com.forgefit.dominio.AcademiaFuncionalidade;
+import br.com.forgefit.dominio.aluno.enums.StatusAluno;
+import br.com.forgefit.dominio.aluno.enums.StatusFrequencia;
 import br.com.forgefit.dominio.aula.AulaId;
+import br.com.forgefit.infraestrutura.persistencia.memoria.Repositorio; 
+import br.com.forgefit.dominio.aluno.FrequenciaService.AlunoBloqueadoEvento; 
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+
 
 public class ControleDeFrequenciaFuncionalidade extends AcademiaFuncionalidade {
 
@@ -22,27 +27,30 @@ public class ControleDeFrequenciaFuncionalidade extends AcademiaFuncionalidade {
 
     @Given("o aluno {string} está matriculado em uma aula agendada no dia {string} com horário {string} e duração de {string}")
     public void o_aluno_está_matriculado_em_uma_aula_agendada_no_dia_com_horário_e_duração_de(String cpfStr, String dataStr, String horaStr, String duracaoStr) {
-        var repositorio = frequenciaService.getRepositorio();
+        // CORREÇÃO: Substituído por getRepositorioDeTeste()
+        Repositorio repositorio = getRepositorioDeTeste(); 
         repositorio.simularAluno(alunoCpf, StatusAluno.ATIVO);
         this.dataAula = LocalDate.parse(dataStr, formatter);
         repositorio.simularReserva(alunoCpf, aulaId, dataAula, false);
-    }
+    } // Linha 31
 
     @Given("o aluno {string} possui {string} falta(s) nos últimos {string} dias")
     public void o_aluno_possui_falta_nos_últimos_dias(String cpfStr, String numFaltasStr, String numDiasStr) {
-        var repositorio = frequenciaService.getRepositorio();
+        // CORREÇÃO: Substituído por getRepositorioDeTeste()
+        Repositorio repositorio = getRepositorioDeTeste();
         int numFaltas = Integer.parseInt(numFaltasStr);
         int numDias = Integer.parseInt(numDiasStr);
         repositorio.simularAluno(alunoCpf, StatusAluno.ATIVO);
         repositorio.simularFaltasAluno(alunoCpf, numFaltas, numDias);
-    }
+    } // Linha 40
 
     @Given("o aluno {string} está bloqueado até {string}")
     public void o_aluno_está_bloqueado_até(String cpfStr, String dataFimBloqueioStr) {
-        var repositorio = frequenciaService.getRepositorio();
+        // CORREÇÃO: Substituído por getRepositorioDeTeste()
+        Repositorio repositorio = getRepositorioDeTeste();
         LocalDate dataFim = LocalDate.parse(dataFimBloqueioStr, formatter);
         repositorio.simularAlunoBloqueado(alunoCpf, dataFim);
-    }
+    } // Linha 50
 
     @When("o aluno passa pela catraca no horário da aula")
     public void o_aluno_passa_pela_catraca_no_horário_da_aula() {
@@ -56,12 +64,18 @@ public class ControleDeFrequenciaFuncionalidade extends AcademiaFuncionalidade {
 
     @When("o aluno tenta reservar uma aula no dia {string}")
     public void o_aluno_tenta_reservar_uma_aula_no_dia(String dataTentativaStr) {
-        var repositorio = frequenciaService.getRepositorio();
+        // CORREÇÃO: Substituído por getRepositorioDeTeste()
+        Repositorio repositorio = getRepositorioDeTeste(); // Linha 68
         LocalDate dataTentativa = LocalDate.parse(dataTentativaStr, formatter);
         this.dataTentativaReserva = dataTentativa;
         excecao = null;
         try {
-            reservaService.realizarReserva(alunoCpf, dataTentativa);
+            // ... restante da lógica (já corrigida anteriormente)
+            String resultado = reservaService.tentarReservar(alunoCpf, aulaId, dataTentativa);
+            
+            if (resultado.contains("bloqueado") || resultado.contains("rejeita")) {
+                throw new IllegalStateException(resultado);
+            }
         } catch (Exception e) {
             excecao = e;
         }
@@ -74,15 +88,19 @@ public class ControleDeFrequenciaFuncionalidade extends AcademiaFuncionalidade {
 
     @Then("o sistema registra {string} para o aluno no dia {string} com horário {string} e duração {string}")
     public void o_sistema_registra_para_o_aluno_no_dia_com_horário_e_duração(String statusEsperado, String dataStr, String horaStr, String duracaoStr) {
-        var repositorio = frequenciaService.getRepositorio();
-        var aluno = repositorio.obterPorCpf(alunoCpf).get();
-        assertTrue(aluno.getHistoricoFrequencia().stream()
+        // CORREÇÃO: Substituído por getRepositorioDeTeste()
+        Repositorio repositorio = getRepositorioDeTeste(); // Linha 93
+        // CORREÇÃO: Cast para Aluno, pois obterPorCpf retorna um objeto genérico.
+        Aluno aluno = (Aluno) repositorio.obterPorCpf(alunoCpf).get(); 
+        
+        // ... restante da lógica (já corrigida anteriormente)
+        assertTrue(aluno.getHistoricoFrequencia().stream() 
                 .anyMatch(r -> r.getStatus().name().equals(statusEsperado.toUpperCase())),
                 "Deveria ter encontrado um registro de frequência com status: " + statusEsperado);
 
         if (statusEsperado.equalsIgnoreCase("FALTA") && aluno.getHistoricoFrequencia().size() >= 3) {
-            assertTrue(aluno.estaBloqueado(), "Após 3 faltas, o aluno deveria estar bloqueado.");
-            assertTrue(eventos.stream().anyMatch(e -> e instanceof FrequenciaService.AlunoBloqueadoEvento),
+            assertTrue(aluno.estaBloqueado(), "Após 3 faltas, o aluno deveria estar bloqueado."); 
+            assertTrue(eventos.stream().anyMatch(e -> e instanceof AlunoBloqueadoEvento), 
                     "O evento de bloqueio não foi emitido.");
         }
     }
@@ -96,8 +114,11 @@ public class ControleDeFrequenciaFuncionalidade extends AcademiaFuncionalidade {
 
     @Then("o sistema confirma a reserva e informa {string}")
     public void o_sistema_confirma_a_reserva_e_informa(String mensagemEsperada) {
-        var repositorio = frequenciaService.getRepositorio();
-        var aluno = repositorio.obterPorCpf(alunoCpf).get();
+        // CORREÇÃO: Substituído por getRepositorioDeTeste()
+        Repositorio repositorio = getRepositorioDeTeste(); // Linha 121
+        // CORREÇÃO: Cast para Aluno, pois obterPorCpf retorna um objeto genérico.
+        Aluno aluno = (Aluno) repositorio.obterPorCpf(alunoCpf).get();
+        // ... restante da lógica (já corrigida anteriormente)
         assertTrue(aluno.podeReservarAula(this.dataTentativaReserva),
                 "O aluno deveria poder reservar na data: " + this.dataTentativaReserva);
     }

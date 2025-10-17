@@ -1,105 +1,62 @@
 package br.com.forgefit.dominio.aluno;
 
-import br.com.forgefit.dominio.aluno.enums.StatusAluno;
-import br.com.forgefit.dominio.aluno.enums.StatusFrequencia;
-import br.com.forgefit.dominio.aula.AulaId;
-
-
-import static org.apache.commons.lang3.Validate.notNull;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+
+import br.com.forgefit.dominio.aluno.enums.StatusAluno;
+import br.com.forgefit.dominio.aluno.enums.StatusFrequencia;
 
 public class Aluno {
-
     private final Cpf cpf;
     private StatusAluno status;
-    private LocalDate dataFimBloqueio;
-
-    private List<RegistroFrequencia> historicoFrequencia = new ArrayList<>();
+    private final List<RegistroFrequencia> historicoFrequencia = new ArrayList<>();
+    public LocalDate bloqueioAte;
 
     public Aluno(Cpf cpf) {
-        notNull(cpf, "O CPF do aluno não pode ser nulo");
         this.cpf = cpf;
-        this.status = StatusAluno.ATIVO;
+        this.status = StatusAluno.ATIVO; // default
     }
-
-    public boolean podeReservarAula(LocalDate dataAtual) {
-        if (this.status == StatusAluno.BLOQUEADO && dataAtual.isAfter(this.dataFimBloqueio)) {
-            desbloquear();
-            return true;
-        }
-
-        if (this.status == StatusAluno.BLOQUEADO) {
-            return false;
-        }
-
-        long numFaltasRecentes = contarFaltasNosUltimosDias(30, dataAtual);
-        if (numFaltasRecentes >= 3) {
-            bloquearPorFaltas();
-            return false;
-        }
-
-        return true;
-    }
-
-    private long contarFaltasNosUltimosDias(int dias, LocalDate dataBase) {
-        LocalDate dataLimite = dataBase.minusDays(dias);
-
-        return historicoFrequencia.stream()
-                .filter(reg -> reg.getStatus() == StatusFrequencia.FALTA)
-                .filter(reg -> reg.getDataAula().isAfter(dataLimite) || reg.getDataAula().isEqual(dataLimite))
-                .count();
-    }
-
-    public void bloquearPorFaltas() {
-        this.status = StatusAluno.BLOQUEADO;
-        this.dataFimBloqueio = LocalDate.now().plusDays(7);
-    }
-
-    public void desbloquear() {
-        this.status = StatusAluno.ATIVO;
-        this.dataFimBloqueio = null;
-    }
-
-
-    public void adicionarRegistroFrequencia(RegistroFrequencia registro) {
-        notNull(registro, "O registro de frequência não pode ser nulo");
-        this.historicoFrequencia.add(registro);
+    
+    public Aluno(Cpf cpf, StatusAluno status) {
+        this.cpf = cpf;
+        this.status = status;
     }
 
     public Cpf getCpf() {
         return cpf;
     }
 
-    public StatusAluno getStatus() {
-        return status;
+    public void adicionarRegistroFrequencia(RegistroFrequencia registro) {
+        historicoFrequencia.add(registro);
+
+        if (registro.getStatus() == StatusFrequencia.FALTA) {
+            if (contarFaltasRecentes(7) >= 3) {
+                bloquearPorFaltas();
+            }
+        }
     }
 
-    public LocalDate getDataFimBloqueio() {
-        return dataFimBloqueio;
+    private int contarFaltasRecentes(int dias) {
+        LocalDate limite = LocalDate.now().minusDays(dias);
+        return (int) historicoFrequencia.stream()
+                .filter(f -> f.getStatus() == StatusFrequencia.FALTA && f.getDataAula().isAfter(limite))
+                .count();
+    }
+
+    private void bloquearPorFaltas() {
+        bloqueioAte = LocalDate.now().plusDays(7);
     }
 
     public boolean estaBloqueado() {
-        return this.status == StatusAluno.BLOQUEADO;
+        return bloqueioAte != null && bloqueioAte.isAfter(LocalDate.now());
     }
 
-    public boolean estaAtivo() {
-        return this.status == StatusAluno.ATIVO;
+    public boolean podeReservarAula(LocalDate data) {
+        return !estaBloqueado();
     }
 
-    // Métodos para simulação de testes (BDD)
-    public void simularFaltasParaTeste(int numFaltas, int numDias) {
-        // Limpar e adicionar faltas fictícias dentro do período
-        this.historicoFrequencia.clear();
-        LocalDate hoje = LocalDate.now();
-        for (int i = 1; i <= numFaltas; i++) {
-            // Adiciona faltas retroativas
-            LocalDate dataFalta = hoje.minusDays(i);
-            RegistroFrequencia falta = new RegistroFrequencia(new AulaId(i), dataFalta, StatusFrequencia.FALTA);
-            this.historicoFrequencia.add(falta);
-        }
+    public List<RegistroFrequencia> getHistoricoFrequencia() {
+        return historicoFrequencia;
     }
 }

@@ -10,10 +10,6 @@ import br.com.forgefit.dominio.aluno.Cpf;
 import br.com.forgefit.dominio.aula.Aula.ReservaCanceladaEvento;
 import br.com.forgefit.dominio.evento.EventoBarramento;
 
-/**
- * Serviço de Domínio para orquestrar as operações relacionadas a Reservas.
- * Ele coordena o acesso ao Repositório e a propagação de Eventos.
- */
 public class ReservaService {
 
     private final AulaRepositorio aulaRepositorio;
@@ -27,13 +23,6 @@ public class ReservaService {
         this.barramento = barramento;
     }
 
-    /**
-     * Lógica de negócio: Cancelar uma reserva existente.
-     * 1. Obtém o Agregado (Aula).
-     * 2. Executa a regra de negócio no Agregado.
-     * 3. Salva o Agregado.
-     * 4. Posta o Evento.
-     */
     public String cancelarReserva(Cpf alunoId, AulaId aulaId, LocalDate dataAula, LocalDate dataCancelamento) {
         notNull(alunoId, "O ID do aluno não pode ser nulo");
         

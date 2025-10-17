@@ -3,19 +3,21 @@ package br.com.forgefit.dominio.aluno;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import br.com.forgefit.dominio.aluno.enums.StatusAluno;
 import br.com.forgefit.dominio.aluno.enums.StatusFrequencia;
+import br.com.forgefit.dominio.aula.AulaId;
 
 public class Aluno {
     private final Cpf cpf;
     private StatusAluno status;
-    private final List<RegistroFrequencia> historicoFrequencia = new ArrayList<>();
+    private final List<RegistroFrequencia> historicoFrequencia = new ArrayList<>(); 
     public LocalDate bloqueioAte;
 
     public Aluno(Cpf cpf) {
         this.cpf = cpf;
-        this.status = StatusAluno.ATIVO; // default
+        this.status = StatusAluno.ATIVO; 
     }
     
     public Aluno(Cpf cpf, StatusAluno status) {
@@ -58,5 +60,16 @@ public class Aluno {
 
     public List<RegistroFrequencia> getHistoricoFrequencia() {
         return historicoFrequencia;
+    }
+    
+    /**
+     * Busca um RegistroFrequencia pela data da aula (corrigido para usar o nome do campo correto).
+     */
+    public RegistroFrequencia obterRegistroFrequencia(LocalDate data) {
+        // CORREÇÃO: Usa o nome correto do campo: historicoFrequencia
+        return this.historicoFrequencia.stream() 
+            .filter(r -> r.getDataAula().isEqual(data)) 
+            .findFirst()
+            .orElse(null);
     }
 }

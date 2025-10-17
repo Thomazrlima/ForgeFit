@@ -12,9 +12,7 @@ public class Cpf {
         notNull(numero, "O CPF não pode ser nulo.");
         notBlank(numero, "O CPF não pode estar em branco.");
         
-        // Regra de Negócio: Adicione a lógica de validação do CPF aqui
         if (!numero.matches("\\d{11}")) {
-            // Assume 11 dígitos por simplicidade, adicione a lógica de validação completa do CPF se necessário
             throw new IllegalArgumentException("Formato de CPF inválido. Deve ter 11 dígitos numéricos.");
         }
         

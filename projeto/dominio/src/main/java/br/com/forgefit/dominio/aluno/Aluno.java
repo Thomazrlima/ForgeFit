@@ -1,11 +1,15 @@
 package br.com.forgefit.dominio.aluno;
 
+import br.com.forgefit.dominio.aluno.enums.StatusAluno;
+import br.com.forgefit.dominio.aluno.enums.StatusFrequencia;
+import br.com.forgefit.dominio.aula.AulaId;
+
+
 import static org.apache.commons.lang3.Validate.notNull;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class Aluno {

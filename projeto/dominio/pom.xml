@@ -8,7 +8,6 @@
   <artifactId>forgefit-dominio</artifactId>
   <version>0.0.1-SNAPSHOT</version>
 
-  <!-- Versões centralizadas -->
   <properties>
     <java.version>21</java.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -16,9 +15,9 @@
     <cucumber.version>7.18.0</cucumber.version>
     <junit.jupiter.version>5.10.2</junit.jupiter.version>
     <junit.platform.version>1.10.2</junit.platform.version>
+    <commons-lang3.version>3.14.0</commons-lang3.version> 
   </properties>
 
-  <!-- Gerenciamento de dependências do Cucumber -->
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -32,7 +31,13 @@
   </dependencyManagement>
 
   <dependencies>
-    <!-- Dependências do Cucumber -->
+    
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>${commons-lang3.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>io.cucumber</groupId>
       <artifactId>cucumber-java</artifactId>
@@ -45,7 +50,6 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- JUnit 5 -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
@@ -61,10 +65,8 @@
     </dependency>
   </dependencies>
 
-  <!-- Plugins -->
   <build>
     <plugins>
-      <!-- Compilador Java -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -75,7 +77,6 @@
         </configuration>
       </plugin>
 
-      <!-- Plugin do Surefire -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>

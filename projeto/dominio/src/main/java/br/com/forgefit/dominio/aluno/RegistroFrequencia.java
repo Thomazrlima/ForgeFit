@@ -1,11 +1,12 @@
 package br.com.forgefit.dominio.aluno;
 
-import static org.apache.commons.lang3.Validate.notNull;
-
-import java.time.LocalDate;
+import br.com.forgefit.dominio.aluno.enums.StatusFrequencia;
 import java.util.Objects;
 
+
 import br.com.forgefit.dominio.aula.AulaId;
+import java.time.LocalDate;
+import static org.apache.commons.lang3.Validate.notNull;
 
 public class RegistroFrequencia {
 

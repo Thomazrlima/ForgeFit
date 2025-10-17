@@ -1,4 +1,4 @@
-package br.com.forgefit.dominio.aluno.enum;
+package br.com.forgefit.dominio.aluno.enums;
 
 public enum StatusFrequencia {
     PRESENTE,

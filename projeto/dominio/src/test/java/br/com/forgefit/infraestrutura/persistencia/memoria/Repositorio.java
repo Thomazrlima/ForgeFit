@@ -28,12 +28,24 @@ import br.com.forgefit.dominio.torneio.enums.StatusTorneio;
 import br.com.forgefit.dominio.treino.PlanoDeTreinoId;
 import br.com.forgefit.dominio.treino.enums.LetraDoTreino;
 
+import br.com.forgefit.dominio.aula.Aula;
+import br.com.forgefit.dominio.aula.AulaId;
+import br.com.forgefit.dominio.aula.AulaRepositorio;
+import br.com.forgefit.dominio.avaliacao.Avaliacao;
+import br.com.forgefit.dominio.avaliacao.AvaliacaoId;
+import br.com.forgefit.dominio.avaliacao.AvaliacaoRepositorio;
+import br.com.forgefit.dominio.aluno.ProfessorId;
+import br.com.forgefit.dominio.ranking.Ranking;
+import br.com.forgefit.dominio.ranking.RankingRepositorio;
+import br.com.forgefit.dominio.ranking.enums.PeriodoRanking;
+
 /**
  * Implementação em memória dos repositórios para testes BDD.
  * Usa HashMaps e Lists para simular persistência.
  */
 public class Repositorio implements AlunoRepositorio, RepositorioGeral, 
-                                     GuildaRepositorio, CheckinRepositorio, TorneioRepositorio { 
+                                     GuildaRepositorio, CheckinRepositorio, TorneioRepositorio,
+                                     AulaRepositorio, RankingRepositorio, AvaliacaoRepositorio { 
 
     /*-----------------------------------------------------------------------*/
     private Map<Cpf, Aluno> alunos = new HashMap<>();
@@ -165,6 +177,78 @@ public class Repositorio implements AlunoRepositorio, RepositorioGeral,
     @Override
     public List<Torneio> listarTorneios() {
         return new ArrayList<>(torneios.values());
+    }
+    /*-----------------------------------------------------------------------*/
+
+    /*-----------------------------------------------------------------------*/
+    // Aula Repository
+    private Map<AulaId, Aula> aulas = new HashMap<>();
+
+    @Override
+    public void salvar(Aula aula) {
+        notNull(aula, "A aula não pode ser nula");
+        aulas.put(aula.getId(), aula);
+    }
+
+    @Override
+    public Optional<Aula> obterPorId(AulaId aulaId) {
+        notNull(aulaId, "O ID da aula não pode ser nulo");
+        return Optional.ofNullable(aulas.get(aulaId));
+    }
+
+    @Override
+    public List<Aula> listarTodas() {
+        return new ArrayList<>(aulas.values());
+    }
+    /*-----------------------------------------------------------------------*/
+
+    /*-----------------------------------------------------------------------*/
+    // Ranking Repository
+    private Map<PeriodoRanking, Ranking> rankings = new HashMap<>();
+
+    @Override
+    public void salvar(Ranking ranking) {
+        notNull(ranking, "O ranking não pode ser nulo");
+        rankings.put(ranking.getPeriodo(), ranking);
+    }
+
+    @Override
+    public Optional<Ranking> obterPorPeriodo(PeriodoRanking periodo) {
+        notNull(periodo, "O período não pode ser nulo");
+        return Optional.ofNullable(rankings.get(periodo));
+    }
+    /*-----------------------------------------------------------------------*/
+
+    /*-----------------------------------------------------------------------*/
+    // Avaliacao Repository
+    private Map<AvaliacaoId, Avaliacao> avaliacoes = new HashMap<>();
+
+    @Override
+    public void salvar(Avaliacao avaliacao) {
+        notNull(avaliacao, "A avaliação não pode ser nula");
+        avaliacoes.put(avaliacao.getId(), avaliacao);
+    }
+
+    @Override
+    public Optional<Avaliacao> obterPorId(AvaliacaoId id) {
+        notNull(id, "O ID da avaliação não pode ser nulo");
+        return Optional.ofNullable(avaliacoes.get(id));
+    }
+
+    @Override
+    public List<Avaliacao> buscarPorProfessor(ProfessorId professorId) {
+        notNull(professorId, "O ID do professor não pode ser nulo");
+        return avaliacoes.values().stream()
+            .filter(a -> a.getProfessorId().equals(professorId))
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean existeAvaliacao(Cpf alunoId, AulaId aulaId, LocalDate dataDaOcorrencia) {
+        return avaliacoes.values().stream()
+            .anyMatch(a -> a.getAlunoId().equals(alunoId) 
+                && a.getAulaId().equals(aulaId)
+                && a.getDataDaOcorrenciaDaAula().equals(dataDaOcorrencia));
     }
     /*-----------------------------------------------------------------------*/
 }

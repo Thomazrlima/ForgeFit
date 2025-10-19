@@ -21,35 +21,45 @@
 
 ## 🚀 **Sobre o Projeto**
 
-O **ForgeFit** é um sistema completo de gerenciamento de academia, projetado para otimizar a administração de alunos, professores, treinos e modalidades. Desenvolvido com **Design Patterns**, o sistema oferece uma arquitetura robusta e flexível, garantindo escalabilidade e manutenibilidade.
+O **ForgeFit** é um sistema de gerenciamento de academias voltado a modernizar a administração de aulas, alunos, professores e treinos. Desenvolvido com **Design Patterns**, oferece uma arquitetura robusta e escalável, garantindo organização, eficiência e facilidade de manutenção.
 
 ---
 
 ## ⭐ **Funcionalidades Principais**
 
-### **📅 Gestão de Aulas Inteligente**
-- Agenda automatizada com **detecção de conflitos**
-- Sistema de reservas com **lista de espera dinâmica**
-- Criação de **aulas recorrentes em lote**
+### **📋 Controle e Organização**
 
-### **💰 Sistema de Benefícios Flexível**
-- Combinação de **cupons e promoções empilháveis**
+* **Criação de Aulas** com verificação automática de conflitos de horário e capacidade.
+* **Gerenciamento de Treinos** personalizados, com histórico e validade sugerida.
 
-### **🔄 Políticas Personalizáveis**
-- Múltiplas estratégias para **cancelamentos e reembolsos**
+### **📅 Reservas e Cancelamentos**
 
-### **📊 Avaliação e Performance**
-- Mecanismos avançados para **avaliação de instrutores**
-- Controle de frequência com **consequências automáticas**
+* **Reserva de Aulas com Lista de Espera**, incluindo **promoção automática** quando uma vaga é liberada.
+* **Cancelamento de Reservas** com política de **reembolso flexível**, conforme a antecedência da solicitação.
+
+### **📊 Frequência e Avaliação**
+
+* **Controle de Frequência** com **bloqueio automático** após número limite de faltas.
+* **Avaliação de Professores**, considerando critérios de didática, pontualidade e atenção.
+
+### **💪 Evolução e Desempenho**
+
+* **Acompanhamento de Bioimpedância**, com histórico e análise de composição corporal.
+* **Ranking de Alunos**, baseado em engajamento e desempenho.
+
+### **⚔️ Engajamento Social**
+
+* **Guildas**, que permitem interação e cooperação entre alunos.
+* **Torneios e Pontuação Coletiva**, com desafios e rankings semanais ou mensais.
 
 > [!WARNING]
-> As demais funcionalidades serão detalhadas com o decorrer do período
+> Outras funcionalidades poderão ser detalhadas ao longo do desenvolvimento.
 
 ---
 
 ## 🎥 **Demonstração**
 
-https://github.com/user-attachments/assets/db85e843-5f2e-4016-97b2-3882f07513c1
+[https://github.com/user-attachments/assets/db85e843-5f2e-4016-97b2-3882f07513c1](https://github.com/user-attachments/assets/db85e843-5f2e-4016-97b2-3882f07513c1)
 
 ---
 
@@ -57,51 +67,45 @@ https://github.com/user-attachments/assets/db85e843-5f2e-4016-97b2-3882f07513c1
 
 ### **Lista das Funcionalidades**
 
-| Funcionalidade | Responsável |
-|----------------|-------------|
+| Funcionalidade                                                | Responsável            |
+| ------------------------------------------------------------- | ---------------------- |
+| **Avaliação de Professores**                                  | 🎯 Gustavo Mourato     |
+| **Acompanhamento de Bioimpedância**                           | 🎯 Gustavo Mourato     |
+| **Controle de Frequência e Política de Bloqueio por Faltas**  | 🎯 Thomaz Lima         |
+| **Cancelamento de Reserva com Política de Reembolso**         | 🎯 Thomaz Lima         |
+| **Gestão e Participação em Guildas**                          | 🎯 Paulo Rosado        |
+| **Pontuação e Torneios de Guilda**                            | 🎯 Paulo Rosado        |
+| **Criação de Aulas**                                          | 🎯 Leonardo Matos      |
+| **Criação e Gerenciamento de Treinos**                        | 🎯 Leonardo Matos      |
 | **Reserva de Aula com Lista de Espera e Promoção Automática** | 🎯 Vinícius de Andrade |
-| **Cupom/Benefícios Empilháveis** | 🎯 Vinícius de Andrade |
-| **Cancelamento de Reserva com Política de Reembolso** | 🎯 Thomaz Lima |
-| **Avaliação de Professores** | 🎯 Gustavo Mourato |
-| **Criação em Lote de Aulas Recorrentes por Modalidade** | 🎯 Leonardo Matos |
-| **Controle de Frequência e Política de Bloqueio por Faltas** | 🎯 Thomaz Lima |
-| **Criação e Gerenciamento de Treinos** | 🎯 Gustavo Mourato |
-| **Gestão e Participação em Guildas** | 🎯 Paulo Rosado |
-| **Pontuação e Torneios de Guilda** | 🎯 Paulo Rosado |
-| **Acompanhamento de Bioimpedância** | 🎯 Gustavo Mourato |
-| **Sistema de Ranking de Alunos** | 🎯 Vinícius de Andrade |
-| **Criação de Aulas** | 🎯 Leonardo Matos |
+| **Sistema de Ranking de Alunos**                              | 🎯 Vinícius de Andrade |
 
 ---
 
 ## 🏢 **Domínio de Negócio**
 
-### **📚 Criação de Aulas**
-A aula é uma sessão agendada de uma modalidade, conduzida por um professor em um espaço com capacidade definida. A criação respeita conflitos de agenda, onde um professor ou espaço não pode ser alocado em horários sobrepostos.
+### **📚 Aulas e Treinos**
 
-### **📝 Reserva e Lista de Espera**
-Sistema de reservas com lista de espera ordenada. Quando uma vaga é liberada, ocorre promoção automática seguindo ordem de prioridade.
+As aulas representam sessões de modalidades conduzidas por professores, respeitando restrições de agenda e capacidade.
+Os treinos são planos personalizados, com histórico de evolução e sugestão de validade.
 
-### **❌ Cancelamento e Reembolso**
-Política de reembolso baseada na antecedência do cancelamento. Vagas liberadas reativam o processo de promoção da lista de espera.
+### **📅 Reservas e Cancelamentos**
 
-### **📊 Controle de Frequência**
-Registro de presença/falta com política de bloqueio automático para padrões de ausência recorrentes.
+As reservas seguem uma lista de espera ordenada, promovendo automaticamente alunos quando há desistências.
+Cancelamentos seguem uma política de reembolso proporcional à antecedência, reabrindo vagas disponíveis.
 
-### **🏋️ Gestão de Treinos**
-Planos personalizados por professores, com histórico de evolução e sugestão de validade.
+### **📊 Frequência e Avaliação**
 
-### **⚖️ Bioimpedância**
-Acompanhamento físico completo com registro periódico de dados corporais e composição corporal.
+O controle de presença aplica bloqueios automáticos em casos de faltas recorrentes.
+Após cada aula, os alunos podem avaliar o desempenho dos instrutores em múltiplos critérios.
 
-### **⭐ Avaliação de Professores**
-Sistema de feedback pós-aula baseado em didática, atenção e pontualidade.
+### **💪 Evolução Física**
 
-### **🛡️ Guildas**
-Grupos sociais para check-in em treinos e aulas, promovendo engajamento.
+A bioimpedância registra e acompanha periodicamente dados corporais, permitindo o monitoramento da evolução física.
 
-### **🏆 Torneios e Ranking**
-Sistema de pontuação por participação, com rankings semanais e mensais para guildas e alunos.
+### **⚔️ Engajamento e Competição**
+
+As guildas estimulam o espírito de equipe e participação, enquanto o sistema de pontuação e torneios gera rankings coletivos e individuais.
 
 ---
 

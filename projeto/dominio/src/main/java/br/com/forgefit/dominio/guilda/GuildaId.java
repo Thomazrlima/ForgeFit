@@ -1,13 +1,13 @@
-package br.com.forgefit.dominio.aula;
+package br.com.forgefit.dominio.guilda;
 
 import static org.apache.commons.lang3.Validate.isTrue;
 
 import java.util.Objects;
 
-public class AulaId {
+public class GuildaId {
     private final int id;
 
-    public AulaId(int id) {
+    public GuildaId(int id) {
         isTrue(id > 0, "O id deve ser positivo");
         this.id = id;
     }
@@ -18,9 +18,9 @@ public class AulaId {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj != null && obj instanceof AulaId) {
-            AulaId aulaId = (AulaId) obj;
-            return id == aulaId.id;
+        if (obj != null && obj instanceof GuildaId) {
+            GuildaId guildaId = (GuildaId) obj;
+            return id == guildaId.id;
         }
         return false;
     }

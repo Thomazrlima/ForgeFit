@@ -9,7 +9,7 @@ Feature: Pontuação e Torneios de Guilda
     Scenario: Aluno tenta realizar o mesmo check-in de treino novamente no mesmo dia
         Given o aluno com CPF "123.456.789-00" já realizou o check-in do seu treino "A" na guilda "Confra dos Amigos" hoje
         When o aluno tenta realizar o check-in do mesmo treino "A" na guilda "Confra dos Amigos" novamente
-        Then o sistema informa que "o check-in para este treino já foi realizado hoje"
+        Then o sistema informa que: "o check-in para este treino já foi realizado hoje"
         And a pontuação do aluno e da guilda não é alterada
     
     Scenario: Gerente cria um torneio com sucesso 
@@ -20,7 +20,7 @@ Feature: Pontuação e Torneios de Guilda
     Scenario: Gerente tenta criar um torneio com datas inválidas
         Given um torneio com status "ATIVO" não existe no sistema
         When o gerente tenta criar um novo torneio com data de início "15/11/2025" e data de fim "01/11/2025"
-        Then o sistema informa que as "datas do torneio são inválidas"
+        Then o sistema informa que: "datas do torneio são inválidas"
 
     Scenario: Gerente define um prêmio para um torneio planejado
         Given o torneio "Torneio de São João" foi criado para começar em "15/11/2025" e está com o status "PLANEJADO"
@@ -30,7 +30,7 @@ Feature: Pontuação e Torneios de Guilda
     Scenario: Gerente tenta definir um prêmio para um torneio que já começou
         Given o torneio "Torneio de São João" está "ATIVO"
         When o gerente tenta definir o prêmio "1kg de Whey Protein" para o "PRIMEIRO_LUGAR" do torneio
-        Then o sistema informa que "não é possível alterar os prêmios de um torneio ativo"
+        Then o sistema informa que: "não é possível alterar os prêmios de um torneio ativo"
 
     Scenario: Sistema finaliza um torneio que já terminou
         Given o torneio "Torneio de São João" está com status "ATIVO", data de início "01/10/2025" e data de fim "10/10/2025"

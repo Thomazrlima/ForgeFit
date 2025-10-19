@@ -6,6 +6,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="forgefit-dominio" />
         <module name="forgefit-aplicacao" />
         <module name="forgefit-persistencia" />
         <module name="forgefit-frontend" />

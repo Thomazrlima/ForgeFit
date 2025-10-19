@@ -1,75 +1,126 @@
 package br.com.forgefit.dominio.aluno;
 
+import static org.apache.commons.lang3.Validate.notNull;
+
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+
 
 import br.com.forgefit.dominio.aluno.enums.StatusAluno;
-import br.com.forgefit.dominio.aluno.enums.StatusFrequencia;
-import br.com.forgefit.dominio.aula.AulaId;
+
+import br.com.forgefit.dominio.treino.PlanoDeTreino;
+import br.com.forgefit.dominio.guilda.GuildaId;
 
 public class Aluno {
     private final Cpf cpf;
+    private String nome;
+    private Matricula matricula;
+    private LocalDate dataNascimento;
+    private int pontuacaoTotal;
+    private double creditos;
     private StatusAluno status;
-    private final List<RegistroFrequencia> historicoFrequencia = new ArrayList<>(); 
-    public LocalDate bloqueioAte;
+    private LocalDate bloqueioAte;
+    private PlanoDeTreino planoAtivo;
+    private GuildaId guildaId;
 
     public Aluno(Cpf cpf) {
+        notNull(cpf, "O CPF não pode ser nulo");
         this.cpf = cpf;
-        this.status = StatusAluno.ATIVO; 
+        this.status = StatusAluno.ATIVO;
+        this.pontuacaoTotal = 0;
+        this.creditos = 0.0;
     }
     
     public Aluno(Cpf cpf, StatusAluno status) {
+        notNull(cpf, "O CPF não pode ser nulo");
         this.cpf = cpf;
         this.status = status;
+        this.pontuacaoTotal = 0;
+        this.creditos = 0.0;
     }
 
     public Cpf getCpf() {
         return cpf;
     }
 
-    public void adicionarRegistroFrequencia(RegistroFrequencia registro) {
-        historicoFrequencia.add(registro);
+    public String getNome() {
+        return nome;
+    }
 
-        if (registro.getStatus() == StatusFrequencia.FALTA) {
-            if (contarFaltasRecentes(7) >= 3) {
-                bloquearPorFaltas();
-            }
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public Matricula getMatricula() {
+        return matricula;
+    }
+
+    public void setMatricula(Matricula matricula) {
+        this.matricula = matricula;
+    }
+
+    public LocalDate getDataNascimento() {
+        return dataNascimento;
+    }
+
+    public void setDataNascimento(LocalDate dataNascimento) {
+        this.dataNascimento = dataNascimento;
+    }
+
+    public int getPontuacaoTotal() {
+        return pontuacaoTotal;
+    }
+
+    public void adicionarPontos(int pontos) {
+        if (pontos <= 0) {
+            throw new IllegalArgumentException("Os pontos devem ser positivos");
         }
+        this.pontuacaoTotal += pontos;
     }
 
-    private int contarFaltasRecentes(int dias) {
-        LocalDate limite = LocalDate.now().minusDays(dias);
-        return (int) historicoFrequencia.stream()
-                .filter(f -> f.getStatus() == StatusFrequencia.FALTA && f.getDataAula().isAfter(limite))
-                .count();
+    public double getCreditos() {
+        return creditos;
     }
 
-    private void bloquearPorFaltas() {
-        bloqueioAte = LocalDate.now().plusDays(7);
+    public void adicionarCreditos(double creditos) {
+        if (creditos <= 0) {
+            throw new IllegalArgumentException("Os créditos devem ser positivos");
+        }
+        this.creditos += creditos;
     }
 
-    public boolean estaBloqueado() {
-        return bloqueioAte != null && bloqueioAte.isAfter(LocalDate.now());
+    public StatusAluno getStatus() {
+        return status;
     }
 
-    public boolean podeReservarAula(LocalDate data) {
-        return !estaBloqueado();
+    public void setStatus(StatusAluno status) {
+        this.status = status;
     }
 
-    public List<RegistroFrequencia> getHistoricoFrequencia() {
-        return historicoFrequencia;
+    public LocalDate getBloqueioAte() {
+        return bloqueioAte;
     }
-    
-    /**
-     * Busca um RegistroFrequencia pela data da aula (corrigido para usar o nome do campo correto).
-     */
-    public RegistroFrequencia obterRegistroFrequencia(LocalDate data) {
-        // CORREÇÃO: Usa o nome correto do campo: historicoFrequencia
-        return this.historicoFrequencia.stream() 
-            .filter(r -> r.getDataAula().isEqual(data)) 
-            .findFirst()
-            .orElse(null);
+
+    public void setBloqueioAte(LocalDate bloqueioAte) {
+        this.bloqueioAte = bloqueioAte;
+    }
+
+    public PlanoDeTreino getPlanoAtivo() {
+        return planoAtivo;
+    }
+
+    public void setPlanoAtivo(PlanoDeTreino planoAtivo) {
+        this.planoAtivo = planoAtivo;
+    }
+
+    public GuildaId getGuildaId() {
+        return guildaId;
+    }
+
+    public void setGuildaId(GuildaId guildaId) {
+        this.guildaId = guildaId;
+    }
+
+    public boolean temPlanoAtivo() {
+        return planoAtivo != null && planoAtivo.isAtivo();
     }
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import br.com.forgefit.dominio.aula.AulaService;
+import br.com.forgefit.dominio.aula.ReembolsoService;
 import br.com.forgefit.dominio.aula.ReservaService;
 import br.com.forgefit.dominio.avaliacao.AvaliacaoService;
 import br.com.forgefit.dominio.checkin.CheckinService;
@@ -28,6 +29,7 @@ public class AcademiaFuncionalidade implements EventoBarramento {
     public final ReservaService reservaService;
     public final RankingService rankingService;
     public final AvaliacaoService avaliacaoService;
+    public final ReembolsoService reembolsoService;
 
     public List<Object> eventos;
     public Exception excecao;
@@ -41,7 +43,8 @@ public class AcademiaFuncionalidade implements EventoBarramento {
         this.checkinService = new CheckinService(this.repositorio, this.repositorio, this.repositorio);
         this.torneioService = new TorneioService(this.repositorio);
         this.aulaService = new AulaService(this.repositorio);
-        this.reservaService = new ReservaService(this.repositorio);
+        this.reembolsoService = new ReembolsoService();
+        this.reservaService = new ReservaService(this.repositorio, this.repositorio, this.reembolsoService);
         this.rankingService = new RankingService(this.repositorio);
         this.avaliacaoService = new AvaliacaoService(this.repositorio);
     }

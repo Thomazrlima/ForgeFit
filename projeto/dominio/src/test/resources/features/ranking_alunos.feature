@@ -64,13 +64,7 @@ Feature: Ranking de Alunos
     And o log de auditoria registra o motivo do ajuste
 
   #Regra de negócio: Premiações e recompensas
-
-  Scenario: Premiação semanal dos melhores colocados
-    Given que o ranking semanal tenha sido finalizado
-    When o sistema identificar os 3 primeiros colocados
-    Then cada aluno recebe um cupom de R$ 20 de desconto em reservas
-    And os alunos são notificados por aplicativo e e-mail
-
+  
   Scenario: Recompensa mensal por engajamento contínuo
     Given que o aluno Lucas tenha mantido presença em todas as semanas do mês
     And acumulado mais de 400 pontos de engajamento

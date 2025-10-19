@@ -5,7 +5,6 @@ import static org.apache.commons.lang3.Validate.notNull;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 import br.com.forgefit.dominio.aluno.Cpf;
 import br.com.forgefit.dominio.ranking.enums.PeriodoRanking;
@@ -28,19 +27,21 @@ public class Ranking {
 
     public ItemRanking getItemPorCpf(Cpf cpf) {
         return itens.stream()
-            .filter(item -> item.getCpf().equals(cpf))
-            .findFirst()
-            .orElse(null);
+                .filter(item -> item.getCpf().equals(cpf))
+                .findFirst()
+                .orElse(null);
     }
 
     public void recalcular() {
-        // Ordena por: pontuação total DESC, número de aulas DESC, média de performance DESC
-        itens.sort(Comparator
-            .comparingInt(ItemRanking::getPontuacaoTotal).reversed()
-            .thenComparingInt(ItemRanking::getNumeroDeAulasParticipadas).reversed()
-            .thenComparingDouble(ItemRanking::getMediaPerformance).reversed()
-        );
-        
+        // Ordena por: pontuação total DESC, número de aulas DESC, média de performance
+        // DESC
+        // IMPORTANTE: cada .reversed() só se aplica ao nível correspondente, não a toda
+        // a cadeia
+        itens.sort(
+                Comparator.comparingInt(ItemRanking::getPontuacaoTotal).reversed()
+                        .thenComparing(Comparator.comparingInt(ItemRanking::getNumeroDeAulasParticipadas).reversed())
+                        .thenComparing(Comparator.comparingDouble(ItemRanking::getMediaPerformance).reversed()));
+
         // Atualiza posições
         for (int i = 0; i < itens.size(); i++) {
             itens.get(i).setPosicao(i + 1);
@@ -61,6 +62,7 @@ public class Ranking {
     }
 
     public List<ItemRanking> getItens() {
+        recalcular();
         return new ArrayList<>(itens);
     }
 }

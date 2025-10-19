@@ -13,6 +13,7 @@ public class ItemRanking {
     private int posicao;
     private int numeroDeAulasParticipadas;
     private double mediaPerformance;
+    private int numeroDeAvaliacoes; // Contador separado para avaliações
 
     public ItemRanking(Cpf cpf) {
         notNull(cpf, "O CPF não pode ser nulo");
@@ -24,6 +25,7 @@ public class ItemRanking {
         this.posicao = 0;
         this.numeroDeAulasParticipadas = 0;
         this.mediaPerformance = 0.0;
+        this.numeroDeAvaliacoes = 0;
     }
 
     public void adicionarPontosFrequencia(int pontos) {
@@ -40,8 +42,9 @@ public class ItemRanking {
     public void adicionarPontosPerformance(int pontos, double nota) {
         this.pontosPerformance += pontos;
         // Recalcula média de performance
-        double somaNotas = mediaPerformance * (numeroDeAulasParticipadas > 0 ? numeroDeAulasParticipadas : 1);
-        this.mediaPerformance = (somaNotas + nota) / (numeroDeAulasParticipadas + 1);
+        double somaNotas = mediaPerformance * numeroDeAvaliacoes;
+        this.numeroDeAvaliacoes++;
+        this.mediaPerformance = (somaNotas + nota) / numeroDeAvaliacoes;
         recalcularTotal();
     }
 
@@ -68,6 +71,7 @@ public class ItemRanking {
         this.pontuacaoTotal = 0;
         this.numeroDeAulasParticipadas = 0;
         this.mediaPerformance = 0.0;
+        this.numeroDeAvaliacoes = 0;
     }
 
     // Getters

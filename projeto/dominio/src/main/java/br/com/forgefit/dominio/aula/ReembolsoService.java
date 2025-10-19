@@ -11,11 +11,11 @@ import java.time.LocalDateTime;
  */
 public class ReembolsoService {
 
-    // Política de reembolso: 24 horas de antecedência = 100%
-    private static final long HORAS_MINIMAS_REEMBOLSO_TOTAL = 24;
+    // Política de reembolso: 15 dias de antecedência = 100%, 5 dias = 50%
+    private static final long HORAS_MINIMAS_REEMBOLSO_TOTAL = 15 * 24; // 15 dias = 360 horas
     private static final double PERCENTUAL_REEMBOLSO_TOTAL = 1.0; // 100%
     private static final double PERCENTUAL_REEMBOLSO_PARCIAL = 0.5; // 50%
-    private static final long HORAS_MINIMAS_REEMBOLSO_PARCIAL = 12;
+    private static final long HORAS_MINIMAS_REEMBOLSO_PARCIAL = 5 * 24; // 5 dias = 120 horas
 
     /**
      * Calcula o crédito de reembolso baseado na antecedência do cancelamento
@@ -34,17 +34,17 @@ public class ReembolsoService {
         Duration antecedencia = Duration.between(momentoCancelamento, inicioAula);
         long horasAntecedencia = antecedencia.toHours();
 
-        // Se cancelou com mais de 24 horas de antecedência: reembolso total
+        // Se cancelou com mais de 15 dias (360 horas) de antecedência: reembolso total
         if (horasAntecedencia >= HORAS_MINIMAS_REEMBOLSO_TOTAL) {
             return calcularValorBase() * PERCENTUAL_REEMBOLSO_TOTAL;
         }
 
-        // Se cancelou com mais de 12 horas: reembolso parcial (50%)
+        // Se cancelou com mais de 5 dias (120 horas): reembolso parcial (50%)
         if (horasAntecedencia >= HORAS_MINIMAS_REEMBOLSO_PARCIAL) {
             return calcularValorBase() * PERCENTUAL_REEMBOLSO_PARCIAL;
         }
 
-        // Menos de 12 horas: sem reembolso
+        // Menos de 5 dias: sem reembolso
         return 0.0;
     }
 

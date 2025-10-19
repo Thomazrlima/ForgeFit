@@ -11,7 +11,7 @@ Feature: Cancelamento de reserva com política de reembolso
     When o aluno solicita o cancelamento em "01/09/2025"
     Then o sistema informa "cancelamento aprovado, reembolso parcial em processamento"
 
-  # Regra 2 — Cancelamento com antecedência parcial (reembolso parcial em até 7 dias)
+  # Regra 2 — Cancelamento com antecedência parcial (reembolso parcial entre 5 e 14 dias)
   Scenario: Cancelamento com reembolso parcial processado
     Given existe uma reserva confirmada para o dia "15/09/2025" às "14:00" com duração de "90 minutos"
     When o aluno solicita o cancelamento em "10/09/2025"

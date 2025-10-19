@@ -40,6 +40,9 @@ import br.com.forgefit.dominio.aluno.ProfessorId;
 import br.com.forgefit.dominio.ranking.Ranking;
 import br.com.forgefit.dominio.ranking.RankingRepositorio;
 import br.com.forgefit.dominio.ranking.enums.PeriodoRanking;
+import br.com.forgefit.dominio.frequencia.Frequencia;
+import br.com.forgefit.dominio.frequencia.FrequenciaRepositorio;
+import br.com.forgefit.dominio.frequencia.enums.StatusFrequencia;
 
 /**
  * Implementação em memória dos repositórios para testes BDD.
@@ -48,7 +51,7 @@ import br.com.forgefit.dominio.ranking.enums.PeriodoRanking;
 public class Repositorio implements AlunoRepositorio, RepositorioGeral, 
                                      GuildaRepositorio, CheckinRepositorio, TorneioRepositorio,
                                      AulaRepositorio, RankingRepositorio, AvaliacaoRepositorio,
-                                     TreinoRepositorio { 
+                                     TreinoRepositorio, FrequenciaRepositorio { 
 
     /*-----------------------------------------------------------------------*/
     private Map<Cpf, Aluno> alunos = new HashMap<>();
@@ -282,6 +285,58 @@ public class Repositorio implements AlunoRepositorio, RepositorioGeral,
     public Optional<PlanoDeTreinoCompleto> obterPorId(PlanoDeTreinoId id) {
         notNull(id, "O ID do plano de treino não pode ser nulo");
         return Optional.ofNullable(planosTreino.get(id));
+    }
+    /*-----------------------------------------------------------------------*/
+
+    /*-----------------------------------------------------------------------*/
+    // Frequencia Repository
+    private List<Frequencia> frequencias = new ArrayList<>();
+
+    @Override
+    public void salvar(Frequencia frequencia) {
+        notNull(frequencia, "A frequência não pode ser nula");
+        frequencias.add(frequencia);
+    }
+
+    @Override
+    public List<Frequencia> buscarPorAlunoEPeriodo(Cpf alunoId, LocalDate inicio, LocalDate fim) {
+        notNull(alunoId, "O CPF do aluno não pode ser nulo");
+        notNull(inicio, "A data de início não pode ser nula");
+        notNull(fim, "A data de fim não pode ser nula");
+
+        return frequencias.stream()
+                .filter(f -> f.getAlunoId().equals(alunoId))
+                .filter(f -> !f.getDataDaOcorrencia().isBefore(inicio))
+                .filter(f -> !f.getDataDaOcorrencia().isAfter(fim))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Frequencia buscarPorAlunoAulaEData(Cpf alunoId, AulaId aulaId, LocalDate data) {
+        notNull(alunoId, "O CPF do aluno não pode ser nulo");
+        notNull(aulaId, "O ID da aula não pode ser nulo");
+        notNull(data, "A data não pode ser nula");
+
+        return frequencias.stream()
+                .filter(f -> f.getAlunoId().equals(alunoId))
+                .filter(f -> f.getAulaId().equals(aulaId))
+                .filter(f -> f.getDataDaOcorrencia().equals(data))
+                .findFirst()
+                .orElse(null);
+    }
+
+    @Override
+    public long contarFaltasPorPeriodo(Cpf alunoId, LocalDate inicio, LocalDate fim) {
+        notNull(alunoId, "O CPF do aluno não pode ser nulo");
+        notNull(inicio, "A data de início não pode ser nula");
+        notNull(fim, "A data de fim não pode ser nula");
+
+        return frequencias.stream()
+                .filter(f -> f.getAlunoId().equals(alunoId))
+                .filter(f -> f.getStatus() == StatusFrequencia.FALTA)
+                .filter(f -> !f.getDataDaOcorrencia().isBefore(inicio))
+                .filter(f -> !f.getDataDaOcorrencia().isAfter(fim))
+                .count();
     }
     /*-----------------------------------------------------------------------*/
 }

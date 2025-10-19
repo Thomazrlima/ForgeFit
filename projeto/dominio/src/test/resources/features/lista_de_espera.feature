@@ -52,7 +52,7 @@ Feature: Reserva de Aula com Lista de Espera e Promoção Automática
 
   # Regra de negócio: Cancelamento e reembolso
   Scenario: Cancelamento com antecedência gera reembolso conforme política
-    Given que o aluno Pedro possua reserva ativa na aula do dia 23/10/2025 às 08h00 e cancele com 24 horas de antecedência, dentro do prazo de reembolso
+    Given que o aluno Pedro possua reserva ativa na aula do dia 23/10/2025 às 08h00 e cancele com 360 horas de antecedência, dentro do prazo de reembolso
     When o sistema processar o cancelamento
     Then o crédito interno é calculado conforme percentual previsto pela política
     And a vaga é liberada para promoção automática na lista de espera

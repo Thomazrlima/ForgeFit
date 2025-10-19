@@ -12,7 +12,8 @@ import org.junit.runner.RunWith;
         "br.com.forgefit.dominio.aluno", 
         "br.com.forgefit.dominio.aula",
         "br.com.forgefit.dominio.guilda",
-        "br.com.forgefit.dominio.checkin"
+        "br.com.forgefit.dominio.checkin",
+        "br.com.forgefit.dominio.treino"
     },
     plugin = {"pretty"}
 )

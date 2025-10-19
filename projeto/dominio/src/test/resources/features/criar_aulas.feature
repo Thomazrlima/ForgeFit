@@ -25,29 +25,31 @@ Feature: Criação de aulas
     Then Todos a mesma "aula" é marcada "15" vezes para as "quartas-feira"s atuais e seguintes
 
 
-    Scenario: Criar aula
+  Scenario: Criar aula recorrente com conflito
     Given o professor está na plataforma
     When o professor cria uma aula recorrente e o dia "08/02/2022" choca com alguma aula presente ou futura
     Then a aula não é salva no sistema
 
 
-    #Regre 3 - editar aula
+  #Regre 3 - editar aula
 
+  Scenario: Editar aula - alterar data
     Given o professor quer editar a "aula de boxe"
     When o professor altera o status do dia "08/02/2022"para "09/02/2022" de "quinta-feira"
     Then a "aula" é atualizada e lançada no sistema com as "novas datas"
     And os alunos são notificados
 
 
+  Scenario: Editar aula - conflito ao alterar data
     Given o professor quer editar a "aula de boxe" 
-    When o professor altera o status do dia "08/02/2022" para "09/02/2022" de "quinta-feira"
     And a "quinta-feira" já está preenchida no horario e dia escolhido por outra aula
+    When o professor altera o status do dia "08/02/2022" para "09/02/2022" de "quinta-feira"
     Then não é possivel salvar a alterção da "aula"
 
 
 #regra 4 - excluir aula
 
-
+  Scenario: Excluir aula
     Given o professor quer excluir a "aula de boxe"
     When o professor seleciona a "lixeira" na sua "tela de gerenciamento"
     Then a "aula" é excluida com sucesso
@@ -55,12 +57,14 @@ Feature: Criação de aulas
 
 #Regra 5 - alterar recorrencia de aula
 
+  Scenario: Alterar recorrencia - reduzir limite
     Given o professor quer alterar a recorrencia da "aula de boxe"
     When o professor altera a recorrencia de "SEMANAL" para "MENSAL"
     Then a recorrencia é alterada com sucesso
     And as aulas que ultrapassam o novo limite são excluidas do sistema
    
 
+  Scenario: Alterar recorrencia - expandir limite
     Given o professor quer alterar a recorrencia da "aula de boxe"
     When o professor altera a recorrencia de "SEMANAL" para "MENSAL"
     Then a recorrencia é alterada com sucesso

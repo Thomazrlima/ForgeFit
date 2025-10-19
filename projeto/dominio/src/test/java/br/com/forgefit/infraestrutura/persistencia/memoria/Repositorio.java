@@ -25,7 +25,9 @@ import br.com.forgefit.dominio.torneio.Torneio;
 import br.com.forgefit.dominio.torneio.TorneioId;
 import br.com.forgefit.dominio.torneio.TorneioRepositorio;
 import br.com.forgefit.dominio.torneio.enums.StatusTorneio;
+import br.com.forgefit.dominio.treino.PlanoDeTreinoCompleto;
 import br.com.forgefit.dominio.treino.PlanoDeTreinoId;
+import br.com.forgefit.dominio.treino.TreinoRepositorio;
 import br.com.forgefit.dominio.treino.enums.LetraDoTreino;
 
 import br.com.forgefit.dominio.aula.Aula;
@@ -45,7 +47,8 @@ import br.com.forgefit.dominio.ranking.enums.PeriodoRanking;
  */
 public class Repositorio implements AlunoRepositorio, RepositorioGeral, 
                                      GuildaRepositorio, CheckinRepositorio, TorneioRepositorio,
-                                     AulaRepositorio, RankingRepositorio, AvaliacaoRepositorio { 
+                                     AulaRepositorio, RankingRepositorio, AvaliacaoRepositorio,
+                                     TreinoRepositorio { 
 
     /*-----------------------------------------------------------------------*/
     private Map<Cpf, Aluno> alunos = new HashMap<>();
@@ -200,6 +203,20 @@ public class Repositorio implements AlunoRepositorio, RepositorioGeral,
     public List<Aula> listarTodas() {
         return new ArrayList<>(aulas.values());
     }
+
+    @Override
+    public List<Aula> buscarPorEspacoEPeriodo(br.com.forgefit.dominio.aula.enums.Espaco espaco, 
+                                                java.time.LocalDateTime inicio, 
+                                                java.time.LocalDateTime fim) {
+        notNull(espaco, "O espaço não pode ser nulo");
+        notNull(inicio, "A data de início não pode ser nula");
+        notNull(fim, "A data de fim não pode ser nula");
+        
+        return aulas.values().stream()
+            .filter(a -> a.getEspaco() == espaco)
+            .filter(a -> !(a.getFim().isBefore(inicio) || a.getInicio().isAfter(fim)))
+            .collect(Collectors.toList());
+    }
     /*-----------------------------------------------------------------------*/
 
     /*-----------------------------------------------------------------------*/
@@ -249,6 +266,22 @@ public class Repositorio implements AlunoRepositorio, RepositorioGeral,
             .anyMatch(a -> a.getAlunoId().equals(alunoId) 
                 && a.getAulaId().equals(aulaId)
                 && a.getDataDaOcorrenciaDaAula().equals(dataDaOcorrencia));
+    }
+    /*-----------------------------------------------------------------------*/
+
+    /*-----------------------------------------------------------------------*/
+    private Map<PlanoDeTreinoId, PlanoDeTreinoCompleto> planosTreino = new HashMap<>();
+
+    @Override
+    public void salvar(PlanoDeTreinoCompleto plano) {
+        notNull(plano, "O plano de treino não pode ser nulo");
+        planosTreino.put(plano.getId(), plano);
+    }
+
+    @Override
+    public Optional<PlanoDeTreinoCompleto> obterPorId(PlanoDeTreinoId id) {
+        notNull(id, "O ID do plano de treino não pode ser nulo");
+        return Optional.ofNullable(planosTreino.get(id));
     }
     /*-----------------------------------------------------------------------*/
 }

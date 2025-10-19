@@ -12,6 +12,7 @@ import br.com.forgefit.dominio.evento.EventoBarramento;
 import br.com.forgefit.dominio.guilda.GuildaService;
 import br.com.forgefit.dominio.ranking.RankingService;
 import br.com.forgefit.dominio.torneio.TorneioService;
+import br.com.forgefit.dominio.treino.TreinoService;
 import br.com.forgefit.infraestrutura.persistencia.memoria.Repositorio;
 
 /**
@@ -30,6 +31,7 @@ public class AcademiaFuncionalidade implements EventoBarramento {
     public final RankingService rankingService;
     public final AvaliacaoService avaliacaoService;
     public final ReembolsoService reembolsoService;
+    public final TreinoService treinoService;
 
     public List<Object> eventos;
     public Exception excecao;
@@ -47,6 +49,7 @@ public class AcademiaFuncionalidade implements EventoBarramento {
         this.reservaService = new ReservaService(this.repositorio, this.repositorio, this.reembolsoService);
         this.rankingService = new RankingService(this.repositorio);
         this.avaliacaoService = new AvaliacaoService(this.repositorio);
+        this.treinoService = new TreinoService(this.repositorio);
     }
 
     @Override

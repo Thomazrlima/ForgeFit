@@ -4,21 +4,35 @@ import static org.apache.commons.lang3.Validate.isTrue;
 
 /**
  * Value Object Notas conforme CML: pontualidade, didatica, atencao
- * Nota: Nos testes, usamos apenas uma nota geral, então simplificamos
  */
 public class Notas {
-    private final double nota;
+    private final int pontualidade;
+    private final int didatica;
+    private final int atencao;
 
-    public Notas(double nota) {
-        isTrue(nota >= 0 && nota <= 10, "A nota deve estar entre 0 e 10");
-        this.nota = nota;
+    public Notas(int pontualidade, int didatica, int atencao) {
+        isTrue(pontualidade >= 0 && pontualidade <= 5, "A nota de pontualidade deve estar entre 0 e 5 estrelas");
+        isTrue(didatica >= 0 && didatica <= 5, "A nota de didática deve estar entre 0 e 5 estrelas");
+        isTrue(atencao >= 0 && atencao <= 5, "A nota de atenção deve estar entre 0 e 5 estrelas");
+        
+        this.pontualidade = pontualidade;
+        this.didatica = didatica;
+        this.atencao = atencao;
     }
 
-    public double getNota() {
-        return nota;
+    public int getPontualidade() {
+        return pontualidade;
+    }
+
+    public int getDidatica() {
+        return didatica;
+    }
+
+    public int getAtencao() {
+        return atencao;
     }
 
     public double getMedia() {
-        return nota;
+        return (pontualidade + didatica + atencao) / 3.0;
     }
 }

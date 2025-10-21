@@ -53,8 +53,17 @@ O **ForgeFit** é um sistema de gerenciamento de academias voltado a modernizar 
 * **Torneios e Pontuação Coletiva**, com desafios e rankings semanais ou mensais.
 
 > [!WARNING]
-> Outras funcionalidades poderão ser detalhadas ao longo do desenvolvimento.
-
+> ### 📦 Entregáveis do Projeto
+> Abaixo estão os principais artefatos desenvolvidos e organizados na pasta [`/entregaveis`](https://github.com/Thomazrlima/ForgeFit/tree/main/entregaveis):
+>
+> - 📽️ [Apresentação](https://github.com/Thomazrlima/ForgeFit/tree/main/entregaveis/apresentacao)
+> - 🧩 [CML](https://github.com/Thomazrlima/ForgeFit/tree/main/entregaveis/cml)
+> - 🧠 [Domínio](https://github.com/Thomazrlima/ForgeFit/tree/main/entregaveis/dominio)
+> - 🗺️ [Mapa de Histórias](https://github.com/Thomazrlima/ForgeFit/tree/main/entregaveis/mapa)
+> - 🎨 [Protótipo](https://github.com/Thomazrlima/ForgeFit/tree/main/entregaveis/prototipo)
+>
+> Clique nos nomes acima para acessar os arquivos correspondentes.  
+> As imagens abaixo também são clicáveis e redirecionam para suas respectivas pastas.
 ---
 
 ## 🎥 **Demonstração**
@@ -86,17 +95,17 @@ O **ForgeFit** é um sistema de gerenciamento de academias voltado a modernizar 
 
 ### **📚 Aulas e Treinos**
 
-As aulas representam sessões de modalidades conduzidas por professores, respeitando restrições de agenda e capacidade.
+As aulas representam sessões de modalidades conduzidas por professores, respeitando restrições de agenda e capacidade.  
 Os treinos são planos personalizados, com histórico de evolução e sugestão de validade.
 
 ### **📅 Reservas e Cancelamentos**
 
-As reservas seguem uma lista de espera ordenada, promovendo automaticamente alunos quando há desistências.
+As reservas seguem uma lista de espera ordenada, promovendo automaticamente alunos quando há desistências.  
 Cancelamentos seguem uma política de reembolso proporcional à antecedência, reabrindo vagas disponíveis.
 
 ### **📊 Frequência e Avaliação**
 
-O controle de presença aplica bloqueios automáticos em casos de faltas recorrentes.
+O controle de presença aplica bloqueios automáticos em casos de faltas recorrentes.  
 Após cada aula, os alunos podem avaliar o desempenho dos instrutores em múltiplos critérios.
 
 ### **💪 Evolução Física**

@@ -117,7 +117,7 @@ public class AvaliacaoProfessorFuncionalidade {
         assertEquals(comentarioEsperado, avaliacaoSalva.getComentario());
     }
 
-    @Then("o sistema informa {string}")
+    @Then("o sistema em relação a avaliação do professor informa {string}")
     public void o_sistema_informa_para_avaliacao_professor(String mensagemEsperada) {
         assertEquals(mensagemEsperada, mensagemSistema);
     }

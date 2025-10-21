@@ -5,12 +5,12 @@ Feature: Avaliação de Professores
   Scenario: Avaliação realizada com sucesso
     Given que um aluno teve aula com o professor do CPF "149.811.150-59"
     When o aluno preenche as métricas de didática com "5" estrelas, atenção com "4" estrelas e pontualidade com "1" estrela
-    Then o sistema informa "A avaliação foi registrada com sucesso"
+    Then o sistema em relação a avaliação do professor informa "A avaliação foi registrada com sucesso"
 
   Scenario: Avaliação não realizada por falta de métricas
     Given que um aluno teve aula com o professor do CPF "873.870.480-37"
     When o aluno não preenche todas as métricas obrigatórias
-    Then o sistema informa "É necessário preencher todas as métricas de avaliação"
+    Then o sistema em relação a avaliação do professor informa "É necessário preencher todas as métricas de avaliação"
     
   # Regra de negócio 2: Inserir comentário opcional
 

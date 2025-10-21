@@ -3,6 +3,8 @@ package br.com.forgefit.dominio;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.com.forgefit.dominio.aluno.Aluno;
+import br.com.forgefit.dominio.aula.Aula;
 import br.com.forgefit.dominio.aula.AulaService;
 import br.com.forgefit.dominio.aula.ReembolsoService;
 import br.com.forgefit.dominio.aula.ReservaService;
@@ -34,6 +36,11 @@ public class AcademiaFuncionalidade implements EventoBarramento {
     public final ReembolsoService reembolsoService;
     public final TreinoService treinoService;
     public final FrequenciaService frequenciaService;
+    public final br.com.forgefit.dominio.aluno.AvaliacaoFisicaService avaliacaoFisicaService;
+    
+    // Contexto atual do teste
+    public Aluno alunoAtual;
+    public Aula aulaAtual;
 
     public List<Object> eventos;
     public Exception excecao;
@@ -53,6 +60,7 @@ public class AcademiaFuncionalidade implements EventoBarramento {
         this.avaliacaoService = new AvaliacaoService(this.repositorio);
         this.treinoService = new TreinoService(this.repositorio);
         this.frequenciaService = new FrequenciaService(this.repositorio, this.repositorio, this.repositorio);
+        this.avaliacaoFisicaService = new br.com.forgefit.dominio.aluno.AvaliacaoFisicaService(this.repositorio);
     }
 
     @Override

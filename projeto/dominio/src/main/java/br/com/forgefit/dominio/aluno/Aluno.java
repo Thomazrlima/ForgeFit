@@ -3,7 +3,9 @@ package br.com.forgefit.dominio.aluno;
 import static org.apache.commons.lang3.Validate.notNull;
 
 import java.time.LocalDate;
-
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import br.com.forgefit.dominio.aluno.enums.StatusAluno;
 
@@ -21,6 +23,7 @@ public class Aluno {
     private LocalDate bloqueioAte;
     private PlanoDeTreino planoAtivo;
     private GuildaId guildaId;
+    private final List<AvaliacaoFisica> historicoDeAvaliacoes = new ArrayList<>();
 
     public Aluno(Cpf cpf) {
         notNull(cpf, "O CPF não pode ser nulo");
@@ -122,5 +125,14 @@ public class Aluno {
 
     public boolean temPlanoAtivo() {
         return planoAtivo != null && planoAtivo.isAtivo();
+    }
+
+    public List<AvaliacaoFisica> getHistoricoDeAvaliacoes() {
+        return Collections.unmodifiableList(historicoDeAvaliacoes);
+    }
+
+    public void adicionarAvaliacaoFisica(AvaliacaoFisica avaliacao) {
+        notNull(avaliacao, "A avaliação física não pode ser nula");
+        historicoDeAvaliacoes.add(avaliacao);
     }
 }

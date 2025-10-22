@@ -1,101 +1,69 @@
 Feature: Ranking de Alunos
-
   #Regra de negócio: Acúmulo de pontos
+
   Scenario: Acumular pontos por frequência nas aulas
-    Given que o aluno João tenha comparecido à aula de Cross Training no dia 15/10/2025 às 18h00
-    When o sistema registrar a presença do aluno
-    Then o aluno recebe 10 pontos por frequência
-    And o total de pontos é atualizado no ranking geral
+    Given que o aluno com CPF "123.456.789-01" possui "50" pontos totais
+    When o aluno comparece à aula de "Cross Training" no dia "15/10/2025" às "18h00" e recebe "10" pontos por frequência
+    Then o aluno passa a ter "60" pontos totais
 
   Scenario: Acumular pontos por participação em guilda
-    Given que a aluna Maria tenha participado da atividade coletiva da guilda Fênix no dia 16/10/2025
-    When o sistema registrar a contribuição
-    Then a aluna recebe 15 pontos de engajamento
-    And o ranking da guilda e o ranking geral são atualizados
+    Given que a aluna com CPF "234.567.890-12" possui "100" pontos totais
+    When a aluna participa da atividade coletiva da guilda Fênix no dia "16/10/2025" e recebe "15" pontos
+    Then a aluna passa a ter "115" pontos totais
 
   Scenario: Acumular pontos por avaliação de performance
-    Given que o professor tenha avaliado o aluno Pedro com nota 9,5 na aula de Yoga do dia 17/10/2025
-    When a avaliação for registrada
-    Then o sistema converte a nota em 20 pontos de performance
-    And adiciona esses pontos ao total acumulado do aluno
-
-  #Regra de negócio: Atualização e Ppríodo de Ranking
-
-  Scenario: Atualização semanal do ranking
-    Given que a semana vigente termine no dia 20/10/2025
-    When o sistema executar o fechamento semanal
-    Then o ranking semanal é recalculado com base nas pontuações acumuladas até essa data
-    And os 10 primeiros alunos são destacados no painel principal
-
-  Scenario: Atualização mensal do ranking
-    Given que o mês de outubro de 2025 tenha sido encerrado
-    When o sistema consolidar as pontuações mensais
-    Then o ranking mensal é gerado
-    And os alunos com mais de 500 pontos recebem uma medalha digital de consistência
-
+    Given que o aluno com CPF "345.678.901-23" possui "200" pontos totais
+    When o professor avalia o aluno com nota "9,5" na aula de Yoga e o sistema converte em "20" pontos
+    Then o aluno passa a ter "220" pontos totais
   #Regra de negócio: Critérios de desempate
 
   Scenario: Desempate por maior frequência em aulas
-    Given que dois alunos tenham a mesma pontuação total no ranking
-    And o aluno A tenha participado de 12 aulas
-    And o aluno B tenha participado de 10 aulas
+    Given que o aluno com CPF "456.789.012-34" possui "300" pontos e participou de "12" aulas
+    And o aluno com CPF "567.890.123-45" possui "300" pontos e participou de "10" aulas
     When o sistema aplicar o critério de desempate
-    Then o aluno A é classificado à frente do aluno B
+    Then o aluno com CPF "456.789.012-34" é classificado à frente do aluno com CPF "567.890.123-45"
 
   Scenario: Desempate por média de performance
-    Given que dois alunos empatem em pontuação e frequência
-    And o aluno C tenha média de 9,0 em performance
-    And o aluno D tenha média de 8,5
-    When o sistema recalcular o ranking
-    Then o aluno C assume a posição superior
-
+    Given que o aluno com CPF "678.901.234-56" possui "450" pontos com média de "9,0" em performance
+    And o aluno com CPF "789.012.345-67" possui "450" pontos com média de "8,5" em performance
+    When o sistema aplicar o critério de desempate
+    Then o aluno com CPF "678.901.234-56" é classificado à frente do aluno com CPF "789.012.345-67"
   #Regra de negócio: Penalidades e ajustes
 
   Scenario: Perda de pontos por falta não justificada
-    Given que o aluno Rafael tenha falta não justificada na aula do dia 18/10/2025 às 19h00
-    When o sistema processar a ausência
-    Then o aluno perde 5 pontos no ranking semanal
-    And o histórico de faltas é atualizado
+    Given que o aluno com CPF "890.123.456-78" possui "80" pontos totais
+    When o aluno tem falta não justificada na aula do dia "18/10/2025" e perde "5" pontos
+    Then o aluno passa a ter "75" pontos totais
 
   Scenario: Ajuste manual de pontos pelo administrador
-    Given que a administradora Ana precise corrigir a pontuação de um aluno
-    When ela registrar o ajuste de -10 pontos no sistema
-    Then o total de pontos do aluno é atualizado imediatamente
-    And o log de auditoria registra o motivo do ajuste
+    Given que o aluno com CPF "012.345.678-90" possui "150" pontos totais
+    When a administradora com CPF "901.234.567-89" registra um ajuste de "-10" pontos
+    Then o aluno passa a ter "140" pontos totais
 
+  Scenario: Adicionar pontos manualmente pelo administrador
+    Given que o aluno com CPF "123.456.789-02" possui "200" pontos totais
+    When a administradora com CPF "901.234.567-89" registra um ajuste de "+25" pontos
+    Then o aluno passa a ter "225" pontos totais
   #Regra de negócio: Premiações e recompensas
-  
-  Scenario: Recompensa mensal por engajamento contínuo
-    Given que o aluno Lucas tenha mantido presença em todas as semanas do mês
-    And acumulado mais de 400 pontos de engajamento
-    When o sistema gerar o ranking mensal
-    Then o aluno recebe o título de Aluno Destaque do Mês
-    And é exibido no mural principal do aplicativo
 
+  Scenario: Recompensa mensal por engajamento contínuo
+    Given que o aluno com CPF "234.567.890-13" possui "420" pontos de engajamento
+    When o sistema gerar o ranking mensal e o aluno manteve presença em todas as semanas
+    Then o aluno recebe o título de Aluno Destaque do Mês
   #Regra de negócio: Transparência e visualização
 
   Scenario: Exibir detalhamento da pontuação no painel do aluno
-    Given que o aluno acesse seu painel de desempenho
-    When o sistema carregar o histórico
-    Then exibe o detalhamento de pontos por categoria (frequência, guilda, performance)
-    And mostra a posição atual no ranking semanal e mensal
-
-  Scenario: Exibir evolução histórica de posições
-    Given que o aluno possua histórico de ranking das últimas 4 semanas
-    When ele acessar a aba Minha Evolução
-    Then o sistema apresenta um gráfico de progresso com variação de posições
-    And destaca conquistas e marcos alcançados
-
+    Given que o aluno com CPF "345.678.901-24" possui "180" pontos totais
+    When o aluno acessar seu painel de desempenho
+    Then o sistema exibe "60" pontos de frequência, "50" pontos de guilda e "70" pontos de performance
   #Regra de negócio: Reset de pontos e novo ciclo
 
   Scenario: Reset de ranking no início de novo ciclo mensal
-    Given que o mês de outubro encerre no dia 31/10/2025
-    When o sistema iniciar o novo ciclo em 01/11/2025
-    Then o ranking semanal é zerado
-    And os pontos passam a ser acumulados para o ciclo de novembro
+    Given que o aluno com CPF "456.789.012-35" possui "500" pontos acumulados em outubro
+    When o sistema iniciar o novo ciclo em "01/11/2025"
+    Then os pontos do aluno são zerados e ele inicia novembro com "0" pontos
 
-  Scenario: Preservar histórico após o reset mensal
-    Given que o ranking de outubro tenha sido encerrado
-    When o sistema iniciar o novo ciclo
-    Then o histórico de outubro é arquivado
-    And pode ser consultado na seção Histórico de rankings
+  Scenario: Preservar histórico de pontos após reset
+    Given que o aluno com CPF "567.890.123-46" finalizou outubro com "480" pontos
+    When o sistema arquivar o ranking de outubro
+    Then o histórico preserva os "480" pontos de outubro e o aluno inicia novembro com "0" pontos

@@ -27,4 +27,16 @@ public class AvaliacaoService {
         avaliacaoRepositorio.salvar(avaliacao);
         return avaliacao;
     }
+    
+    public String criarAvaliacaoComMensagem(Matricula alunoMatricula, ProfessorId professorId, AulaId aulaId, 
+                                            LocalDate dataDaOcorrencia, Notas notas, String comentario) {
+        notNull(notas, "As notas não podem ser nulas");
+        
+        if (notas.getPontualidade() == 0 || notas.getDidatica() == 0 || notas.getAtencao() == 0) {
+            return "É necessário preencher todas as métricas de avaliação";
+        }
+        
+        criarAvaliacao(alunoMatricula, professorId, aulaId, dataDaOcorrencia, notas, comentario);
+        return "A avaliação foi registrada com sucesso";
+    }
 }

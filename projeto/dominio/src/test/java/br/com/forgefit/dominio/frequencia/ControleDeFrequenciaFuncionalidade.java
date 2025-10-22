@@ -27,7 +27,6 @@ public class ControleDeFrequenciaFuncionalidade {
     
     private final AcademiaFuncionalidade contexto;
     
-    private Cpf cpfAluno;
     private Matricula matriculaAluno;
     private Aula aulaCriada;
     private Frequencia frequenciaRegistrada;
@@ -40,11 +39,13 @@ public class ControleDeFrequenciaFuncionalidade {
 
     // ========== CENÁRIO 1: Registrar presença do aluno na aula ==========
 
-    @Given("o aluno {string} está matriculado em uma aula agendada no dia {string} com horário {string} e duração de {string}")
-    public void o_aluno_esta_matriculado_em_uma_aula_agendada(String cpf, String dataStr, String horario, String duracao) {
-        cpfAluno = new Cpf(cpf);
-        Aluno aluno = new Aluno(cpfAluno, "Aluno Teste", LocalDate.of(1990, 1, 1));
-        matriculaAluno = aluno.getMatricula();
+    @Given("o aluno com matrícula {string} está matriculado em uma aula agendada no dia {string} com horário {string} e duração de {string}")
+    public void o_aluno_com_matricula_esta_matriculado_em_uma_aula_agendada(String matriculaStr, String dataStr, String horario, String duracao) {
+        matriculaAluno = new Matricula(matriculaStr);
+        
+        // Cria CPF baseado na matrícula (apenas para testes)
+        Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", "").substring(0, 11));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(aluno);
 
         // Parse da data e hora
@@ -87,9 +88,21 @@ public class ControleDeFrequenciaFuncionalidade {
                 ? StatusFrequencia.PRESENCA 
                 : StatusFrequencia.FALTA;
         
-        assertEquals(statusEsperado, frequenciaRegistrada.getStatus());
-        assertEquals(matriculaAluno, frequenciaRegistrada.getAlunoMatricula());
-        assertEquals(aulaCriada.getId(), frequenciaRegistrada.getAulaId());
+        // Valida persistência no repositório
+        LocalDate data = LocalDate.parse(dataStr, dateFormatter);
+        Frequencia frequenciaPersistida = contexto.repositorio.buscarPorAlunoAulaEData(
+                matriculaAluno, 
+                aulaCriada.getId(), 
+                data
+        );
+        
+        assertNotNull(frequenciaPersistida, "Frequência não foi persistida no repositório");
+        
+        // Valida TODOS os atributos da frequência persistida
+        assertEquals(statusEsperado, frequenciaPersistida.getStatus());
+        assertEquals(matriculaAluno, frequenciaPersistida.getAlunoMatricula());
+        assertEquals(aulaCriada.getId(), frequenciaPersistida.getAulaId());
+        assertEquals(data, frequenciaPersistida.getDataDaOcorrencia());
     }
 
     // ========== CENÁRIO 2: Registrar falta do aluno na aula ==========
@@ -106,12 +119,13 @@ public class ControleDeFrequenciaFuncionalidade {
 
     // ========== CENÁRIO 3: Aluno bloqueado tenta reservar ==========
 
-    @Given("o aluno {string} possui {string} falta\\(s) nos últimos {string} dias")
-    public void o_aluno_possui_faltas_nos_ultimos_dias(String cpf, String quantidadeFaltas, String diasStr) {
-        cpfAluno = new Cpf(cpf);
-        Aluno aluno = new Aluno(cpfAluno, "Aluno Teste", LocalDate.of(1990, 1, 1));
-        matriculaAluno = aluno.getMatricula();
-        aluno.setNome("Aluno com Faltas");
+    @Given("o aluno com matrícula {string} possui {string} falta\\(s) nos últimos {string} dias")
+    public void o_aluno_com_matricula_possui_faltas_nos_ultimos_dias(String matriculaStr, String quantidadeFaltas, String diasStr) {
+        matriculaAluno = new Matricula(matriculaStr);
+        
+        // Cria CPF baseado na matrícula (apenas para testes)
+        Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", "").substring(0, 11));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno com Faltas", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(aluno);
 
         int qtdFaltas = Integer.parseInt(quantidadeFaltas);
@@ -135,7 +149,7 @@ public class ControleDeFrequenciaFuncionalidade {
         }
 
         // Verifica se foi bloqueado
-        aluno = contexto.repositorio.obterAlunoPorCpf(cpfAluno).get();
+        aluno = contexto.repositorio.obterPorMatricula(matriculaAluno).get();
         if (qtdFaltas >= 3) {
             assertEquals(StatusAluno.BLOQUEADO, aluno.getStatus());
         }
@@ -146,7 +160,7 @@ public class ControleDeFrequenciaFuncionalidade {
         LocalDate data = LocalDate.parse(dataStr, dateFormatter);
         LocalDateTime inicio = LocalDateTime.of(data, java.time.LocalTime.of(10, 0));
 
-        Aula aula = contexto.aulaService.criarAulaUnica(
+        aulaCriada = contexto.aulaService.criarAulaUnica(
                 new ProfessorId(1),
                 Modalidade.PILATES,
                 Espaco.ESTUDIO_PILATES,
@@ -156,20 +170,14 @@ public class ControleDeFrequenciaFuncionalidade {
         );
 
         try {
-            // Verifica se aluno está bloqueado na data da tentativa de reserva
-            if (contexto.frequenciaService.alunoEstaBloqueado(matriculaAluno, data)) {
-                // Verifica se tem faltas recentes para dar mensagem específica
-                long faltasRecentes = contexto.frequenciaService.contarFaltasRecentes(matriculaAluno, LocalDate.now(), 30);
-                if (faltasRecentes >= 3) {
-                    mensagemResposta = "Aluno bloqueado por excesso de faltas.";
-                } else {
-                    mensagemResposta = "Aluno bloqueado.";
-                }
+            // Verifica se aluno está bloqueado e obtém mensagem do serviço
+            String mensagemBloqueio = contexto.frequenciaService.verificarBloqueioComMensagem(matriculaAluno, data);
+            if (mensagemBloqueio != null) {
+                mensagemResposta = mensagemBloqueio;
                 throw new IllegalStateException(mensagemResposta);
             }
             
-            contexto.reservaService.reservarVaga(matriculaAluno, aula.getId());
-            mensagemResposta = "Reserva confirmada.";
+            mensagemResposta = contexto.reservaService.tentarReservarVaga(matriculaAluno, aulaCriada.getId());
         } catch (Exception e) {
             if (mensagemResposta == null) {
                 contexto.excecao = e;
@@ -191,12 +199,13 @@ public class ControleDeFrequenciaFuncionalidade {
 
     // ========== CENÁRIO 5: Desbloquear aluno após período ==========
 
-    @Given("o aluno {string} está bloqueado até {string}")
-    public void o_aluno_esta_bloqueado_ate(String cpf, String dataStr) {
-        cpfAluno = new Cpf(cpf);
-        Aluno aluno = new Aluno(cpfAluno, "Aluno Teste", LocalDate.of(1990, 1, 1));
-        matriculaAluno = aluno.getMatricula();
-        aluno.setNome("Aluno Bloqueado");
+    @Given("o aluno com matrícula {string} está bloqueado até {string}")
+    public void o_aluno_com_matricula_esta_bloqueado_ate(String matriculaStr, String dataStr) {
+        matriculaAluno = new Matricula(matriculaStr);
+        
+        // Cria CPF baseado na matrícula (apenas para testes)
+        Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", "").substring(0, 11));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Bloqueado", LocalDate.of(1990, 1, 1));
         aluno.setStatus(StatusAluno.BLOQUEADO);
         
         LocalDate dataBloqueio = LocalDate.parse(dataStr, dateFormatter);
@@ -210,7 +219,7 @@ public class ControleDeFrequenciaFuncionalidade {
         LocalDate data = LocalDate.parse(dataStr, dateFormatter);
         LocalDateTime inicio = LocalDateTime.of(data, java.time.LocalTime.of(10, 0));
 
-        Aula aula = contexto.aulaService.criarAulaUnica(
+        aulaCriada = contexto.aulaService.criarAulaUnica(
                 new ProfessorId(1),
                 Modalidade.SPINNING,
                 Espaco.SALA03_SPINNING,
@@ -220,14 +229,14 @@ public class ControleDeFrequenciaFuncionalidade {
         );
 
         try {
-            // Verifica se aluno está bloqueado NESTA DATA
-            if (contexto.frequenciaService.alunoEstaBloqueado(matriculaAluno, data)) {
-                mensagemResposta = "Aluno bloqueado.";
+            // Verifica se aluno está bloqueado e obtém mensagem do serviço
+            String mensagemBloqueio = contexto.frequenciaService.verificarBloqueioComMensagem(matriculaAluno, data);
+            if (mensagemBloqueio != null) {
+                mensagemResposta = mensagemBloqueio;
                 throw new IllegalStateException(mensagemResposta);
             }
             
-            contexto.reservaService.reservarVaga(matriculaAluno, aula.getId());
-            mensagemResposta = "Reserva confirmada.";
+            mensagemResposta = contexto.reservaService.tentarReservarVaga(matriculaAluno, aulaCriada.getId());
         } catch (Exception e) {
             if (mensagemResposta == null) {
                 contexto.excecao = e;
@@ -240,8 +249,14 @@ public class ControleDeFrequenciaFuncionalidade {
         assertNotNull(mensagemResposta);
         assertEquals(mensagemEsperada, mensagemResposta);
         
-        // Verifica que o aluno foi desbloqueado
-        var aluno = contexto.repositorio.obterAlunoPorCpf(cpfAluno).get();
+        // Verifica que o aluno foi desbloqueado no repositório
+        Aluno aluno = contexto.repositorio.obterPorMatricula(matriculaAluno).get();
         assertEquals(StatusAluno.ATIVO, aluno.getStatus());
+        
+        // Verifica que a reserva foi persistida no repositório
+        var aulaPersistida = contexto.repositorio.obterPorId(aulaCriada.getId());
+        assertTrue(aulaPersistida.isPresent(), "Aula não foi persistida no repositório");
+        assertTrue(aulaPersistida.get().alunoJaPossuiReserva(matriculaAluno), 
+                "Reserva do aluno não foi persistida na aula");
     }
 }

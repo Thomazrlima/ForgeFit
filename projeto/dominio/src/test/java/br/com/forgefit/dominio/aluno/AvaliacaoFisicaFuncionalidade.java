@@ -1,7 +1,9 @@
 package br.com.forgefit.dominio.aluno;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -17,7 +19,7 @@ import br.com.forgefit.dominio.professor.ProfessorId;
 
 public class AvaliacaoFisicaFuncionalidade {
     private final AcademiaFuncionalidade contexto;
-    private Cpf cpfAluno;
+    private Matricula matriculaAluno;
     private AvaliacaoFisica avaliacaoAtual;
     private List<AvaliacaoFisica> historicoAvaliacoes;
     private String mensagemSistema;
@@ -27,12 +29,14 @@ public class AvaliacaoFisicaFuncionalidade {
         this.contexto = contexto;
     }
 
-    @Given("que o aluno é cadastrado com o CPF {string}")
-    public void queOAlunoECadastradoComOCPF(String cpf) {
-        this.cpfAluno = new Cpf(cpf.replaceAll("[^0-9]", ""));
-        Optional<Aluno> aluno = contexto.repositorio.obterAlunoPorCpf(cpfAluno);
+    @Given("que o aluno é cadastrado com a matrícula {string}")
+    public void queOAlunoECadastradoComAMatricula(String matricula) {
+        this.matriculaAluno = new Matricula(matricula);
+        Optional<Aluno> aluno = contexto.repositorio.obterPorMatricula(matriculaAluno);
         if (aluno.isEmpty()) {
-            Aluno novoAluno = new Aluno(cpfAluno, "Aluno Teste", LocalDate.now().minusYears(25));
+            // Cria CPF baseado na matrícula (apenas para testes)
+            Cpf cpf = new Cpf(matricula.replaceAll("[^0-9]", "").substring(0, 11));
+            Aluno novoAluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.now().minusYears(25));
             contexto.repositorio.salvar(novoAluno);
             contexto.alunoAtual = novoAluno;
         } else {
@@ -87,8 +91,7 @@ public class AvaliacaoFisicaFuncionalidade {
                 }
             }
 
-            contexto.avaliacaoFisicaService.registrarAvaliacaoFisica(contexto.alunoAtual.getMatricula(), avaliacaoAtual);
-            mensagemSistema = "Avaliação física salva com sucesso";
+            mensagemSistema = contexto.avaliacaoFisicaService.registrarAvaliacaoFisica(contexto.alunoAtual.getMatricula(), avaliacaoAtual);
         } catch (Exception e) {
             mensagemSistema = "É necessário preencher todos os campos da avaliação física";
         }
@@ -96,8 +99,8 @@ public class AvaliacaoFisicaFuncionalidade {
 
     @Given("que o aluno possui uma avaliação com a data {string}")
     public void queOAlunoPossuiUmaAvaliacaoComAData(String data) {
-        if (cpfAluno == null) {
-            queOAlunoECadastradoComOCPF("902.142.720-60");
+        if (matriculaAluno == null) {
+            queOAlunoECadastradoComAMatricula("902.142.720-60");
         }
         LocalDate dataAvaliacao = LocalDate.parse(data, FORMATTER);
         AvaliacaoFisica avaliacao = criarAvaliacaoPadrao(dataAvaliacao);
@@ -106,18 +109,21 @@ public class AvaliacaoFisicaFuncionalidade {
 
     @When("o aluno solicita o histórico de avaliações")
     public void oAlunoSolicitaOHistoricoDeAvaliacoes() {
-        Optional<Aluno> aluno = contexto.repositorio.obterAlunoPorCpf(cpfAluno);
-        if (aluno.isPresent() && !aluno.get().getHistoricoDeAvaliacoes().isEmpty()) {
-            historicoAvaliacoes = aluno.get().getHistoricoDeAvaliacoes();
+        String mensagemVerificacao = contexto.avaliacaoFisicaService.verificarHistoricoAvaliacoes(matriculaAluno);
+        if (mensagemVerificacao != null) {
+            mensagemSistema = mensagemVerificacao;
         } else {
-            mensagemSistema = "Esse aluno não tem avaliações registradas";
+            Optional<Aluno> aluno = contexto.repositorio.obterPorMatricula(matriculaAluno);
+            if (aluno.isPresent()) {
+                historicoAvaliacoes = aluno.get().getHistoricoDeAvaliacoes();
+            }
         }
     }
 
     @Given("que o aluno possui uma avaliação física de {string} e outra de {string}")
     public void queOAlunoPossuiDuasAvaliacoesFisicas(String data1, String data2) {
-        if (cpfAluno == null) {
-            queOAlunoECadastradoComOCPF("902.142.720-60");
+        if (matriculaAluno == null) {
+            queOAlunoECadastradoComAMatricula("902.142.720-60");
         }
         LocalDate dataAvaliacao1 = LocalDate.parse(data1, FORMATTER);
         LocalDate dataAvaliacao2 = LocalDate.parse(data2, FORMATTER);
@@ -132,7 +138,7 @@ public class AvaliacaoFisicaFuncionalidade {
     @When("o sistema compara os campos:")
     public void oSistemaComparaOsCampos(io.cucumber.datatable.DataTable dataTable) {
         List<String> linhas = dataTable.asList();
-        List<String> camposEvoluidos = new ArrayList<>();
+        List<AvaliacaoFisicaService.ComparacaoCampo> comparacoes = new ArrayList<>();
 
         for (String linha : linhas) {
             linha = linha.endsWith(",") ? linha.substring(0, linha.length() - 1) : linha;
@@ -149,33 +155,16 @@ public class AvaliacaoFisicaFuncionalidade {
             
             String campoCompleto = dadosAntigos[0].substring(0, dadosAntigos[0].lastIndexOf(" de ")).trim();
             
-            boolean evoluiu = false;
-            if (campoCompleto.toLowerCase().contains("gordura") || campoCompleto.toLowerCase().contains("cintura")) {
-                evoluiu = valorNovo < valorAntigo;
-            } else {
-                evoluiu = valorNovo > valorAntigo;
-            }
+            // Define se menor é melhor (gordura, cintura) ou maior é melhor (músculos)
+            boolean menorEMelhor = campoCompleto.toLowerCase().contains("gordura") || 
+                                   campoCompleto.toLowerCase().contains("cintura");
             
-            if (evoluiu) {
-                camposEvoluidos.add(campoCompleto);
-            }
+            comparacoes.add(new AvaliacaoFisicaService.ComparacaoCampo(
+                campoCompleto, valorAntigo, valorNovo, menorEMelhor
+            ));
         }
 
-        if (!camposEvoluidos.isEmpty()) {
-            StringBuilder mensagem = new StringBuilder("Você demonstrou evolução em: ");
-            for (int i = 0; i < camposEvoluidos.size(); i++) {
-                mensagem.append(camposEvoluidos.get(i));
-                if (i < camposEvoluidos.size() - 2) {
-                    mensagem.append(", ");
-                } else if (i == camposEvoluidos.size() - 2) {
-                    mensagem.append(" e ");
-                }
-            }
-            mensagem.append(". Parabéns!");
-            mensagemSistema = mensagem.toString();
-        } else {
-            mensagemSistema = "Você não mostrou evolução nos seus treinos... É melhor revisar o seu treino com um professor";
-        }
+        mensagemSistema = contexto.avaliacaoFisicaService.analisarEvolucaoFisica(comparacoes);
     }
 
     @When("o aluno tenta registrar uma avaliação física com os campos:")
@@ -247,43 +236,20 @@ public class AvaliacaoFisicaFuncionalidade {
     @Then("o sistema exibe a lista com os dados de cada avaliação:")
     public void o_sistema_exibe_a_lista_com_os_dados_de_cada_avaliação(io.cucumber.datatable.DataTable dataTable) {
         if (historicoAvaliacoes == null || historicoAvaliacoes.isEmpty()) {
-            mensagemSistema = "Esse aluno não tem avaliações registradas";
-            return;
+            mensagemSistema = contexto.avaliacaoFisicaService.verificarHistoricoAvaliacoes(matriculaAluno);
+        } else {
+            mensagemSistema = contexto.avaliacaoFisicaService.formatarHistoricoAvaliacoes(historicoAvaliacoes);
         }
-
-        StringBuilder resultado = new StringBuilder();
-        for (AvaliacaoFisica avaliacao : historicoAvaliacoes) {
-            String dataFormatada = FORMATTER.format(avaliacao.getDataDaAvaliacao());
-
-            resultado.append("Avaliação de \"").append(dataFormatada).append("\":\n")
-                .append("O porcentual de massa gorda como \"").append(avaliacao.getMassaGordaPercentual()).append("\",\n")
-                .append("A massa gorda como \"").append(avaliacao.getMassaGordaKg()).append("\" kg,\n")
-                .append("A massa magra como \"").append(avaliacao.getMassaMagraKg()).append("\" kg,\n")
-                .append("A massa muscular esquelética como \"").append(avaliacao.getMassaMuscularEsqueleticaKg()).append("\" kg,\n")
-                .append("O percentual de água corporal como \"").append(avaliacao.getAguaCorporalTotalPercentual()).append("\",\n")
-                .append("O nível de gordura visceral como \"").append(avaliacao.getGorduraVisceralNivel()).append("\",\n")
-                .append("A taxa metabolica basal como \"").append(avaliacao.getTaxaMetabolicaBasalKcal()).append("\" kcal,\n")
-                .append("A massa óssea como \"").append(avaliacao.getMassaOsseaKg()).append("\" kg,\n")
-                .append("O índice de massa corporal como \"").append(avaliacao.getIndiceDeMassaCorporal()).append("\",\n")
-                .append("O tamanho do braço relaxado como \"").append(avaliacao.getBracoRelaxadoCm()).append("\" cm,\n")
-                .append("O tamanho do braço contraído como \"").append(avaliacao.getBracoContraidoCm()).append("\" cm,\n")
-                .append("O tamanho do antebraço como \"").append(avaliacao.getAntebracoCm()).append("\" cm,\n")
-                .append("O tamanho do torax peitoral como \"").append(avaliacao.getToraxPeitoralCm()).append("\" cm,\n")
-                .append("O tamanho da cintura como \"").append(avaliacao.getCinturaCm()).append("\" cm,\n")
-                .append("O tamanho do abdomen como \"").append(avaliacao.getAbdomenCm()).append("\" cm,\n")
-                .append("O tamanho do quadril como \"").append(avaliacao.getQuadrilCm()).append("\" cm,\n")
-                .append("O tamanho da coxa como \"").append(avaliacao.getCoxaCm()).append("\" cm,\n")
-                .append("O tamanho da panturrilha como \"").append(avaliacao.getPanturrilhaCm()).append("\" cm\n");
-        }
-        mensagemSistema = resultado.toString();
     }
 
-    @Given("que o aluno com o CPF {string} ainda não possui avaliações físicas registradas")
-    public void que_o_aluno_com_o_cpf_ainda_não_possui_avaliações_físicas_registradas(String cpf) {
-        this.cpfAluno = new Cpf(cpf.replaceAll("[^0-9]", ""));
-        Optional<Aluno> aluno = contexto.repositorio.obterAlunoPorCpf(cpfAluno);
+    @Given("que o aluno com a matrícula {string} ainda não possui avaliações físicas registradas")
+    public void que_o_aluno_com_a_matricula_ainda_não_possui_avaliações_físicas_registradas(String matricula) {
+        this.matriculaAluno = new Matricula(matricula);
+        Optional<Aluno> aluno = contexto.repositorio.obterPorMatricula(matriculaAluno);
         if (aluno.isEmpty()) {
-            Aluno novoAluno = new Aluno(cpfAluno, "Aluno Teste", LocalDate.now().minusYears(25));
+            // Cria CPF baseado na matrícula (apenas para testes)
+            Cpf cpf = new Cpf(matricula.replaceAll("[^0-9]", "").substring(0, 11));
+            Aluno novoAluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.now().minusYears(25));
             contexto.repositorio.salvar(novoAluno);
             contexto.alunoAtual = novoAluno;
         } else {
@@ -295,6 +261,59 @@ public class AvaliacaoFisicaFuncionalidade {
     @Then("o sistema em relação a avaliação fisica informa {string}")
     public void o_sistema_em_relação_a_avaliação_fisica_informa(String mensagemEsperada) {
         assertEquals(mensagemEsperada, mensagemSistema);
+        
+        // BUSCA DO REPOSITÓRIO - valida que o service realmente persistiu a avaliação física
+        if (mensagemEsperada.contains("sucesso") && matriculaAluno != null && avaliacaoAtual != null) {
+            Optional<Aluno> alunoDoRepositorio = contexto.repositorio.obterPorMatricula(matriculaAluno);
+            assertTrue(alunoDoRepositorio.isPresent(), 
+                    "O aluno deveria estar no repositório após salvar avaliação física");
+            
+            Aluno alunoSalvo = alunoDoRepositorio.get();
+            assertNotNull(alunoSalvo.getHistoricoDeAvaliacoes(), 
+                    "O histórico de avaliações não pode ser nulo");
+            assertFalse(alunoSalvo.getHistoricoDeAvaliacoes().isEmpty(), 
+                    "A avaliação física deveria ter sido adicionada ao histórico do aluno no repositório");
+            
+            // VALIDA QUE OS DADOS DA AVALIAÇÃO FORAM SALVOS CORRETAMENTE
+            AvaliacaoFisica avaliacaoSalva = alunoSalvo.getHistoricoDeAvaliacoes()
+                    .get(alunoSalvo.getHistoricoDeAvaliacoes().size() - 1); // Última avaliação adicionada
+            
+            // Valida todos os atributos críticos da avaliação física
+            assertEquals(avaliacaoAtual.getMassaGordaPercentual(), avaliacaoSalva.getMassaGordaPercentual(), 0.01,
+                    "Porcentual de massa gorda deveria ter sido salvo corretamente");
+            assertEquals(avaliacaoAtual.getMassaGordaKg(), avaliacaoSalva.getMassaGordaKg(), 0.01,
+                    "Massa gorda em kg deveria ter sido salva corretamente");
+            assertEquals(avaliacaoAtual.getMassaMagraKg(), avaliacaoSalva.getMassaMagraKg(), 0.01,
+                    "Massa magra em kg deveria ter sido salva corretamente");
+            assertEquals(avaliacaoAtual.getMassaMuscularEsqueleticaKg(), avaliacaoSalva.getMassaMuscularEsqueleticaKg(), 0.01,
+                    "Massa muscular esquelética deveria ter sido salva corretamente");
+            assertEquals(avaliacaoAtual.getGorduraVisceralNivel(), avaliacaoSalva.getGorduraVisceralNivel(),
+                    "Nível de gordura visceral deveria ter sido salvo corretamente");
+            assertEquals(avaliacaoAtual.getTaxaMetabolicaBasalKcal(), avaliacaoSalva.getTaxaMetabolicaBasalKcal(),
+                    "Taxa metabólica basal deveria ter sido salva corretamente");
+            assertEquals(avaliacaoAtual.getMassaOsseaKg(), avaliacaoSalva.getMassaOsseaKg(), 0.01,
+                    "Massa óssea deveria ter sido salva corretamente");
+            assertEquals(avaliacaoAtual.getIndiceDeMassaCorporal(), avaliacaoSalva.getIndiceDeMassaCorporal(), 0.01,
+                    "Índice de massa corporal deveria ter sido salvo corretamente");
+            assertEquals(avaliacaoAtual.getBracoRelaxadoCm(), avaliacaoSalva.getBracoRelaxadoCm(), 0.01,
+                    "Tamanho do braço relaxado deveria ter sido salvo corretamente");
+            assertEquals(avaliacaoAtual.getBracoContraidoCm(), avaliacaoSalva.getBracoContraidoCm(), 0.01,
+                    "Tamanho do braço contraído deveria ter sido salvo corretamente");
+            assertEquals(avaliacaoAtual.getAntebracoCm(), avaliacaoSalva.getAntebracoCm(), 0.01,
+                    "Tamanho do antebraço deveria ter sido salvo corretamente");
+            assertEquals(avaliacaoAtual.getToraxPeitoralCm(), avaliacaoSalva.getToraxPeitoralCm(), 0.01,
+                    "Tamanho do tórax peitoral deveria ter sido salvo corretamente");
+            assertEquals(avaliacaoAtual.getCinturaCm(), avaliacaoSalva.getCinturaCm(), 0.01,
+                    "Tamanho da cintura deveria ter sido salvo corretamente");
+            assertEquals(avaliacaoAtual.getAbdomenCm(), avaliacaoSalva.getAbdomenCm(), 0.01,
+                    "Tamanho do abdômen deveria ter sido salvo corretamente");
+            assertEquals(avaliacaoAtual.getQuadrilCm(), avaliacaoSalva.getQuadrilCm(), 0.01,
+                    "Tamanho do quadril deveria ter sido salvo corretamente");
+            assertEquals(avaliacaoAtual.getCoxaCm(), avaliacaoSalva.getCoxaCm(), 0.01,
+                    "Tamanho da coxa deveria ter sido salvo corretamente");
+            assertEquals(avaliacaoAtual.getPanturrilhaCm(), avaliacaoSalva.getPanturrilhaCm(), 0.01,
+                    "Tamanho da panturrilha deveria ter sido salvo corretamente");
+        }
     }
 
     @Then("o sistema em relação a evolução física informa {string}")

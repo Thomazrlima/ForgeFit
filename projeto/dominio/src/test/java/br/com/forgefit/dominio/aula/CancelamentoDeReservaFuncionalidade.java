@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 import br.com.forgefit.dominio.AcademiaFuncionalidade;
 import br.com.forgefit.dominio.aluno.Aluno;
@@ -12,6 +13,7 @@ import br.com.forgefit.dominio.aluno.Cpf;
 import br.com.forgefit.dominio.aluno.Matricula;
 import br.com.forgefit.dominio.aula.enums.Espaco;
 import br.com.forgefit.dominio.aula.enums.Modalidade;
+import br.com.forgefit.dominio.aula.enums.StatusReserva;
 import br.com.forgefit.dominio.professor.ProfessorId;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -25,7 +27,6 @@ public class CancelamentoDeReservaFuncionalidade {
     
     private final AcademiaFuncionalidade contexto;
     
-    private Cpf cpfAluno;
     private Matricula matriculaAluno;
     private Aula aulaCriada;
     private LocalDate dataCancelamento;
@@ -38,11 +39,13 @@ public class CancelamentoDeReservaFuncionalidade {
 
     // ========== CENÁRIO 1: Cancelamento com reembolso total ==========
 
-    @Given("existe uma reserva confirmada para o dia {string} às {string} com duração de {string}")
-    public void existe_uma_reserva_confirmada_para_o_dia(String dataStr, String horario, String duracao) {
-        cpfAluno = new Cpf("12345678900");
-        Aluno aluno = new Aluno(cpfAluno, "Aluno Teste", LocalDate.of(1990, 1, 1));
-        matriculaAluno = aluno.getMatricula();
+    @Given("existe uma reserva confirmada para o aluno com matrícula {string} no dia {string} às {string} com duração de {string}")
+    public void existe_uma_reserva_confirmada_para_o_aluno_com_matricula_no_dia(String matriculaStr, String dataStr, String horario, String duracao) {
+        matriculaAluno = new Matricula(matriculaStr);
+        
+        // Cria CPF baseado na matrícula (apenas para testes)
+        Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", "").substring(0, 11));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(aluno);
 
         // Parse da data e hora
@@ -76,25 +79,9 @@ public class CancelamentoDeReservaFuncionalidade {
         LocalDateTime momentoCancelamento = dataCancelamento.atStartOfDay();
         
         try {
-            // Obtém o crédito de reembolso que será calculado pelo ReembolsoService
-            double credito = contexto.reembolsoService.calcularCreditoDeReembolso(
-                aulaCriada.getId(), 
-                aulaCriada, 
-                momentoCancelamento
-            );
+            // Cancela a reserva e obtém a mensagem diretamente do service
+            mensagemResposta = contexto.reservaService.cancelarReserva(matriculaAluno, aulaCriada.getId(), momentoCancelamento);
             
-            // Cancela a reserva
-            contexto.reservaService.cancelarReserva(matriculaAluno, aulaCriada.getId(), momentoCancelamento);
-            
-            // Define a mensagem baseada no valor do crédito
-            double valorBase = 20.0; // Mesmo valor do ReembolsoService
-            if (credito >= valorBase * 0.99) { // 100% (com margem para float)
-                mensagemResposta = "cancelamento aprovado, reembolso integral em processamento";
-            } else if (credito >= valorBase * 0.49) { // 50% (com margem para float)
-                mensagemResposta = "cancelamento aprovado, reembolso parcial em processamento";
-            } else {
-                mensagemResposta = "cancelamento realizado sem direito a reembolso";
-            }
         } catch (IllegalArgumentException e) {
             contexto.excecao = e;
             mensagemResposta = "nenhuma reserva encontrada para cancelamento";
@@ -108,6 +95,20 @@ public class CancelamentoDeReservaFuncionalidade {
     public void o_sistema_informa(String mensagemEsperada) {
         assertNotNull(mensagemResposta);
         assertEquals(mensagemEsperada, mensagemResposta);
+        
+        // Valida que a reserva foi realmente cancelada no repositório
+        if (!mensagemEsperada.equals("nenhuma reserva encontrada para cancelamento")) {
+            // Busca a aula do repositório para validar persistência
+            Optional<Aula> aulaDoRepositorio = contexto.repositorio.obterPorId(aulaCriada.getId());
+            assertTrue(aulaDoRepositorio.isPresent(), "A aula deveria estar persistida no repositório");
+            
+            Aula aulaSalva = aulaDoRepositorio.get();
+            Optional<Reserva> reservaSalva = aulaSalva.obterReserva(matriculaAluno);
+            
+            assertTrue(reservaSalva.isPresent(), "A reserva deveria existir no repositório");
+            assertEquals(StatusReserva.CANCELADA_PELO_ALUNO, reservaSalva.get().getStatus(),
+                    "O status da reserva deveria ser CANCELADA_PELO_ALUNO no repositório");
+        }
     }
 
     // ========== CENÁRIO 7: Cancelamento duplicado ==========
@@ -133,11 +134,13 @@ public class CancelamentoDeReservaFuncionalidade {
 
     // ========== CENÁRIO 9: Cancelar reserva inexistente ==========
 
-    @Given("não existe reserva confirmada para o aluno na data {string} às {string}")
-    public void nao_existe_reserva_confirmada_para_o_aluno_na_data(String dataStr, String horario) {
-        cpfAluno = new Cpf("12345678900");
-        Aluno aluno = new Aluno(cpfAluno, "Aluno Sem Reserva", LocalDate.of(1990, 1, 1));
-        matriculaAluno = aluno.getMatricula();
+    @Given("não existe reserva confirmada para o aluno com matrícula {string} na data {string} às {string}")
+    public void nao_existe_reserva_confirmada_para_o_aluno_com_matricula_na_data(String matriculaStr, String dataStr, String horario) {
+        matriculaAluno = new Matricula(matriculaStr);
+        
+        // Cria CPF baseado na matrícula (apenas para testes)
+        Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", "").substring(0, 11));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Sem Reserva", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(aluno);
 
         // Parse da data e hora

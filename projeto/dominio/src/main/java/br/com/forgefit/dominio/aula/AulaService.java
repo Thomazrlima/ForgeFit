@@ -9,6 +9,7 @@ import br.com.forgefit.dominio.professor.ProfessorId;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -46,6 +47,29 @@ public class AulaService {
         
         // Verifica conflito apenas para o horário base da recorrência
         verificarConflitoHorario(espaco, professorId, inicio, fim, null);
+        
+        // Verifica conflitos em todas as ocorrências futuras
+        LocalDate dataAtual = inicio.toLocalDate();
+        LocalTime horaInicio = inicio.toLocalTime();
+        LocalTime horaFim = fim.toLocalTime();
+        
+        while (dataAtual.isBefore(dataFimRecorrencia) || dataAtual.isEqual(dataFimRecorrencia)) {
+            dataAtual = dataAtual.plusDays(1);
+            
+            // Verifica se é um dia da semana da recorrência
+            DiaDaSemana diaAtual = DiaDaSemana.fromDayOfWeek(dataAtual.getDayOfWeek());
+            if (diasDaSemana.contains(diaAtual) && dataAtual.isAfter(inicio.toLocalDate())) {
+                LocalDateTime inicioOcorrencia = LocalDateTime.of(dataAtual, horaInicio);
+                LocalDateTime fimOcorrencia = LocalDateTime.of(dataAtual, horaFim);
+                
+                // Verifica conflito para esta ocorrência
+                try {
+                    verificarConflitoHorario(espaco, professorId, inicioOcorrencia, fimOcorrencia, null);
+                } catch (IllegalStateException e) {
+                    throw new IllegalStateException("Conflito em ocorrência futura");
+                }
+            }
+        }
         
         AulaId id = new AulaId(aulaIdCounter.getAndIncrement());
         Aula aula = new Aula(id, professorId, modalidade, espaco, capacidade, inicio, fim, recorrencia);
@@ -142,6 +166,68 @@ public class AulaService {
             
         if (conflitoProfessor) {
             throw new IllegalStateException("Conflito de horário: O professor já está alocado em outra aula.");
+        }
+    }
+    
+    // Métodos com retorno de mensagem para facilitar testes BDD
+    
+    public String criarAulaUnicaComMensagem(ProfessorId professorId, Modalidade modalidade, Espaco espaco, 
+                                            int capacidade, LocalDateTime inicio, LocalDateTime fim) {
+        try {
+            criarAulaUnica(professorId, modalidade, espaco, capacidade, inicio, fim);
+            return "A aula foi criada com sucesso!";
+        } catch (IllegalStateException e) {
+            return "Conflito de horário";
+        }
+    }
+    
+    public String criarAulaRecorrenteComMensagem(ProfessorId professorId, Modalidade modalidade, Espaco espaco, 
+                                                 int capacidade, LocalDateTime inicio, LocalDateTime fim,
+                                                 TipoRecorrencia tipoRecorrencia, List<DiaDaSemana> diasDaSemana, 
+                                                 LocalDate dataFimRecorrencia) {
+        try {
+            criarAulaRecorrente(professorId, modalidade, espaco, capacidade, inicio, fim, 
+                               tipoRecorrencia, diasDaSemana, dataFimRecorrencia);
+            return "A aula recorrente foi criada com sucesso!";
+        } catch (IllegalStateException e) {
+            return "Conflito em ocorrência futura";
+        }
+    }
+    
+    public String alterarHorarioPrincipalComMensagem(AulaId aulaId, LocalDateTime novoInicio, LocalDateTime novoFim) {
+        try {
+            alterarHorarioPrincipal(aulaId, novoInicio, novoFim);
+            return "Horário principal alterado com sucesso";
+        } catch (IllegalStateException e) {
+            return "Conflito de horário";
+        }
+    }
+    
+    public String reagendarOcorrenciaUnicaComMensagem(AulaId aulaId, LocalDate dataOriginal, 
+                                                      LocalDateTime novoInicio, LocalDateTime novoFim) {
+        try {
+            reagendarOcorrenciaUnica(aulaId, dataOriginal, novoInicio, novoFim);
+            return "Ocorrência reagendada com sucesso";
+        } catch (IllegalStateException e) {
+            return "Conflito de horário";
+        }
+    }
+    
+    public String cancelarOcorrenciaUnicaComMensagem(AulaId aulaId, LocalDate dataDaOcorrencia) {
+        try {
+            cancelarOcorrenciaUnica(aulaId, dataDaOcorrencia);
+            return "Ocorrência cancelada com sucesso";
+        } catch (Exception e) {
+            return "Erro ao cancelar ocorrência";
+        }
+    }
+    
+    public String cancelarAulaDefinitivamenteComMensagem(AulaId aulaId) {
+        try {
+            cancelarAulaDefinitivamente(aulaId);
+            return "Aula cancelada com sucesso";
+        } catch (Exception e) {
+            return "Erro ao cancelar aula";
         }
     }
 

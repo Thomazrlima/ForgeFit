@@ -38,6 +38,14 @@ public class ReservaService {
         return null; 
     }
 
+    public String tentarReservarVaga(Matricula alunoMatricula, AulaId aulaId) {
+        Reserva reserva = reservarVaga(alunoMatricula, aulaId);
+        if (reserva != null) {
+            return "Reserva confirmada.";
+        }
+        return "Vaga indisponível. Aluno adicionado à lista de espera.";
+    }
+
     private void entrarNaListaDeEspera(Matricula alunoMatricula, Aula aula) {
         PosicaoListaDeEspera posicao = new PosicaoListaDeEspera(alunoMatricula, LocalDateTime.now());
         aula.adicionarNaListaDeEspera(posicao);
@@ -48,7 +56,7 @@ public class ReservaService {
         cancelarReserva(alunoMatricula, aulaId, LocalDateTime.now());
     }
 
-    public void cancelarReserva(Matricula alunoMatricula, AulaId aulaId, LocalDateTime momentoCancelamento) {
+    public String cancelarReserva(Matricula alunoMatricula, AulaId aulaId, LocalDateTime momentoCancelamento) {
         notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         notNull(aulaId, "O id da aula não pode ser nulo");
         notNull(momentoCancelamento, "O momento do cancelamento não pode ser nulo");
@@ -63,6 +71,9 @@ public class ReservaService {
         aulaRepositorio.salvar(aula);
 
         promoverPrimeiroDaListaSeHouver(aula);
+        
+        // Retorna mensagem baseada no valor do crédito calculado pelo ReembolsoService
+        return reembolsoService.obterMensagemDeReembolso(credito);
     }
 
     private void promoverPrimeiroDaListaSeHouver(Aula aula) {

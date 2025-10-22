@@ -110,6 +110,26 @@ public class FrequenciaService {
     }
 
     /**
+     * Verifica bloqueio e retorna mensagem apropriada.
+     * Retorna null se o aluno não está bloqueado.
+     */
+    public String verificarBloqueioComMensagem(Matricula alunoMatricula, LocalDate dataAtual) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
+        notNull(dataAtual, "A data atual não pode ser nula");
+
+        if (alunoEstaBloqueado(alunoMatricula, dataAtual)) {
+            // Usa LocalDate.now() para contar faltas recentes, não a data da tentativa de reserva
+            long faltasRecentes = contarFaltasRecentes(alunoMatricula, LocalDate.now(), DIAS_PERIODO_CONTAGEM_FALTAS);
+            if (faltasRecentes >= LIMITE_FALTAS_PARA_BLOQUEIO) {
+                return "Aluno bloqueado por excesso de faltas.";
+            } else {
+                return "Aluno bloqueado.";
+            }
+        }
+        return null;
+    }
+
+    /**
      * Desbloqueia um aluno.
      */
     public void desbloquearAluno(Matricula alunoMatricula) {

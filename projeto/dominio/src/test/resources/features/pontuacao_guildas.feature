@@ -1,13 +1,13 @@
 Feature: Pontuação e Torneios de Guilda
 
   Scenario: Aluno realiza um check-in de treino pela primeira vez no dia
-    Given o aluno com CPF "123.456.789-00" com um plano de treino ativo é membro da guilda "Confra dos Amigos"
+    Given o aluno com matrícula "123.456.789-00" com um plano de treino ativo é membro da guilda "Confra dos Amigos"
     When o aluno realiza o check-in do treino "A" na guilda "Confra dos Amigos" com a mensagem "Treino de peito concluído!"
     Then o sistema registra um check-in para o treino "A" na data "15/10/2025" com a mensagem "Treino de peito concluído!"
     And a pontuação do aluno e da guilda "Confra dos Amigos" é incrementada em "10" pontos
 
   Scenario: Aluno tenta realizar o mesmo check-in de treino novamente no mesmo dia
-    Given o aluno com CPF "123.456.789-00" já realizou o check-in do seu treino "A" na guilda "Confra dos Amigos" hoje
+    Given o aluno com matrícula "123.456.789-00" já realizou o check-in do seu treino "A" na guilda "Confra dos Amigos" hoje
     When o aluno tenta realizar o check-in do mesmo treino "A" na guilda "Confra dos Amigos" novamente
     Then o sistema informa que: "o check-in para este treino já foi realizado hoje"
     And a pontuação do aluno e da guilda não é alterada

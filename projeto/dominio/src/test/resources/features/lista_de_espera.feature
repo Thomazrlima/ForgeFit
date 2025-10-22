@@ -21,7 +21,7 @@ Feature: Reserva de Aula com Lista de Espera e Promoção Automática
     And a capacidade da aula é decrementada em "1"
 
   Scenario: Impedir dupla reserva do mesmo aluno
-    Given que o aluno com CPF "111.222.333-44" já possua uma reserva ativa para a aula marcada no dia "18/10/2025" às "09h00"
+    Given que o aluno com matrícula "111.222.333-44" já possua uma reserva ativa para a aula marcada no dia "18/10/2025" às "09h00"
     When o aluno tentar reservar novamente essa aula
     Then o sistema bloqueia a nova reserva
     And o aluno é informado com a mensagem "Você já possui uma vaga para essa aula."
@@ -34,7 +34,7 @@ Feature: Reserva de Aula com Lista de Espera e Promoção Automática
     And o aluno é notificado com a mensagem "Você está na posição 1 na lista de espera."
 
   Scenario: Não permitir fila para quem já está reservado ou já está na fila
-    Given que o aluno com CPF "222.333.444-55" já esteja reservado ou na lista de espera da aula marcada para o dia "20/10/2025" às "18h30"
+    Given que o aluno com matrícula "222.333.444-55" já esteja reservado ou na lista de espera da aula marcada para o dia "20/10/2025" às "18h30"
     When o aluno tentar entrar novamente na lista de espera
     Then o sistema recusa a inclusão duplicada
     And o aluno é informado do motivo da recusa
@@ -49,7 +49,6 @@ Feature: Reserva de Aula com Lista de Espera e Promoção Automática
     Given que haja lista de espera para a aula de "Spinning" marcada para o dia "22/10/2025" às "19h00" e uma vaga seja liberada
     When o prazo de "30" minutos expirar sem resposta
     Then o sistema convida automaticamente o próximo elegível da fila
-  
   # Regra de negócio: Reativação de promoção após cancelamento
 
   Scenario: Cancelamento reativa promoção para a lista de espera

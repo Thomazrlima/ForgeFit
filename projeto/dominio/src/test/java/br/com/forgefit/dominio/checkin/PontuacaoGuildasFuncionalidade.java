@@ -29,13 +29,12 @@ import io.cucumber.java.en.And;
 
 /**
  * Step definitions para pontuação de guildas e torneios.
- * Recebe o contexto compartilhado via injeção de dependência do Cucumber PicoContainer.
+ * Usa matrícula para identificação de alunos e delega responsabilidades para services.
  */
 public class PontuacaoGuildasFuncionalidade {
     
     private final AcademiaFuncionalidade contexto;
     
-    private Cpf cpfAluno;
     private Matricula matriculaAluno;
     private Guilda guilda;
     private PlanoDeTreino planoAtivo;
@@ -49,24 +48,21 @@ public class PontuacaoGuildasFuncionalidade {
         this.contexto = contexto;
     }
 
-    @Given("o aluno com CPF {string} com um plano de treino ativo é membro da guilda {string}")
-    public void o_aluno_com_cpf_com_um_plano_de_treino_ativo_é_membro_da_guilda(String cpfString, String nomeGuilda) {
-        String cpfNumeros = cpfString.replaceAll("[^0-9]", "");
-        cpfAluno = new Cpf(cpfNumeros);
-        var aluno = new Aluno(cpfAluno, "João da Silva", LocalDate.of(1990, 1, 1));
-        matriculaAluno = aluno.getMatricula();
+    @Given("o aluno com matrícula {string} com um plano de treino ativo é membro da guilda {string}")
+    public void o_aluno_com_matricula_com_um_plano_de_treino_ativo_é_membro_da_guilda(String matriculaStr, String nomeGuilda) {
+        matriculaAluno = new Matricula(matriculaStr);
+        Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "João da Silva", LocalDate.of(1990, 1, 1));
         
         // Cria plano de treino ativo
-        var planoId = new PlanoDeTreinoId(1);
-        var treinos = new ArrayList<TreinoDiario>();
+        PlanoDeTreinoId planoId = new PlanoDeTreinoId(1);
+        ArrayList<TreinoDiario> treinos = new ArrayList<>();
         planoAtivo = new PlanoDeTreino(planoId, new ProfessorId(1), LocalDate.now(), LocalDate.now().plusMonths(3), treinos);
-        contexto.repositorio.salvar(planoAtivo); // Salva o plano primeiro
+        contexto.repositorio.salvar(planoAtivo);
         aluno.setPlanoAtivoId(planoId);
         
         // Cria a guilda e associa o aluno à guilda
         guilda = contexto.guildaService.criarGuilda(nomeGuilda, "Descrição da guilda", null, matriculaAluno);
-        
-        // Define o guildaId do aluno
         aluno.setGuildaId(guilda.getId());
         
         contexto.repositorio.salvar(aluno);
@@ -74,7 +70,7 @@ public class PontuacaoGuildasFuncionalidade {
 
     @When("o aluno realiza o check-in do treino {string} na guilda {string} com a mensagem {string}")
     public void o_aluno_realiza_o_check_in_do_treino_na_guilda_com_a_mensagem(String letra, String nomeGuilda, String mensagem) {
-        var aluno = contexto.repositorio.obterAlunoPorCpf(cpfAluno).get();
+        Aluno aluno = contexto.repositorio.obterPorMatricula(matriculaAluno).get();
         pontuacaoAlunoAntes = aluno.getPontuacaoTotal();
         pontuacaoGuildaAntes = guilda.getPontuacaoTotal();
         
@@ -98,37 +94,64 @@ public class PontuacaoGuildasFuncionalidade {
     @Then("o sistema registra um check-in para o treino {string} na data {string} com a mensagem {string}")
     public void o_sistema_registra_um_check_in_para_o_treino_na_data_com_a_mensagem(String letra, String dataString, String mensagem) {
         assertNotNull(checkinCriado);
-        assertEquals(LetraDoTreino.valueOf(letra), checkinCriado.getContexto().getLetraDoTreino());
-        assertEquals(mensagem, checkinCriado.getMensagem());
-        assertEquals(LocalDate.now(), checkinCriado.getDataDoCheckin());
-    }
-
-    @And("a pontuação do aluno e da guilda {string} é incrementada em {int} pontos")
-    public void a_pontuação_do_aluno_e_da_guilda_é_incrementada_em_pontos(String nomeGuilda, int pontos) {
-        var aluno = contexto.repositorio.obterAlunoPorCpf(cpfAluno).get();
         
-        assertEquals(pontuacaoAlunoAntes + pontos, aluno.getPontuacaoTotal());
-        assertEquals(pontuacaoGuildaAntes + pontos, guilda.getPontuacaoTotal());
+        // Valida persistência no repositório
+        var checkinsDoAluno = contexto.repositorio.buscarPorAluno(matriculaAluno);
+        assertTrue(!checkinsDoAluno.isEmpty(), "Nenhum check-in foi persistido no repositório");
+        
+        // Busca o check-in específico (mais recente)
+        Checkin checkinPersistido = checkinsDoAluno.stream()
+            .filter(c -> c.getId().equals(checkinCriado.getId()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("Check-in criado não foi persistido no repositório"));
+        
+        // Valida TODOS os atributos do check-in persistido
+        assertEquals(matriculaAluno, checkinPersistido.getAlunoMatricula());
+        assertEquals(guilda.getId(), checkinPersistido.getGuildaId());
+        assertEquals(LetraDoTreino.valueOf(letra), checkinPersistido.getContexto().getLetraDoTreino());
+        assertEquals(mensagem, checkinPersistido.getMensagem());
+        assertEquals(LocalDate.now(), checkinPersistido.getDataDoCheckin());
+        assertEquals(10, checkinPersistido.getPontuacaoGerada());
+        assertEquals(planoAtivo.getId(), checkinPersistido.getContexto().getPlanoDeTreinoId());
     }
 
-    @Given("o aluno com CPF {string} já realizou o check-in do seu treino {string} na guilda {string} hoje")
-    public void o_aluno_com_cpf_já_realizou_o_check_in_do_seu_treino_na_guilda_hoje(String cpfString, String letra, String nomeGuilda) {
-        String cpfNumeros = cpfString.replaceAll("[^0-9]", "");
-        cpfAluno = new Cpf(cpfNumeros);
-        var aluno = new Aluno(cpfAluno, "Aluno Teste", LocalDate.of(1990, 1, 1));
-        matriculaAluno = aluno.getMatricula();
+    @And("a pontuação do aluno e da guilda {string} é incrementada em {string} pontos")
+    public void a_pontuação_do_aluno_e_da_guilda_é_incrementada_em_pontos(String nomeGuilda, String pontosStr) {
+        int pontos = Integer.parseInt(pontosStr);
+        
+        // Valida pontuação do aluno no repositório
+        Aluno aluno = contexto.repositorio.obterPorMatricula(matriculaAluno).get();
+        assertEquals(pontuacaoAlunoAntes + pontos, aluno.getPontuacaoTotal());
+        
+        // Valida pontuação da guilda no repositório
+        var guildaPersistida = contexto.guildaService.obter(guilda.getId());
+        assertEquals(pontuacaoGuildaAntes + pontos, guildaPersistida.getPontuacaoTotal());
+        
+        // Valida que o check-in foi persistido com a pontuação correta
+        var checkinsDoAluno = contexto.repositorio.buscarPorAluno(matriculaAluno);
+        Checkin checkinPersistido = checkinsDoAluno.stream()
+            .filter(c -> c.getId().equals(checkinCriado.getId()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("Check-in não foi persistido"));
+        
+        assertEquals(pontos, checkinPersistido.getPontuacaoGerada());
+    }
+
+    @Given("o aluno com matrícula {string} já realizou o check-in do seu treino {string} na guilda {string} hoje")
+    public void o_aluno_com_matricula_já_realizou_o_check_in_do_seu_treino_na_guilda_hoje(String matriculaStr, String letra, String nomeGuilda) {
+        matriculaAluno = new Matricula(matriculaStr);
+        Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1));
         
         // Cria plano de treino ativo
-        var planoId = new PlanoDeTreinoId(1);
-        var treinos = new ArrayList<TreinoDiario>();
+        PlanoDeTreinoId planoId = new PlanoDeTreinoId(1);
+        ArrayList<TreinoDiario> treinos = new ArrayList<>();
         planoAtivo = new PlanoDeTreino(planoId, new ProfessorId(1), LocalDate.now(), LocalDate.now().plusMonths(3), treinos);
-        contexto.repositorio.salvar(planoAtivo); // Salva o plano primeiro
+        contexto.repositorio.salvar(planoAtivo);
         aluno.setPlanoAtivoId(planoId);
         
         // Cria a guilda
         guilda = contexto.guildaService.criarGuilda(nomeGuilda, "Descrição", null, matriculaAluno);
-        
-        // Define o guildaId do aluno
         aluno.setGuildaId(guilda.getId());
         
         contexto.repositorio.salvar(aluno);
@@ -143,7 +166,7 @@ public class PontuacaoGuildasFuncionalidade {
 
     @When("o aluno tenta realizar o check-in do mesmo treino {string} na guilda {string} novamente")
     public void o_aluno_tenta_realizar_o_check_in_do_mesmo_treino_na_guilda_novamente(String letra, String nomeGuilda) {
-        var aluno = contexto.repositorio.obterAlunoPorCpf(cpfAluno).get();
+        Aluno aluno = contexto.repositorio.obterPorMatricula(matriculaAluno).get();
         pontuacaoAlunoAntes = aluno.getPontuacaoTotal();
         pontuacaoGuildaAntes = guilda.getPontuacaoTotal();
         
@@ -158,7 +181,7 @@ public class PontuacaoGuildasFuncionalidade {
 
     @And("a pontuação do aluno e da guilda não é alterada")
     public void a_pontuação_do_aluno_e_da_guilda_não_é_alterada() {
-        var aluno = contexto.repositorio.obterAlunoPorCpf(cpfAluno).get();
+        Aluno aluno = contexto.repositorio.obterPorMatricula(matriculaAluno).get();
         guilda = contexto.guildaService.obter(guilda.getId());
         
         assertEquals(pontuacaoAlunoAntes, aluno.getPontuacaoTotal());
@@ -185,7 +208,15 @@ public class PontuacaoGuildasFuncionalidade {
     @Then("o torneio é criado com o status {string}")
     public void o_torneio_é_criado_com_o_status(String status) {
         assertNotNull(torneio);
-        assertEquals(StatusTorneio.valueOf(status), torneio.getStatus());
+        
+        // Valida persistência no repositório
+        var torneioPersistido = contexto.torneioService.obter(torneio.getId());
+        
+        // Valida atributos do torneio persistido
+        assertEquals(StatusTorneio.valueOf(status), torneioPersistido.getStatus());
+        assertEquals("Torneio Teste", torneioPersistido.getNome());
+        assertNotNull(torneioPersistido.getDataInicio());
+        assertNotNull(torneioPersistido.getDataFim());
     }
 
     @When("o gerente tenta criar um novo torneio com data de início {string} e data de fim {string}")
@@ -223,8 +254,11 @@ public class PontuacaoGuildasFuncionalidade {
 
     @Then("o sistema atribui o prêmio à posição correspondente do torneio")
     public void o_sistema_atribui_o_prêmio_à_posição_correspondente_do_torneio() {
-        assertNotNull(torneio.getPremioPrimeiroLugar());
-        assertEquals("1kg de Whey Protein", torneio.getPremioPrimeiroLugar().getNome());
+        // Valida persistência no repositório
+        var torneioPersistido = contexto.torneioService.obter(torneio.getId());
+        
+        assertNotNull(torneioPersistido.getPremioPrimeiroLugar());
+        assertEquals("1kg de Whey Protein", torneioPersistido.getPremioPrimeiroLugar().getNome());
     }
 
     @Given("o torneio {string} está {string}")
@@ -249,7 +283,7 @@ public class PontuacaoGuildasFuncionalidade {
         }
     }
 
-    @Given("o torneio {string} está com status {string}, data de início {string} e data de fim {string}")
+    @Given("o torneio {string} está com status {string} data de início {string} e data de fim {string}")
     public void o_torneio_está_com_status_data_de_início_e_data_de_fim(String nomeTorneio, String status, String dataInicioStr, String dataFimStr) {
         LocalDate dataInicio = LocalDate.parse(dataInicioStr, formatter);
         LocalDate dataFim = LocalDate.parse(dataFimStr, formatter);
@@ -259,22 +293,22 @@ public class PontuacaoGuildasFuncionalidade {
         contexto.torneioService.salvar(torneio);
     }
 
-    @And("apenas a guilda {string} participou do torneio com {int} check-ins")
-    public void apenas_a_guilda_participou_do_torneio_com_check_ins(String nomeGuilda, int quantidadeCheckins) {
-        String cpfNumeros = "12345678900";
-        cpfAluno = new Cpf(cpfNumeros);
-        var aluno = new Aluno(cpfAluno, "Aluno Teste", LocalDate.of(1990, 1, 1));
-        matriculaAluno = aluno.getMatricula();
+    @And("apenas a guilda {string} participou do torneio com {string} check-ins")
+    public void apenas_a_guilda_participou_do_torneio_com_check_ins(String nomeGuilda, String quantidadeStr) {
+        int quantidadeCheckins = Integer.parseInt(quantidadeStr);
         
-        var planoId = new PlanoDeTreinoId(1);
-        var treinos = new ArrayList<TreinoDiario>();
+        String matriculaStr = "100.000.000-00";
+        matriculaAluno = new Matricula(matriculaStr);
+        Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        
+        PlanoDeTreinoId planoId = new PlanoDeTreinoId(1);
+        ArrayList<TreinoDiario> treinos = new ArrayList<>();
         planoAtivo = new PlanoDeTreino(planoId, new ProfessorId(1), LocalDate.now(), LocalDate.now().plusMonths(3), treinos);
-        contexto.repositorio.salvar(planoAtivo); // Salva o plano primeiro
+        contexto.repositorio.salvar(planoAtivo);
         aluno.setPlanoAtivoId(planoId);
         
         guilda = contexto.guildaService.criarGuilda(nomeGuilda, "Descrição", null, matriculaAluno);
-        
-        // Define o guildaId do aluno
         aluno.setGuildaId(guilda.getId());
         
         contexto.repositorio.salvar(aluno);
@@ -297,18 +331,26 @@ public class PontuacaoGuildasFuncionalidade {
 
     @Then("o status do torneio é alterado para {string}")
     public void o_status_do_torneio_é_alterado_para(String status) {
-        assertEquals(StatusTorneio.valueOf(status), torneio.getStatus());
+        // Valida persistência no repositório
+        var torneioPersistido = contexto.torneioService.obter(torneio.getId());
+        
+        assertEquals(StatusTorneio.valueOf(status), torneioPersistido.getStatus());
     }
 
-    @And("a guilda {string} é declarada vencedora do torneio com {int} pontos")
-    public void a_guilda_é_declarada_vencedora_do_torneio_com_pontos(String nomeGuilda, int pontos) {
-        assertNotNull(torneio.getRankingFinal());
-        assertEquals(1, torneio.getRankingFinal().size());
-        assertEquals(1, torneio.getRankingFinal().get(0).getPosicao());
-        assertEquals(pontos, torneio.getRankingFinal().get(0).getPontuacaoNoTorneio());
+    @And("a guilda {string} é declarada vencedora do torneio com {string} pontos")
+    public void a_guilda_é_declarada_vencedora_do_torneio_com_pontos(String nomeGuilda, String pontosStr) {
+        int pontos = Integer.parseInt(pontosStr);
+        
+        // Valida persistência no repositório
+        var torneioPersistido = contexto.torneioService.obter(torneio.getId());
+        
+        assertNotNull(torneioPersistido.getRankingFinal());
+        assertEquals(1, torneioPersistido.getRankingFinal().size());
+        assertEquals(1, torneioPersistido.getRankingFinal().get(0).getPosicao());
+        assertEquals(pontos, torneioPersistido.getRankingFinal().get(0).getPontuacaoNoTorneio());
     }
 
-    @Given("que o torneio {string} está com status {string}, com início em {string} e fim em {string}")
+    @Given("que o torneio {string} está com status {string} com início em {string} e fim em {string}")
     public void que_o_torneio_está_com_status_com_início_em_e_fim_em(String nomeTorneio, String status, String dataInicioStr, String dataFimStr) {
         LocalDate dataInicio = LocalDate.parse(dataInicioStr, formatter);
         LocalDate dataFim = LocalDate.parse(dataFimStr, formatter);
@@ -333,9 +375,12 @@ public class PontuacaoGuildasFuncionalidade {
         }
     }
 
-    @And("o ranking do torneio é registrado como vazio, sem vencedores")
+    @And("o ranking do torneio é registrado como vazio sem vencedores")
     public void o_ranking_do_torneio_é_registrado_como_vazio_sem_vencedores() {
-        assertTrue(torneio.getRankingFinal().isEmpty());
+        // Valida persistência no repositório
+        var torneioPersistido = contexto.torneioService.obter(torneio.getId());
+        
+        assertTrue(torneioPersistido.getRankingFinal().isEmpty());
     }
 }
 

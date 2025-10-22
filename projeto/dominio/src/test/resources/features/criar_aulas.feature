@@ -1,38 +1,36 @@
 Feature: Criação e gerenciamento de aulas
-# Conforme CML: Service AulaService
-# Métodos: criarAulaUnica, criarAulaRecorrente, alterarHorarioPrincipal, 
-# reagendarOcorrenciaUnica, cancelarOcorrenciaUnica, cancelarAulaDefinitivamente
+
 #REGRA 1 - Criar aula única
 
   Scenario: Criar aula única com sucesso
-    Given o professor com CPF "123.456.789-01" está autenticado na plataforma
+    Given o professorId "1" está autenticado na plataforma
     When o professor cria uma aula única de "BOXE" na "AREA_DE_LUTAS" com capacidade "20" para o dia "08/02/2025" às "19:00"
     Then o sistema informa: "A aula foi criada com sucesso!"
 
   Scenario: Criar aula única com conflito de horário
-    Given o professor com CPF "123.456.789-01" está autenticado na plataforma
+    Given o professorId "1" está autenticado na plataforma
     When o professor tenta criar uma aula de "BOXE" na "AREA_DE_LUTAS" para o dia "08/02/2025" às "19:00" já ocupado
     Then o sistema informa conflito de horário e a aula não é criada
 #REGRA 2 - Criar aula recorrente
 
   Scenario: Criar aula recorrente semanal
-    Given o professor com CPF "123.456.789-01" está autenticado na plataforma
+    Given o professorId "1" está autenticado na plataforma
     When o professor cria uma aula recorrente de "BOXE" na "AREA_DE_LUTAS" às quartas-feiras às "19:00" com recorrência "SEMANAL"
     Then o sistema informa: "A aula recorrente foi criada com sucesso!"
 
   Scenario: Criar aula recorrente com conflito em ocorrência futura
-    Given o professor com CPF "123.456.789-01" está autenticado na plataforma
+    Given o professorId "1" está autenticado na plataforma
     When o professor tenta criar uma aula recorrente que conflita com uma aula existente em ocorrência futura
     Then o sistema informa:"Conflito em ocorrência futura" e a aula recorrente não é criada
 #REGRA 3 - Alterar horário principal da aula
 
   Scenario: Alterar horário principal da aula recorrente
-    Given existe uma aula recorrente de "BOXE" criada pelo professor "123.456.789-01"
+    Given existe uma aula recorrente de "BOXE" criada pelo professorId "1"
     When o professor altera o horário principal da aula de "19:00" para "20:00"
     Then o horário principal é alterado com sucesso para todas as ocorrências futuras
 
   Scenario: Alterar horário principal com conflito
-    Given existe uma aula recorrente de "BOXE" criada pelo professor "123.456.789-01"
+    Given existe uma aula recorrente de "BOXE" criada pelo professorId "1"
     When o professor tenta alterar o horário principal para um horário já ocupado
     Then o sistema informa:"Conflito de horário" e a alteração não é realizada
 #REGRA 4 - Reagendar ocorrência única de aula recorrente

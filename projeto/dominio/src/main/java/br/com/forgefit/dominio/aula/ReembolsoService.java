@@ -62,4 +62,22 @@ public class ReembolsoService {
     public boolean temDireitoAReembolso(Aula aula, LocalDateTime momentoCancelamento) {
         return calcularCreditoDeReembolso(aula.getId(), aula, momentoCancelamento) > 0;
     }
+
+    /**
+     * Obtém a mensagem apropriada baseada no valor do crédito calculado
+     * 
+     * @param credito Valor do crédito de reembolso
+     * @return Mensagem descritiva do tipo de reembolso
+     */
+    public String obterMensagemDeReembolso(double credito) {
+        double valorBase = calcularValorBase();
+        
+        if (credito >= valorBase * PERCENTUAL_REEMBOLSO_TOTAL * 0.99) { // 100% com margem
+            return "cancelamento aprovado, reembolso integral em processamento";
+        } else if (credito >= valorBase * PERCENTUAL_REEMBOLSO_PARCIAL * 0.99) { // 50% com margem
+            return "cancelamento aprovado, reembolso parcial em processamento";
+        } else {
+            return "cancelamento realizado sem direito a reembolso";
+        }
+    }
 }

@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import br.com.forgefit.dominio.AcademiaFuncionalidade;
 import br.com.forgefit.dominio.aluno.Aluno;
 import br.com.forgefit.dominio.aluno.Cpf;
+import br.com.forgefit.dominio.aluno.Matricula;
 import br.com.forgefit.dominio.aula.Aula;
 import br.com.forgefit.dominio.aula.AulaId;
 import br.com.forgefit.dominio.aula.enums.Espaco;
@@ -21,7 +22,6 @@ import io.cucumber.java.en.When;
 public class AvaliacaoProfessorFuncionalidade {
 
     private final AcademiaFuncionalidade contexto;
-    private Cpf cpfProfessor;
     private ProfessorId professorId;
     private String mensagemSistema;
     private Notas notas;
@@ -30,22 +30,17 @@ public class AvaliacaoProfessorFuncionalidade {
         this.contexto = contexto;
     }
 
-    @Given("que um aluno teve aula com o professor do CPF {string}")
-    public void que_um_aluno_teve_aula_com_o_professor_do_cpf(String cpfString) {
+    @Given("que um aluno teve aula com o professorId {string}")
+    public void que_um_aluno_teve_aula_com_o_professor_id(String professorIdStr) {
         // Configura o aluno atual para o teste
+        Matricula matriculaAluno = new Matricula("20231001");
         Cpf cpfAluno = new Cpf("12345678900");
-        contexto.alunoAtual = new Aluno(cpfAluno, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        contexto.alunoAtual = new Aluno(matriculaAluno, cpfAluno, "Aluno Teste", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(contexto.alunoAtual);
 
         // Configura o professor para o teste
-        String cpfNumeros = cpfString.replaceAll("[^0-9]", "");
-        cpfProfessor = new Cpf(cpfNumeros);
-        professorId = new ProfessorId(1); // ID do professor para a aula
-        
-        // Valida CPF do professor (usado para validação nos testes)
-        if (cpfProfessor.getNumero().length() != 11) {
-            throw new IllegalArgumentException("CPF do professor deve ter 11 dígitos");
-        }
+        int id = Integer.parseInt(professorIdStr);
+        professorId = new ProfessorId(id);
 
         // Configura uma aula de teste
         AulaId aulaId = new AulaId(1);
@@ -62,35 +57,46 @@ public class AvaliacaoProfessorFuncionalidade {
             Integer.parseInt(atencao)
         );
 
-        try {
-            contexto.avaliacaoService.criarAvaliacao(
-                contexto.alunoAtual.getMatricula(),
-                professorId,
-                contexto.aulaAtual.getId(),
-                LocalDate.now(),
-                notas,
-                null
-            );
-            mensagemSistema = "A avaliação foi registrada com sucesso";
-        } catch (Exception e) {
-            mensagemSistema = e.getMessage();
+        mensagemSistema = contexto.avaliacaoService.criarAvaliacaoComMensagem(
+            contexto.alunoAtual.getMatricula(),
+            professorId,
+            contexto.aulaAtual.getId(),
+            LocalDate.now(),
+            notas,
+            null
+        );
+        
+        // VALIDAÇÃO DE REPOSITÓRIO - confirma que foi persistida com os atributos corretos
+        if (mensagemSistema.equals("A avaliação foi registrada com sucesso")) {
+            var avaliacoes = contexto.repositorio.buscarPorProfessor(professorId);
+            assertEquals(false, avaliacoes.isEmpty(), "A avaliação deveria ter sido persistida");
+            
+            Avaliacao avaliacaoSalva = avaliacoes.get(0);
+            assertEquals(professorId, avaliacaoSalva.getProfessorId(),
+                    "O professorId deveria ter sido salvo corretamente");
+            assertEquals(contexto.alunoAtual.getMatricula(), avaliacaoSalva.getAlunoMatricula(),
+                    "A matrícula do aluno deveria ter sido salva corretamente");
+            assertEquals(notas.getPontualidade(), avaliacaoSalva.getNotas().getPontualidade(),
+                    "A nota de pontualidade deveria ter sido salva corretamente");
+            assertEquals(notas.getDidatica(), avaliacaoSalva.getNotas().getDidatica(),
+                    "A nota de didática deveria ter sido salva corretamente");
+            assertEquals(notas.getAtencao(), avaliacaoSalva.getNotas().getAtencao(),
+                    "A nota de atenção deveria ter sido salva corretamente");
         }
     }
 
     @When("o aluno não preenche todas as métricas obrigatórias")
     public void o_aluno_nao_preenche_todas_as_metricas() {
-        try {
-            contexto.avaliacaoService.criarAvaliacao(
-                contexto.alunoAtual.getMatricula(),
-                professorId,
-                contexto.aulaAtual.getId(),
-                LocalDate.now(),
-                notas,
-                null
-            );
-        } catch (Exception e) {
-            mensagemSistema = "É necessário preencher todas as métricas de avaliação";
-        }
+        notas = new Notas(0, 0, 0); // Métricas não preenchidas
+        
+        mensagemSistema = contexto.avaliacaoService.criarAvaliacaoComMensagem(
+            contexto.alunoAtual.getMatricula(),
+            professorId,
+            contexto.aulaAtual.getId(),
+            LocalDate.now(),
+            notas,
+            null
+        );
     }
 
     @When("o aluno não insere comentário")
@@ -102,27 +108,40 @@ public class AvaliacaoProfessorFuncionalidade {
     public void o_aluno_insere_um_comentario(String comentario) {
         notas = new Notas(5, 5, 5);
 
-        try {
-            contexto.avaliacaoService.criarAvaliacao(
-                contexto.alunoAtual.getMatricula(),
-                professorId,
-                contexto.aulaAtual.getId(),
-                LocalDate.now(),
-                notas,
-                comentario
-            );
-            mensagemSistema = "A avaliação foi registrada com sucesso";
-        } catch (Exception e) {
-            mensagemSistema = e.getMessage();
-        }
+        mensagemSistema = contexto.avaliacaoService.criarAvaliacaoComMensagem(
+            contexto.alunoAtual.getMatricula(),
+            professorId,
+            contexto.aulaAtual.getId(),
+            LocalDate.now(),
+            notas,
+            comentario
+        );
     }
 
     @Then("o comentário {string} é armazenado com sucesso")
     public void o_comentario_e_armazenado_com_sucesso(String comentarioEsperado) {
-        ProfessorId professorId = new ProfessorId(1); // Using fixed ID for test
-        Avaliacao avaliacaoSalva = contexto.repositorio.buscarPorProfessor(professorId).get(0);
-        assertNotNull(avaliacaoSalva);
-        assertEquals(comentarioEsperado, avaliacaoSalva.getComentario());
+        // VALIDAÇÃO DE REPOSITÓRIO - busca avaliações persistidas
+        var avaliacoes = contexto.repositorio.buscarPorProfessor(professorId);
+        assertNotNull(avaliacoes, "A lista de avaliações não pode ser nula");
+        assertEquals(false, avaliacoes.isEmpty(), "Deve existir pelo menos uma avaliação");
+        
+        Avaliacao avaliacaoSalva = avaliacoes.get(0);
+        assertNotNull(avaliacaoSalva, "A avaliação salva não pode ser nula");
+        
+        // VALIDAÇÃO DE ATRIBUTOS - valida todos os atributos críticos
+        assertEquals(comentarioEsperado, avaliacaoSalva.getComentario(),
+                "O comentário deveria ter sido salvo corretamente");
+        assertEquals(professorId, avaliacaoSalva.getProfessorId(),
+                "O professorId deveria ter sido salvo corretamente");
+        assertEquals(contexto.alunoAtual.getMatricula(), avaliacaoSalva.getAlunoMatricula(),
+                "A matrícula do aluno deveria ter sido salva corretamente");
+        assertNotNull(avaliacaoSalva.getNotas(), "As notas deveriam ter sido salvas");
+        assertEquals(5, avaliacaoSalva.getNotas().getPontualidade(),
+                "A nota de pontualidade deveria ser 5");
+        assertEquals(5, avaliacaoSalva.getNotas().getDidatica(),
+                "A nota de didática deveria ser 5");
+        assertEquals(5, avaliacaoSalva.getNotas().getAtencao(),
+                "A nota de atenção deveria ser 5");
     }
 
     @Then("o sistema em relação a avaliação do professor informa {string}")
@@ -134,9 +153,29 @@ public class AvaliacaoProfessorFuncionalidade {
     public void a_avaliacao_e_registrada_apenas_com_as_metricas(String mensagemEsperada) {
         assertEquals(mensagemEsperada, mensagemSistema);
 
-        ProfessorId professorId = new ProfessorId(1); // Using fixed ID for test
-        Avaliacao avaliacaoSalva = contexto.repositorio.buscarPorProfessor(professorId).get(0);
-        assertNotNull(avaliacaoSalva);
-        assertNotNull(avaliacaoSalva.getNotas());
+        // VALIDAÇÃO DE REPOSITÓRIO - busca avaliações persistidas
+        var avaliacoes = contexto.repositorio.buscarPorProfessor(professorId);
+        assertNotNull(avaliacoes, "A lista de avaliações não pode ser nula");
+        assertEquals(false, avaliacoes.isEmpty(), "Deve existir pelo menos uma avaliação");
+        
+        Avaliacao avaliacaoSalva = avaliacoes.get(0);
+        assertNotNull(avaliacaoSalva, "A avaliação salva não pode ser nula");
+        
+        // VALIDAÇÃO DE ATRIBUTOS - valida todos os atributos críticos
+        assertNotNull(avaliacaoSalva.getNotas(), "As notas deveriam ter sido salvas");
+        assertEquals(professorId, avaliacaoSalva.getProfessorId(),
+                "O professorId deveria ter sido salvo corretamente");
+        assertEquals(contexto.alunoAtual.getMatricula(), avaliacaoSalva.getAlunoMatricula(),
+                "A matrícula do aluno deveria ter sido salva corretamente");
+        assertEquals(contexto.aulaAtual.getId(), avaliacaoSalva.getAulaId(),
+                "O ID da aula deveria ter sido salvo corretamente");
+        
+        // Valida as notas individuais salvas
+        assertEquals(notas.getPontualidade(), avaliacaoSalva.getNotas().getPontualidade(),
+                "A nota de pontualidade deveria ter sido salva corretamente");
+        assertEquals(notas.getDidatica(), avaliacaoSalva.getNotas().getDidatica(),
+                "A nota de didática deveria ter sido salva corretamente");
+        assertEquals(notas.getAtencao(), avaliacaoSalva.getNotas().getAtencao(),
+                "A nota de atenção deveria ter sido salva corretamente");
     }
 }

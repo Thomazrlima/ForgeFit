@@ -49,11 +49,40 @@ public class ItemRanking {
     }
 
     public void removerPontos(int pontos) {
-        this.pontuacaoTotal = Math.max(0, this.pontuacaoTotal - pontos);
+        // Remove proporcionalmente dos componentes para manter integridade
+        int pontosARemover = Math.min(pontos, this.pontuacaoTotal);
+        
+        // Remove primeiro de performance, depois guilda, depois frequência
+        if (pontosARemover > 0 && this.pontosPerformance > 0) {
+            int removerPerformance = Math.min(pontosARemover, this.pontosPerformance);
+            this.pontosPerformance -= removerPerformance;
+            pontosARemover -= removerPerformance;
+        }
+        
+        if (pontosARemover > 0 && this.pontosGuilda > 0) {
+            int removerGuilda = Math.min(pontosARemover, this.pontosGuilda);
+            this.pontosGuilda -= removerGuilda;
+            pontosARemover -= removerGuilda;
+        }
+        
+        if (pontosARemover > 0 && this.pontosFrequencia > 0) {
+            int removerFrequencia = Math.min(pontosARemover, this.pontosFrequencia);
+            this.pontosFrequencia -= removerFrequencia;
+            pontosARemover -= removerFrequencia;
+        }
+        
+        recalcularTotal();
     }
 
     public void ajustarPontos(int ajuste) {
-        this.pontuacaoTotal = Math.max(0, this.pontuacaoTotal + ajuste);
+        if (ajuste > 0) {
+            // Adiciona aos pontos de frequência (ajuste positivo)
+            this.pontosFrequencia += ajuste;
+        } else {
+            // Remove pontos (ajuste negativo)
+            removerPontos(Math.abs(ajuste));
+        }
+        recalcularTotal();
     }
 
     private void recalcularTotal() {

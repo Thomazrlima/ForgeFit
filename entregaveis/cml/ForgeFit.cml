@@ -45,14 +45,20 @@ BoundedContext AcademiaContext implements CoreAcademia {
             void cancelarOcorrenciaUnica(@AulaId aulaId, Date dataDaOcorrencia);
             void cancelarAulaDefinitivamente(@AulaId aulaId);
             void validarConflitoHorario(@Espaco espaco, @ProfessorId professorId, Date inicio, Date fim, @AulaId aulaId);
+            String criarAulaUnicaComMensagem(@ProfessorId professorId, @Modalidade modalidade, @Espaco espaco, int capacidade, Date inicio, Date fim);
+            String criarAulaRecorrenteComMensagem(@ProfessorId professorId, @Modalidade modalidade, @Espaco espaco, int capacidade, Date inicio, Date fim, @TipoRecorrencia tipoRecorrencia, List<@DiaDaSemana> diasDaSemana, Date dataFimRecorrencia);
+            String alterarHorarioPrincipalComMensagem(@AulaId aulaId, Date novoInicio, Date novoFim);
+            String reagendarOcorrenciaUnicaComMensagem(@AulaId aulaId, Date dataOriginal, Date novoInicio, Date novoFim);
+            String cancelarOcorrenciaUnicaComMensagem(@AulaId aulaId, Date dataDaOcorrencia);
+            String cancelarAulaDefinitivamenteComMensagem(@AulaId aulaId);
         }
 
         Service ReservaService {
             @Reserva reservarVaga(@Matricula alunoMatricula, @AulaId aulaId);
+            String tentarReservarVaga(@Matricula alunoMatricula, @AulaId aulaId);
             void entrarNaListaDeEspera(@Matricula alunoMatricula, @AulaId aulaId);
             void promoverPrimeiroDaListaSeHouver(@AulaId aulaId);
-            void cancelarReserva(@Matricula alunoMatricula, @AulaId aulaId);
-            void cancelarReserva(@Matricula alunoMatricula, @AulaId aulaId, Date momentoCancelamento);
+            String cancelarReserva(@Matricula alunoMatricula, @AulaId aulaId, Date momentoCancelamento);
         }
 
         ValueObject AulaId { int id }
@@ -133,15 +139,25 @@ BoundedContext AcademiaContext implements CoreAcademia {
         }
 
         Service AvaliacaoFisicaService {
-            @AvaliacaoFisica registrarAvaliacaoFisica(@Matricula alunoMatricula, @ProfessorId professorId, @AvaliacaoFisica novaAvaliacao);
+            String registrarAvaliacaoFisica(@Matricula alunoMatricula, @ProfessorId professorId, @AvaliacaoFisica novaAvaliacao);
+            String verificarHistoricoAvaliacoes(@Matricula alunoMatricula);
+            String formatarHistoricoAvaliacoes(List<@AvaliacaoFisica> historicoAvaliacoes);
+            String analisarEvolucaoFisica(List<@ComparacaoCampo> comparacoes);
         }
 
         Service ReembolsoService {
             double calcularCreditoDeReembolso(@AulaId aulaId);
+            String obterMensagemDeReembolso(double credito);
         }
 
         Service FrequenciaService {
             @Frequencia registrarFrequencia(@Matricula alunoMatricula, @AulaId aulaId, Date data);
+            @Frequencia registrarPresenca(@Matricula alunoMatricula, @AulaId aulaId, Date data);
+            @Frequencia registrarFalta(@Matricula alunoMatricula, @AulaId aulaId, Date data);
+            boolean alunoEstaBloqueado(@Matricula alunoMatricula, Date dataAtual);
+            String verificarBloqueioComMensagem(@Matricula alunoMatricula, Date dataAtual);
+            void desbloquearAluno(@Matricula alunoMatricula);
+            int contarFaltasRecentes(@Matricula alunoMatricula, Date dataReferencia, int dias);
         }
         
         ValueObject Frequencia {
@@ -178,6 +194,13 @@ BoundedContext AcademiaContext implements CoreAcademia {
             double quadrilCm
             double coxaCm
             double panturrilhaCm
+        }
+        
+        ValueObject ComparacaoCampo {
+            String nomeCampo
+            double valorAntigo
+            double valorNovo
+            boolean menorEMelhor
         }
     }
 
@@ -371,6 +394,7 @@ BoundedContext AcademiaContext implements CoreAcademia {
 
         Service AvaliacaoService {
             void criarAvaliacao(@Matricula alunoMatricula, @ProfessorId professorId, @AulaId aulaId, Date dataDaOcorrencia, @Notas notas, String comentario);
+            String criarAvaliacaoComMensagem(@Matricula alunoMatricula, @ProfessorId professorId, @AulaId aulaId, Date dataDaOcorrencia, @Notas notas, String comentario);
         }
 
         ValueObject AvaliacaoId { int id }

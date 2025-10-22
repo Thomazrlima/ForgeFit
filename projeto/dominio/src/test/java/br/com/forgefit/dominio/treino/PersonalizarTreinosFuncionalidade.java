@@ -2,17 +2,16 @@ package br.com.forgefit.dominio.treino;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import br.com.forgefit.dominio.AcademiaFuncionalidade;
 import br.com.forgefit.dominio.aluno.Aluno;
 import br.com.forgefit.dominio.aluno.Cpf;
-import br.com.forgefit.dominio.aluno.ProfessorId;
+import br.com.forgefit.dominio.professor.ProfessorId;
 import br.com.forgefit.dominio.treino.enums.Exercicio;
 import br.com.forgefit.dominio.treino.enums.LetraDoTreino;
 import br.com.forgefit.dominio.treino.enums.TipoDoTreino;
@@ -46,8 +45,7 @@ public class PersonalizarTreinosFuncionalidade {
         
         // Cria o aluno com treinos existentes
         cpfAluno = new Cpf("12345678900");
-        aluno = new Aluno(cpfAluno);
-        aluno.setNome("João Silva");
+        aluno = new Aluno(cpfAluno, "João Silva", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(aluno);
         
         // Cria um plano de treino com os treinos especificados
@@ -55,7 +53,7 @@ public class PersonalizarTreinosFuncionalidade {
         treinos.add(criarTreinoDiario(LetraDoTreino.A, TipoDoTreino.SUPERIORES));
         treinos.add(criarTreinoDiario(LetraDoTreino.B, TipoDoTreino.INFERIORES));
         
-        planoAtual = contexto.treinoService.criarPlanoDeTreino(cpfAluno, professorId, treinos);
+        planoAtual = contexto.treinoService.criarPlanoDeTreino(aluno.getMatricula(), professorId, treinos);
     }
 
     @When("o treino {string} é selecionado, e escolhe o tipo {string} e os exercicios que irao compor o treino daqele aluno")
@@ -87,7 +85,7 @@ public class PersonalizarTreinosFuncionalidade {
         professorId = new ProfessorId(Integer.parseInt(cpfNumeros.substring(0, 3)));
         
         cpfAluno = new Cpf("12345678900");
-        aluno = new Aluno(cpfAluno);
+        aluno = new Aluno(cpfAluno, "Aluno Teste", LocalDate.of(1990, 1, 1));
         aluno.setNome("João Silva");
         contexto.repositorio.salvar(aluno);
         
@@ -101,7 +99,7 @@ public class PersonalizarTreinosFuncionalidade {
         treinos.add(criarTreinoDiario(LetraDoTreino.F, TipoDoTreino.FOCO_PEITO));
         treinos.add(criarTreinoDiario(LetraDoTreino.G, TipoDoTreino.FOCO_COSTAS));
         
-        planoAtual = contexto.treinoService.criarPlanoDeTreino(cpfAluno, professorId, treinos);
+        planoAtual = contexto.treinoService.criarPlanoDeTreino(aluno.getMatricula(), professorId, treinos);
     }
 
     @When("o Professor decide adicionar um novo treino\\({string})")
@@ -141,7 +139,7 @@ public class PersonalizarTreinosFuncionalidade {
     public void o_aluno_com_cpf_e_com_treino_ja_definido(String cpf, String letraTreino) {
         String cpfNumeros = cpf.replaceAll("[^0-9]", "");
         cpfAluno = new Cpf(cpfNumeros);
-        aluno = new Aluno(cpfAluno);
+        aluno = new Aluno(cpfAluno, "Aluno Teste", LocalDate.of(1990, 1, 1));
         aluno.setNome("Maria Santos");
         contexto.repositorio.salvar(aluno);
         
@@ -151,7 +149,7 @@ public class PersonalizarTreinosFuncionalidade {
         List<TreinoDiario> treinos = new ArrayList<>();
         treinos.add(criarTreinoDiario(LetraDoTreino.A, TipoDoTreino.CORPO_INTEIRO));
         
-        planoAtual = contexto.treinoService.criarPlanoDeTreino(cpfAluno, professorId, treinos);
+        planoAtual = contexto.treinoService.criarPlanoDeTreino(aluno.getMatricula(), professorId, treinos);
     }
 
     @When("o professor cria um novo treino do tipo {string} e escolhe os exercicios {string}, {string} e {string}")
@@ -207,7 +205,7 @@ public class PersonalizarTreinosFuncionalidade {
         Cpf novoCpf = new Cpf(cpfNumeros);
         
         // Obtém o aluno pelo CPF usado anteriormente
-        aluno = contexto.repositorio.obterPorCpf(new Cpf("12345678900")).orElse(null);
+        aluno = contexto.repositorio.obterAlunoPorCpf(new Cpf("12345678900")).orElse(null);
         cpfAluno = novoCpf;
     }
 

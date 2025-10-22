@@ -13,23 +13,24 @@ BoundedContext AcademiaContext implements CoreAcademia {
             -AulaId aulaId
             -ProfessorId professorId
             
-            Modalidade modalidade
-            Espaco espaco
+            -Modalidade modalidade
+            -Espaco espaco
             int capacidade
 
             Date inicio
             Date fim
 
-            StatusAula status
+            -StatusAula status
             
-            Recorrencia recorrencia
-            List<OcorrenciaExcecao> excecoes
-            List<Reserva> reservas
-            List<PosicaoListaDeEspera> listaDeEspera
+            -Recorrencia recorrencia
+            -List<OcorrenciaExcecao> excecoes
+            -List<Reserva> reservas
+            -List<PosicaoListaDeEspera> listaDeEspera
 
             Repository AulaRepository {
                 void salvar(@Aula aula);
                 @Aula obterPorId(@AulaId aulaId);
+                List<@Aula> listarTodas();
                 List<@Aula> buscarPorEspacoEPeriodo(@Espaco espaco, Date inicio, Date fim);
                 List<@Aula> buscarPorProfessorEPeriodo(@ProfessorId professorId, Date inicio, Date fim);
             }
@@ -38,23 +39,28 @@ BoundedContext AcademiaContext implements CoreAcademia {
         Service AulaService {
             @Aula criarAulaUnica(@ProfessorId professorId, @Modalidade modalidade, @Espaco espaco, int capacidade, Date inicio, Date fim);
             @Aula criarAulaRecorrente(@ProfessorId professorId, @Modalidade modalidade, @Espaco espaco, int capacidade, Date inicio, @Recorrencia recorrencia);
+            @Aula obterAula(@AulaId aulaId);
             void alterarHorarioPrincipal(@AulaId aulaId, Date novoInicio, Date novoFim);
             void reagendarOcorrenciaUnica(@AulaId aulaId, Date dataOriginal, Date novoInicio, Date novoFim);
             void cancelarOcorrenciaUnica(@AulaId aulaId, Date dataDaOcorrencia);
             void cancelarAulaDefinitivamente(@AulaId aulaId);
+            void validarConflitoHorario(@Espaco espaco, @ProfessorId professorId, Date inicio, Date fim, @AulaId aulaId);
         }
 
         Service ReservaService {
-            @Reserva reservarVaga(@Cpf alunoId, @AulaId aulaId);
-            void cancelarReserva(@Cpf alunoId, @AulaId aulaId);
+            @Reserva reservarVaga(@Matricula alunoMatricula, @AulaId aulaId);
+            void entrarNaListaDeEspera(@Matricula alunoMatricula, @AulaId aulaId);
+            void promoverPrimeiroDaListaSeHouver(@AulaId aulaId);
+            void cancelarReserva(@Matricula alunoMatricula, @AulaId aulaId);
+            void cancelarReserva(@Matricula alunoMatricula, @AulaId aulaId, Date momentoCancelamento);
         }
 
         ValueObject AulaId { int id }
         
         ValueObject Reserva {
-            -Cpf alunoId
+            -Matricula alunoMatricula
             Date dataDaReserva
-            StatusReserva status
+            -StatusReserva status
         }
 
         enum StatusAula { ATIVA, CANCELADA }
@@ -62,7 +68,7 @@ BoundedContext AcademiaContext implements CoreAcademia {
         enum StatusReserva { CONFIRMADA, CANCELADA_PELO_ALUNO, CANCELADA_PELA_ACADEMIA }
 
         ValueObject PosicaoListaDeEspera {
-            -Cpf alunoId
+            -Matricula alunoMatricula
             Date timestampDeEntrada
         }
         
@@ -77,14 +83,14 @@ BoundedContext AcademiaContext implements CoreAcademia {
         }
 
         ValueObject Recorrencia {
-            TipoRecorrencia tipo
-            List<DiaDaSemana> diasDaSemana
+            -TipoRecorrencia tipo
+            -List<DiaDaSemana> diasDaSemana
             Date dataFimRecorrencia
         }
         
         Entity OcorrenciaExcecao {
             -OcorrenciaExcecaoId id
-            -Date dataOriginalDaOcorrencia
+            Date dataOriginalDaOcorrencia
             boolean cancelada
             Date novoInicio
             Date novoFim
@@ -100,30 +106,35 @@ BoundedContext AcademiaContext implements CoreAcademia {
         Entity Aluno {
             aggregateRoot
             
-            -Cpf cpf
             -Matricula matricula
+            -Cpf cpf
             String nome
             Date dataNascimento
             int pontuacaoTotal
             double creditos
-            StatusAluno status
+            -StatusAluno status
             
-            List<AvaliacaoFisica> historicoDeAvaliacoes
-            List<PlanoDeTreino> historicoDePlanos
-            List<Frequencia> historicoDeFrequencia
+            -List<AvaliacaoFisica> historicoDeAvaliacoes
+            -List<PlanoDeTreino> historicoDePlanos
+            -List<Frequencia> historicoDeFrequencia
 
             Repository AlunoRepository {
                 void salvar(@Aluno aluno);
+                @Aluno obterPorMatricula(@Matricula matricula);
                 @Aluno obterPorCpf(@Cpf cpf);
             }
         }
 
+        Service AlunoService {
+            void adicionarCreditos(@Matricula alunoMatricula, double creditos);
+        }
+
         Service TreinoService {
-            @PlanoDeTreino criarPlanoDeTreino(@Cpf alunoCpf, @ProfessorId professorId, Date validadeSugerida, List<@TreinoDiario> treinos);
+            @PlanoDeTreino criarPlanoDeTreino(@Matricula alunoMatricula, @ProfessorId professorId, Date validadeSugerida, List<@TreinoDiario> treinos);
         }
 
         Service AvaliacaoFisicaService {
-            @AvaliacaoFisica registrarAvaliacaoFisica(@Cpf alunoCpf, @ProfessorId professorId, @AvaliacaoFisica novaAvaliacao);
+            @AvaliacaoFisica registrarAvaliacaoFisica(@Matricula alunoMatricula, @ProfessorId professorId, @AvaliacaoFisica novaAvaliacao);
         }
 
         Service ReembolsoService {
@@ -131,13 +142,13 @@ BoundedContext AcademiaContext implements CoreAcademia {
         }
 
         Service FrequenciaService {
-            @Frequencia registrarFrequencia(@Cpf alunoId, @AulaId aulaId, Date data);
+            @Frequencia registrarFrequencia(@Matricula alunoMatricula, @AulaId aulaId, Date data);
         }
         
         ValueObject Frequencia {
             -AulaId aulaId
             Date dataDaOcorrencia
-            StatusFrequencia status
+            -StatusFrequencia status
         }
         
         enum StatusFrequencia { PRESENTE, FALTA }
@@ -148,7 +159,7 @@ BoundedContext AcademiaContext implements CoreAcademia {
         ValueObject Matricula { String valor }
         
         ValueObject AvaliacaoFisica {
-            -Date dataDaAvaliacao
+            Date dataDaAvaliacao
             -ProfessorId professorResponsavel
             double massaGordaPercentual
             double massaGordaKg
@@ -175,20 +186,20 @@ BoundedContext AcademiaContext implements CoreAcademia {
             -ProfessorId professorResponsavel
             Date dataCriacao
             Date dataValidadeSugerida
-            List<TreinoDiario> treinosDaSemana
+            -List<TreinoDiario> treinosDaSemana
         }
         
         Entity TreinoDiario {
             -LetraDoTreino letra
-            TipoDoTreino tipo
-            List<ItemDeExercicio> exercicios
+            -TipoDoTreino tipo
+            -List<ItemDeExercicio> exercicios
         }
         
-        enum LetraDoTreino { A, B, C, D, E, F, G }
+        enum LetraDoTreino { TREINO_A, TREINO_B, TREINO_C, TREINO_D, TREINO_E, TREINO_F, TREINO_G }
         
         ValueObject ItemDeExercicio {
-            Exercicio exercicio
-            Repeticao repeticao
+            -Exercicio exercicio
+            -Repeticao repeticao
         }
         
         ValueObject Repeticao {
@@ -219,21 +230,19 @@ BoundedContext AcademiaContext implements CoreAcademia {
             ABDOMINAL_INFRA_NA_PARALELA, ELEVACAO_DE_PERNAS_DEITADO, RODA_ABDOMINAL_AB_WHEEL
         }
 
-        ValueObject ProfessorId { int id }
         ValueObject PlanoDeTreinoId { int id }
     }
 
     Aggregate Professor {
         Entity Professor {
             aggregateRoot
+            -ProfessorId id
             -Cpf cpf
-            -Matricula matricula
             String nome
             Date dataNascimento
         }
-
-        ValueObject Cpf { String valor }
-        ValueObject Matricula { String valor }
+        
+        ValueObject ProfessorId { int id }
     }
 
     Aggregate Guilda {
@@ -243,46 +252,67 @@ BoundedContext AcademiaContext implements CoreAcademia {
             String nome
             String descricao
             String imagemURL
-            StatusGuilda status
+            -StatusGuilda status
             -CodigoConvite codigoConvite
-            -Cpf mestreDaGuilda
-            List<Cpf> membros
+            -Matricula mestreDaGuilda
+            - List<Matricula> membros
             int pontuacaoTotal
-        }
-
-        Repository GuildaRepository {
-            void salvar(@Guilda guilda);
-            @Guilda obterPorId(@GuildaId id);
-            List<@Guilda> listarGuildas();
-            @Guilda buscarPorCodigoConvite(@CodigoConvite codigo);
+            
+            Repository GuildaRepository {
+                void salvar(@Guilda guilda);
+                @Guilda obterPorId(@GuildaId id);
+                List<@Guilda> listarGuildas();
+                @Guilda buscarPorCodigoConvite(@CodigoConvite codigo);
+            }
         }
 
         Service GuildaService {
-            @Guilda criarGuilda(@Cpf mestreId, String nome, String descricao, String imagemURL);
+            @Guilda criarGuilda(@Matricula mestreMatricula, String nome, String descricao, String imagemURL);
             void alterarDadosGuilda(@GuildaId guildaId, String novoNome, String novaDescricao, String novaImagemURL);
             void excluirGuilda(@GuildaId guildaId);
-            void entrarEmGuilda(@Cpf alunoId, @CodigoConvite codigo);
-            void sairDaGuilda(@Cpf alunoId, @GuildaId guildaId);
+            void entrarEmGuilda(@Matricula alunoMatricula, @CodigoConvite codigo);
+            void sairDaGuilda(@Matricula alunoMatricula, @GuildaId guildaId);
         }
 
         enum StatusGuilda { ATIVA, INATIVA }
         ValueObject GuildaId { int id }
         ValueObject CodigoConvite { String valor }
-        ValueObject Cpf { String valor }
     }
 
     Aggregate Torneio {
+        ValueObject TorneioId { int id }
+        ValueObject Premio {
+            String nome
+            String urlImagem
+        }
+        ValueObject PosicaoRanking {
+            int posicao
+            -GuildaId guildaId
+            int pontuacaoNoTorneio
+        }
+        enum PosicaoDoPodio {
+            PRIMEIRO_LUGAR,
+            SEGUNDO_LUGAR,
+            TERCEIRO_LUGAR
+        }
+        enum StatusTorneio {
+            PLANEJADO,
+            ATIVO,
+            FINALIZADO,
+            CANCELADO
+        }
+
         Entity Torneio {
             aggregateRoot
             -TorneioId id
             String nome
-            @Premio premioPrimeiroLugar
-            @Premio premioSegundoLugar
-            @Premio premioTerceiroLugar
-            StatusTorneio status
+            -Premio premioPrimeiroLugar
+            -Premio premioSegundoLugar
+            -Premio premioTerceiroLugar
+            -StatusTorneio status
             Date dataInicio
             Date dataFim
-            List<PosicaoRanking> rankingFinal
+            -List<PosicaoRanking> rankingFinal
 
             Repository TorneioRepository {
                 void salvar(@Torneio torneio);
@@ -298,45 +328,17 @@ BoundedContext AcademiaContext implements CoreAcademia {
             void cancelarTorneio(@TorneioId torneioId);
             @Premio definirPremioDoPodio(@TorneioId torneioId, @PosicaoDoPodio posicao, @Premio premio);
         }
-
-        enum PosicaoDoPodio {
-            PRIMEIRO_LUGAR,
-            SEGUNDO_LUGAR,
-            TERCEIRO_LUGAR
-        }
-
-        enum StatusTorneio {
-            PLANEJADO,
-            ATIVO,
-            FINALIZADO,
-            CANCELADO
-        }
-
-        ValueObject TorneioId { int id }
-
-        ValueObject Premio {
-            String nome
-            String urlImagem
-        }
-
-        ValueObject PosicaoRanking {
-            int posicao
-            -GuildaId guildaId
-            int pontuacaoNoTorneio
-        }
-
-        ValueObject GuildaId { int id }
     }
 
     Aggregate Avaliacao {
         Entity Avaliacao {
             aggregateRoot
             -AvaliacaoId id
-            -Cpf alunoId
+            -Matricula alunoMatricula
             -ProfessorId professorId
             -AulaId aulaId
             Date dataDaOcorrenciaDaAula
-            Notas notas
+            - Notas notas
             String comentario
             Date dataDaAvaliacao
 
@@ -344,57 +346,53 @@ BoundedContext AcademiaContext implements CoreAcademia {
                 void salvar(@Avaliacao avaliacao);
                 @Avaliacao obterPorId(@AvaliacaoId id);
                 List<@Avaliacao> buscarPorProfessor(@ProfessorId professorId);
-                boolean existeAvaliacao(@Cpf alunoId, @AulaId aulaId, Date dataDaOcorrencia);
+                boolean existeAvaliacao(@Matricula alunoMatricula, @AulaId aulaId, Date dataDaOcorrencia);
             }
         }
 
         Service AvaliacaoService {
-            void criarAvaliacao(@Cpf alunoId, @ProfessorId professorId, @AulaId aulaId, Date dataDaOcorrencia, @Notas notas, String comentario);
+            void criarAvaliacao(@Matricula alunoMatricula, @ProfessorId professorId, @AulaId aulaId, Date dataDaOcorrencia, @Notas notas, String comentario);
         }
 
         ValueObject AvaliacaoId { int id }
-        ValueObject Notas { int pontualidade, int didatica, int atencao }
-        ValueObject Cpf { String valor }
-        ValueObject ProfessorId { int id }
-        ValueObject AulaId { int id }
+        ValueObject Notas {
+            int pontualidade
+            int didatica
+            int atencao
+        }
     }
 
     Aggregate Checkin {
         Entity Checkin {
             aggregateRoot
             -CheckinId id
-            -Cpf alunoId
+            -Matricula alunoMatricula
             -GuildaId guildaId
             Date dataDoCheckin
-            int pontuacaoGerada
+            int pontuacaoTotal
             String mensagem
             String urlImagem
-            ContextoDoCheckin contexto
+            - ContextoDoCheckin contexto
 
             Repository CheckinRepository {
                 salvar(@Checkin checkin);
-                List<@Checkin> buscarPorAluno(@Cpf alunoId);
+                List<@Checkin> buscarPorAluno(@Matricula alunoMatricula);
             }
         }
 
         Service CheckinService {
-            Checkin realizarCheckinDeTreino(@Cpf alunoId, @GuildaId guildaId, @PlanoDeTreinoId planoDeTreinoId, @LetraDoTreino letraDoTreino, String mensagem, String urlImagem);
+            @Checkin realizarCheckinDeTreino(@Matricula alunoMatricula, @GuildaId guildaId, @PlanoDeTreinoId planoDeTreinoId, @LetraDoTreino letraDoTreino, String mensagem, String urlImagem);
         }
 
         ValueObject CheckinId { int id }
 
         ValueObject ContextoDoCheckin {
-            TipoDeCheckin tipo
+            -TipoDeCheckin tipo
             -AulaId aulaId
             -PlanoDeTreinoId planoDeTreinoId 
             -LetraDoTreino letraDoTreino
         }
 
         enum TipoDeCheckin { AULA, TREINO }
-        ValueObject Cpf { String valor }
-        ValueObject GuildaId { int id }
-        ValueObject AulaId { int id }
-        ValueObject PlanoDeTreinoId { int id }
-        enum LetraDoTreino { A, B, C, D, E, F, G }
     }
 }

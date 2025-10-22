@@ -4,11 +4,9 @@ import static org.apache.commons.lang3.Validate.notNull;
 
 import java.time.LocalDate;
 
-import br.com.forgefit.dominio.aluno.Aluno;
 import br.com.forgefit.dominio.aluno.AlunoRepositorio;
-import br.com.forgefit.dominio.aluno.Cpf;
+import br.com.forgefit.dominio.aluno.Matricula;
 import br.com.forgefit.dominio.aluno.enums.StatusAluno;
-import br.com.forgefit.dominio.aula.Aula;
 import br.com.forgefit.dominio.aula.AulaId;
 import br.com.forgefit.dominio.aula.AulaRepositorio;
 import br.com.forgefit.dominio.frequencia.enums.StatusFrequencia;
@@ -41,21 +39,21 @@ public class FrequenciaService {
     /**
      * Registra presença de um aluno em uma aula.
      */
-    public Frequencia registrarPresenca(Cpf alunoId, AulaId aulaId, LocalDate data) {
-        notNull(alunoId, "O CPF do aluno não pode ser nulo");
+    public Frequencia registrarPresenca(Matricula alunoMatricula, AulaId aulaId, LocalDate data) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         notNull(aulaId, "O ID da aula não pode ser nulo");
         notNull(data, "A data não pode ser nula");
 
         // Verifica se aluno existe
-        var aluno = alunoRepositorio.obterPorCpf(alunoId)
+        alunoRepositorio.obterPorMatricula(alunoMatricula)
                 .orElseThrow(() -> new IllegalArgumentException("Aluno não encontrado"));
 
         // Verifica se aula existe
-        var aula = aulaRepositorio.obterPorId(aulaId)
+        aulaRepositorio.obterPorId(aulaId)
                 .orElseThrow(() -> new IllegalArgumentException("Aula não encontrada"));
 
         // Cria registro de presença
-        var frequencia = new Frequencia(alunoId, aulaId, data, StatusFrequencia.PRESENCA);
+        var frequencia = new Frequencia(alunoMatricula, aulaId, data, StatusFrequencia.PRESENCA);
         frequenciaRepositorio.salvar(frequencia);
 
         return frequencia;
@@ -64,13 +62,13 @@ public class FrequenciaService {
     /**
      * Registra falta de um aluno em uma aula.
      */
-    public Frequencia registrarFalta(Cpf alunoId, AulaId aulaId, LocalDate data) {
-        notNull(alunoId, "O CPF do aluno não pode ser nulo");
+    public Frequencia registrarFalta(Matricula alunoMatricula, AulaId aulaId, LocalDate data) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         notNull(aulaId, "O ID da aula não pode ser nulo");
         notNull(data, "A data não pode ser nula");
 
         // Verifica se aluno existe
-        alunoRepositorio.obterPorCpf(alunoId)
+        alunoRepositorio.obterPorMatricula(alunoMatricula)
                 .orElseThrow(() -> new IllegalArgumentException("Aluno não encontrado"));
 
         // Verifica se aula existe
@@ -78,11 +76,11 @@ public class FrequenciaService {
                 .orElseThrow(() -> new IllegalArgumentException("Aula não encontrada"));
 
         // Cria registro de falta
-        var frequencia = new Frequencia(alunoId, aulaId, data, StatusFrequencia.FALTA);
+        var frequencia = new Frequencia(alunoMatricula, aulaId, data, StatusFrequencia.FALTA);
         frequenciaRepositorio.salvar(frequencia);
 
         // Verifica se deve bloquear o aluno (usa LocalDate.now() como referência)
-        verificarEAplicarBloqueio(alunoId, LocalDate.now());
+        verificarEAplicarBloqueio(alunoMatricula, LocalDate.now());
 
         return frequencia;
     }
@@ -90,11 +88,11 @@ public class FrequenciaService {
     /**
      * Verifica se um aluno está bloqueado.
      */
-    public boolean alunoEstaBloqueado(Cpf alunoId, LocalDate dataAtual) {
-        notNull(alunoId, "O CPF do aluno não pode ser nulo");
+    public boolean alunoEstaBloqueado(Matricula alunoMatricula, LocalDate dataAtual) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         notNull(dataAtual, "A data atual não pode ser nula");
 
-        var aluno = alunoRepositorio.obterPorCpf(alunoId)
+        var aluno = alunoRepositorio.obterPorMatricula(alunoMatricula)
                 .orElseThrow(() -> new IllegalArgumentException("Aluno não encontrado"));
 
         if (aluno.getStatus() == StatusAluno.BLOQUEADO) {
@@ -103,7 +101,7 @@ public class FrequenciaService {
                 return true;
             } else if (bloqueioAte != null && dataAtual.isAfter(bloqueioAte)) {
                 // Desbloqueia automaticamente
-                desbloquearAluno(alunoId);
+                desbloquearAluno(alunoMatricula);
                 return false;
             }
         }
@@ -114,10 +112,10 @@ public class FrequenciaService {
     /**
      * Desbloqueia um aluno.
      */
-    public void desbloquearAluno(Cpf alunoId) {
-        notNull(alunoId, "O CPF do aluno não pode ser nulo");
+    public void desbloquearAluno(Matricula alunoMatricula) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
 
-        var aluno = alunoRepositorio.obterPorCpf(alunoId)
+        var aluno = alunoRepositorio.obterPorMatricula(alunoMatricula)
                 .orElseThrow(() -> new IllegalArgumentException("Aluno não encontrado"));
 
         aluno.setStatus(StatusAluno.ATIVO);
@@ -128,22 +126,22 @@ public class FrequenciaService {
     /**
      * Conta faltas de um aluno nos últimos N dias.
      */
-    public long contarFaltasRecentes(Cpf alunoId, LocalDate dataReferencia, int dias) {
-        notNull(alunoId, "O CPF do aluno não pode ser nulo");
+    public long contarFaltasRecentes(Matricula alunoMatricula, LocalDate dataReferencia, int dias) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         notNull(dataReferencia, "A data de referência não pode ser nula");
 
         LocalDate dataInicio = dataReferencia.minusDays(dias - 1);  // Ajuste: -1 para incluir a data de referência
-        return frequenciaRepositorio.contarFaltasPorPeriodo(alunoId, dataInicio, dataReferencia);
+        return frequenciaRepositorio.contarFaltasPorPeriodo(alunoMatricula, dataInicio, dataReferencia);
     }
 
     /**
      * Verifica e aplica bloqueio se necessário.
      */
-    private void verificarEAplicarBloqueio(Cpf alunoId, LocalDate dataAtual) {
-        long faltas = contarFaltasRecentes(alunoId, dataAtual, DIAS_PERIODO_CONTAGEM_FALTAS);
+    private void verificarEAplicarBloqueio(Matricula alunoMatricula, LocalDate dataAtual) {
+        long faltas = contarFaltasRecentes(alunoMatricula, dataAtual, DIAS_PERIODO_CONTAGEM_FALTAS);
 
         if (faltas >= LIMITE_FALTAS_PARA_BLOQUEIO) {
-            var aluno = alunoRepositorio.obterPorCpf(alunoId).get();
+            var aluno = alunoRepositorio.obterPorMatricula(alunoMatricula).get();
             aluno.setStatus(StatusAluno.BLOQUEADO);
             aluno.setBloqueioAte(dataAtual.plusDays(DIAS_BLOQUEIO));
             alunoRepositorio.salvar(aluno);

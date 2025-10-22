@@ -4,5 +4,6 @@ import java.util.Optional;
 
 public interface AlunoRepositorio {
     void salvar(Aluno aluno);
-    Optional<Aluno> obterPorCpf(Cpf cpf);
+    Optional<Aluno> obterPorMatricula(Matricula matricula);
+    Optional<Aluno> obterAlunoPorCpf(Cpf cpf);
 }

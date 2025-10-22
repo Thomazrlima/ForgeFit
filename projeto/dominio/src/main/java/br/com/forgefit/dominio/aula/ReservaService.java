@@ -1,99 +1,84 @@
 package br.com.forgefit.dominio.aula;
 
-import static org.apache.commons.lang3.Validate.notNull;
+import br.com.forgefit.dominio.aluno.AlunoService;
+import br.com.forgefit.dominio.aluno.Matricula;
 
 import java.time.LocalDateTime;
 
-import br.com.forgefit.dominio.aluno.AlunoRepositorio;
-import br.com.forgefit.dominio.aluno.Cpf;
+import static org.apache.commons.lang3.Validate.notNull;
 
 public class ReservaService {
     private final AulaRepositorio aulaRepositorio;
-    private final AlunoRepositorio alunoRepositorio;
+    private final AlunoService alunoService;
     private final ReembolsoService reembolsoService;
 
-    public ReservaService(AulaRepositorio aulaRepositorio, AlunoRepositorio alunoRepositorio,
+    public ReservaService(AulaRepositorio aulaRepositorio, AlunoService alunoService,
             ReembolsoService reembolsoService) {
         notNull(aulaRepositorio, "O repositório de aulas não pode ser nulo");
-        notNull(alunoRepositorio, "O repositório de alunos não pode ser nulo");
         notNull(reembolsoService, "O serviço de reembolso não pode ser nulo");
         this.aulaRepositorio = aulaRepositorio;
-        this.alunoRepositorio = alunoRepositorio;
+        this.alunoService = alunoService;
         this.reembolsoService = reembolsoService;
     }
 
-    public Reserva reservarVaga(Cpf alunoId, AulaId aulaId) {
-        notNull(alunoId, "O CPF do aluno não pode ser nulo");
+    public Reserva reservarVaga(Matricula alunoMatricula, AulaId aulaId) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         notNull(aulaId, "O id da aula não pode ser nulo");
 
-        var aula = aulaRepositorio.obterPorId(aulaId)
-                .orElseThrow(() -> new IllegalArgumentException("Aula não encontrada"));
+        Aula aula = obterAula(aulaId);
 
-        // Se a aula tem vaga disponível, cria reserva confirmada
         if (aula.temVagaDisponivel()) {
-            var reserva = new Reserva(alunoId, LocalDateTime.now());
+            Reserva reserva = new Reserva(alunoMatricula, LocalDateTime.now());
             aula.adicionarReserva(reserva);
             aulaRepositorio.salvar(aula);
             return reserva;
-        } else {
-            // Se não tem vaga, adiciona na lista de espera
-            // Não retorna Reserva, apenas adiciona na lista
-            entrarNaListaDeEspera(alunoId, aulaId);
-            return null; // Indica que foi para lista de espera
         }
+
+        entrarNaListaDeEspera(alunoMatricula, aula);
+        return null; 
     }
 
-    public void entrarNaListaDeEspera(Cpf alunoId, AulaId aulaId) {
-        notNull(alunoId, "O CPF do aluno não pode ser nulo");
-        notNull(aulaId, "O id da aula não pode ser nulo");
-
-        var aula = aulaRepositorio.obterPorId(aulaId)
-                .orElseThrow(() -> new IllegalArgumentException("Aula não encontrada"));
-
-        var posicao = new PosicaoListaDeEspera(alunoId, LocalDateTime.now());
+    private void entrarNaListaDeEspera(Matricula alunoMatricula, Aula aula) {
+        PosicaoListaDeEspera posicao = new PosicaoListaDeEspera(alunoMatricula, LocalDateTime.now());
         aula.adicionarNaListaDeEspera(posicao);
         aulaRepositorio.salvar(aula);
     }
 
-    public void cancelarReserva(Cpf alunoId, AulaId aulaId) {
-        cancelarReserva(alunoId, aulaId, LocalDateTime.now());
+    public void cancelarReserva(Matricula alunoMatricula, AulaId aulaId) {
+        cancelarReserva(alunoMatricula, aulaId, LocalDateTime.now());
     }
 
-    public void cancelarReserva(Cpf alunoId, AulaId aulaId, LocalDateTime momentoCancelamento) {
-        notNull(alunoId, "O CPF do aluno não pode ser nulo");
+    public void cancelarReserva(Matricula alunoMatricula, AulaId aulaId, LocalDateTime momentoCancelamento) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         notNull(aulaId, "O id da aula não pode ser nulo");
         notNull(momentoCancelamento, "O momento do cancelamento não pode ser nulo");
 
-        var aula = aulaRepositorio.obterPorId(aulaId)
-                .orElseThrow(() -> new IllegalArgumentException("Aula não encontrada"));
+        Aula aula = obterAula(aulaId);
 
-        // Calcula reembolso antes de cancelar
         double credito = reembolsoService.calcularCreditoDeReembolso(aulaId, aula, momentoCancelamento);
 
-        // Se há direito a reembolso, adiciona crédito ao aluno
-        if (credito > 0) {
-            var aluno = alunoRepositorio.obterPorCpf(alunoId)
-                    .orElseThrow(() -> new IllegalArgumentException("Aluno não encontrado"));
-            aluno.adicionarCreditos(credito);
-            alunoRepositorio.salvar(aluno);
-        }
+        alunoService.adicionarCreditos(alunoMatricula, credito);
 
-        // Cancela a reserva
-        aula.cancelarReserva(alunoId);
+        aula.cancelarReserva(alunoMatricula);
         aulaRepositorio.salvar(aula);
 
-        // Promove automaticamente o primeiro da lista de espera se houver
         promoverPrimeiroDaListaSeHouver(aula);
     }
 
     private void promoverPrimeiroDaListaSeHouver(Aula aula) {
-        if (!aula.getListaDeEspera().isEmpty() && aula.temVagaDisponivel()) {
-            var proximoOpt = aula.removerPrimeiroDaListaDeEspera();
-            if (proximoOpt.isPresent()) {
-                var reserva = new Reserva(proximoOpt.get().getAlunoId(), LocalDateTime.now());
-                aula.adicionarReserva(reserva);
-                aulaRepositorio.salvar(aula);
-            }
-        }
+        aula.removerPrimeiroDaListaDeEspera().ifPresent(posicao -> {
+            
+            Matricula proximoAlunoMatricula = posicao.getAlunoMatricula();
+
+            // Lógica para criar uma nova reserva para o aluno promovido
+            Reserva novaReserva = new Reserva(proximoAlunoMatricula, LocalDateTime.now());
+            aula.adicionarReserva(novaReserva);
+            aulaRepositorio.salvar(aula);
+        });
+    }
+
+    private Aula obterAula(AulaId aulaId) {
+        return aulaRepositorio.obterPorId(aulaId)
+            .orElseThrow(() -> new IllegalArgumentException("Aula não encontrada"));
     }
 }

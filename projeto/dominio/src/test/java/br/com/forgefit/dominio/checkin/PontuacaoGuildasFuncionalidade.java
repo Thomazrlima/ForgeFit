@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import br.com.forgefit.dominio.AcademiaFuncionalidade;
 import br.com.forgefit.dominio.aluno.Aluno;
 import br.com.forgefit.dominio.aluno.Cpf;
+import br.com.forgefit.dominio.aluno.Matricula;
 import br.com.forgefit.dominio.guilda.Guilda;
 import br.com.forgefit.dominio.torneio.Premio;
 import br.com.forgefit.dominio.torneio.Torneio;
@@ -17,7 +18,10 @@ import br.com.forgefit.dominio.torneio.enums.PosicaoDoPodio;
 import br.com.forgefit.dominio.torneio.enums.StatusTorneio;
 import br.com.forgefit.dominio.treino.PlanoDeTreino;
 import br.com.forgefit.dominio.treino.PlanoDeTreinoId;
+import br.com.forgefit.dominio.treino.TreinoDiario;
 import br.com.forgefit.dominio.treino.enums.LetraDoTreino;
+import br.com.forgefit.dominio.professor.ProfessorId;
+import java.util.ArrayList;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -32,6 +36,7 @@ public class PontuacaoGuildasFuncionalidade {
     private final AcademiaFuncionalidade contexto;
     
     private Cpf cpfAluno;
+    private Matricula matriculaAluno;
     private Guilda guilda;
     private PlanoDeTreino planoAtivo;
     private Checkin checkinCriado;
@@ -48,32 +53,35 @@ public class PontuacaoGuildasFuncionalidade {
     public void o_aluno_com_cpf_com_um_plano_de_treino_ativo_é_membro_da_guilda(String cpfString, String nomeGuilda) {
         String cpfNumeros = cpfString.replaceAll("[^0-9]", "");
         cpfAluno = new Cpf(cpfNumeros);
-        var aluno = new Aluno(cpfAluno);
-        aluno.setNome("João da Silva");
+        var aluno = new Aluno(cpfAluno, "João da Silva", LocalDate.of(1990, 1, 1));
+        matriculaAluno = aluno.getMatricula();
         
         // Cria plano de treino ativo
         var planoId = new PlanoDeTreinoId(1);
-        planoAtivo = new PlanoDeTreino(planoId, LocalDate.now(), LocalDate.now().plusMonths(3));
+        var treinos = new ArrayList<TreinoDiario>();
+        planoAtivo = new PlanoDeTreino(planoId, new ProfessorId(1), LocalDate.now(), LocalDate.now().plusMonths(3), treinos);
         aluno.setPlanoAtivo(planoAtivo);
         
-        contexto.repositorio.salvar(aluno);
+        // Cria a guilda e associa o aluno à guilda
+        guilda = contexto.guildaService.criarGuilda(nomeGuilda, "Descrição da guilda", null, matriculaAluno);
         
-        // Cria a guilda e adiciona o aluno
-        guilda = contexto.guildaService.criarGuilda(cpfAluno, nomeGuilda, "Descrição da guilda", null);
+        // Define o guildaId do aluno
+        aluno.setGuildaId(guilda.getId());
+        
+        contexto.repositorio.salvar(aluno);
     }
 
     @When("o aluno realiza o check-in do treino {string} na guilda {string} com a mensagem {string}")
     public void o_aluno_realiza_o_check_in_do_treino_na_guilda_com_a_mensagem(String letra, String nomeGuilda, String mensagem) {
-        var aluno = contexto.repositorio.obterPorCpf(cpfAluno).get();
+        var aluno = contexto.repositorio.obterAlunoPorCpf(cpfAluno).get();
         pontuacaoAlunoAntes = aluno.getPontuacaoTotal();
         pontuacaoGuildaAntes = guilda.getPontuacaoTotal();
         
         try {
             LetraDoTreino letraTreino = LetraDoTreino.valueOf(letra);
             checkinCriado = contexto.checkinService.realizarCheckinDeTreino(
-                cpfAluno, 
-                guilda.getId(), 
-                planoAtivo.getId(), 
+                matriculaAluno, 
+                planoAtivo, 
                 letraTreino, 
                 mensagem, 
                 null
@@ -96,7 +104,7 @@ public class PontuacaoGuildasFuncionalidade {
 
     @And("a pontuação do aluno e da guilda {string} é incrementada em {int} pontos")
     public void a_pontuação_do_aluno_e_da_guilda_é_incrementada_em_pontos(String nomeGuilda, int pontos) {
-        var aluno = contexto.repositorio.obterPorCpf(cpfAluno).get();
+        var aluno = contexto.repositorio.obterAlunoPorCpf(cpfAluno).get();
         
         assertEquals(pontuacaoAlunoAntes + pontos, aluno.getPontuacaoTotal());
         assertEquals(pontuacaoGuildaAntes + pontos, guilda.getPontuacaoTotal());
@@ -106,21 +114,26 @@ public class PontuacaoGuildasFuncionalidade {
     public void o_aluno_com_cpf_já_realizou_o_check_in_do_seu_treino_na_guilda_hoje(String cpfString, String letra, String nomeGuilda) {
         String cpfNumeros = cpfString.replaceAll("[^0-9]", "");
         cpfAluno = new Cpf(cpfNumeros);
-        var aluno = new Aluno(cpfAluno);
+        var aluno = new Aluno(cpfAluno, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        matriculaAluno = aluno.getMatricula();
         
         // Cria plano de treino ativo
         var planoId = new PlanoDeTreinoId(1);
-        planoAtivo = new PlanoDeTreino(planoId, LocalDate.now(), LocalDate.now().plusMonths(3));
+        var treinos = new ArrayList<TreinoDiario>();
+        planoAtivo = new PlanoDeTreino(planoId, new ProfessorId(1), LocalDate.now(), LocalDate.now().plusMonths(3), treinos);
         aluno.setPlanoAtivo(planoAtivo);
+        
+        // Cria a guilda
+        guilda = contexto.guildaService.criarGuilda(nomeGuilda, "Descrição", null, matriculaAluno);
+        
+        // Define o guildaId do aluno
+        aluno.setGuildaId(guilda.getId());
         
         contexto.repositorio.salvar(aluno);
         
-        // Cria a guilda
-        guilda = contexto.guildaService.criarGuilda(cpfAluno, nomeGuilda, "Descrição", null);
-        
         // Realiza o primeiro check-in
         LetraDoTreino letraTreino = LetraDoTreino.valueOf(letra);
-        contexto.checkinService.realizarCheckinDeTreino(cpfAluno, guilda.getId(), planoAtivo.getId(), letraTreino, "Primeiro check-in", null);
+        contexto.checkinService.realizarCheckinDeTreino(matriculaAluno, planoAtivo, letraTreino, "Primeiro check-in", null);
         
         // Atualiza referências
         guilda = contexto.guildaService.obter(guilda.getId());
@@ -128,13 +141,13 @@ public class PontuacaoGuildasFuncionalidade {
 
     @When("o aluno tenta realizar o check-in do mesmo treino {string} na guilda {string} novamente")
     public void o_aluno_tenta_realizar_o_check_in_do_mesmo_treino_na_guilda_novamente(String letra, String nomeGuilda) {
-        var aluno = contexto.repositorio.obterPorCpf(cpfAluno).get();
+        var aluno = contexto.repositorio.obterAlunoPorCpf(cpfAluno).get();
         pontuacaoAlunoAntes = aluno.getPontuacaoTotal();
         pontuacaoGuildaAntes = guilda.getPontuacaoTotal();
         
         try {
             LetraDoTreino letraTreino = LetraDoTreino.valueOf(letra);
-            contexto.checkinService.realizarCheckinDeTreino(cpfAluno, guilda.getId(), planoAtivo.getId(), letraTreino, "Tentativa duplicada", null);
+            contexto.checkinService.realizarCheckinDeTreino(matriculaAluno, planoAtivo, letraTreino, "Tentativa duplicada", null);
         } catch (Exception e) {
             contexto.excecao = e;
         }
@@ -143,7 +156,7 @@ public class PontuacaoGuildasFuncionalidade {
 
     @And("a pontuação do aluno e da guilda não é alterada")
     public void a_pontuação_do_aluno_e_da_guilda_não_é_alterada() {
-        var aluno = contexto.repositorio.obterPorCpf(cpfAluno).get();
+        var aluno = contexto.repositorio.obterAlunoPorCpf(cpfAluno).get();
         guilda = contexto.guildaService.obter(guilda.getId());
         
         assertEquals(pontuacaoAlunoAntes, aluno.getPontuacaoTotal());
@@ -248,17 +261,23 @@ public class PontuacaoGuildasFuncionalidade {
     public void apenas_a_guilda_participou_do_torneio_com_check_ins(String nomeGuilda, int quantidadeCheckins) {
         String cpfNumeros = "12345678900";
         cpfAluno = new Cpf(cpfNumeros);
-        var aluno = new Aluno(cpfAluno);
+        var aluno = new Aluno(cpfAluno, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        matriculaAluno = aluno.getMatricula();
         
         var planoId = new PlanoDeTreinoId(1);
-        planoAtivo = new PlanoDeTreino(planoId, LocalDate.now(), LocalDate.now().plusMonths(3));
+        var treinos = new ArrayList<TreinoDiario>();
+        planoAtivo = new PlanoDeTreino(planoId, new ProfessorId(1), LocalDate.now(), LocalDate.now().plusMonths(3), treinos);
         aluno.setPlanoAtivo(planoAtivo);
+        
+        guilda = contexto.guildaService.criarGuilda(nomeGuilda, "Descrição", null, matriculaAluno);
+        
+        // Define o guildaId do aluno
+        aluno.setGuildaId(guilda.getId());
         
         contexto.repositorio.salvar(aluno);
         
-        guilda = contexto.guildaService.criarGuilda(cpfAluno, nomeGuilda, "Descrição", null);
-        
         // Simula os check-ins registrando pontos diretamente no torneio
+        // Cada check-in vale 10 pontos
         torneio.registrarCheckin(guilda.getId(), 10 * quantidadeCheckins);
         contexto.torneioService.salvar(torneio);
     }

@@ -6,6 +6,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 
 import br.com.forgefit.dominio.aluno.enums.StatusAluno;
 
@@ -13,9 +15,11 @@ import br.com.forgefit.dominio.treino.PlanoDeTreino;
 import br.com.forgefit.dominio.guilda.GuildaId;
 
 public class Aluno {
+    private static final AtomicLong matriculaCounter = new AtomicLong(1);
+    
+    private final Matricula matricula;
     private final Cpf cpf;
     private String nome;
-    private Matricula matricula;
     private LocalDate dataNascimento;
     private int pontuacaoTotal;
     private double creditos;
@@ -25,20 +29,28 @@ public class Aluno {
     private GuildaId guildaId;
     private final List<AvaliacaoFisica> historicoDeAvaliacoes = new ArrayList<>();
 
-    public Aluno(Cpf cpf) {
+    public Aluno(Matricula matricula, Cpf cpf, String nome, LocalDate dataNascimento) {
+        notNull(matricula, "A matrícula não pode ser nula");
         notNull(cpf, "O CPF não pode ser nulo");
+        notNull(nome, "O nome não pode ser nulo");
+        notNull(dataNascimento, "A data de nascimento não pode ser nula");
+
+        this.matricula = matricula;
         this.cpf = cpf;
+        this.nome = nome;
+        this.dataNascimento = dataNascimento;
         this.status = StatusAluno.ATIVO;
         this.pontuacaoTotal = 0;
         this.creditos = 0.0;
     }
     
-    public Aluno(Cpf cpf, StatusAluno status) {
-        notNull(cpf, "O CPF não pode ser nulo");
-        this.cpf = cpf;
-        this.status = status;
-        this.pontuacaoTotal = 0;
-        this.creditos = 0.0;
+    // Construtor simplificado que gera matrícula automaticamente
+    public Aluno(Cpf cpf, String nome, LocalDate dataNascimento) {
+        this(new Matricula(String.valueOf(matriculaCounter.getAndIncrement())), cpf, nome, dataNascimento);
+    }
+    
+    public Matricula getMatricula() {
+        return matricula;
     }
 
     public Cpf getCpf() {
@@ -51,14 +63,6 @@ public class Aluno {
 
     public void setNome(String nome) {
         this.nome = nome;
-    }
-
-    public Matricula getMatricula() {
-        return matricula;
-    }
-
-    public void setMatricula(Matricula matricula) {
-        this.matricula = matricula;
     }
 
     public LocalDate getDataNascimento() {
@@ -134,5 +138,18 @@ public class Aluno {
     public void adicionarAvaliacaoFisica(AvaliacaoFisica avaliacao) {
         notNull(avaliacao, "A avaliação física não pode ser nula");
         historicoDeAvaliacoes.add(avaliacao);
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Aluno aluno = (Aluno) o;
+        return matricula.equals(aluno.matricula);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(matricula);
     }
 }

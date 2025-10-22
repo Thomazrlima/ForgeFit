@@ -4,13 +4,13 @@ import static org.apache.commons.lang3.Validate.notNull;
 
 import java.time.LocalDate;
 
-import br.com.forgefit.dominio.aluno.Cpf;
-import br.com.forgefit.dominio.aluno.ProfessorId;
+import br.com.forgefit.dominio.aluno.Matricula;
 import br.com.forgefit.dominio.aula.AulaId;
+import br.com.forgefit.dominio.professor.ProfessorId;
 
 public class Avaliacao {
     private final AvaliacaoId id;
-    private final Cpf alunoId;
+    private final Matricula alunoMatricula;
     private final ProfessorId professorId;
     private final AulaId aulaId;
     private final LocalDate dataDaOcorrenciaDaAula;
@@ -18,17 +18,17 @@ public class Avaliacao {
     private final String comentario;
     private final LocalDate dataDaAvaliacao;
 
-    public Avaliacao(AvaliacaoId id, Cpf alunoId, ProfessorId professorId, AulaId aulaId,
+    public Avaliacao(AvaliacaoId id, Matricula alunoMatricula, ProfessorId professorId, AulaId aulaId,
                      LocalDate dataDaOcorrenciaDaAula, Notas notas, String comentario) {
         notNull(id, "O ID da avaliação não pode ser nulo");
-        notNull(alunoId, "O CPF do aluno não pode ser nulo");
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         notNull(professorId, "O ID do professor não pode ser nulo");
         notNull(aulaId, "O ID da aula não pode ser nulo");
         notNull(dataDaOcorrenciaDaAula, "A data da ocorrência não pode ser nula");
         notNull(notas, "As notas não podem ser nulas");
         
         this.id = id;
-        this.alunoId = alunoId;
+        this.alunoMatricula = alunoMatricula;
         this.professorId = professorId;
         this.aulaId = aulaId;
         this.dataDaOcorrenciaDaAula = dataDaOcorrenciaDaAula;
@@ -41,8 +41,8 @@ public class Avaliacao {
         return id;
     }
 
-    public Cpf getAlunoId() {
-        return alunoId;
+    public Matricula getAlunoMatricula() {
+        return alunoMatricula;
     }
 
     public ProfessorId getProfessorId() {

@@ -9,8 +9,10 @@ import java.time.format.DateTimeFormatter;
 import br.com.forgefit.dominio.AcademiaFuncionalidade;
 import br.com.forgefit.dominio.aluno.Aluno;
 import br.com.forgefit.dominio.aluno.Cpf;
+import br.com.forgefit.dominio.aluno.Matricula;
 import br.com.forgefit.dominio.aula.enums.Espaco;
 import br.com.forgefit.dominio.aula.enums.Modalidade;
+import br.com.forgefit.dominio.professor.ProfessorId;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -24,12 +26,11 @@ public class CancelamentoDeReservaFuncionalidade {
     private final AcademiaFuncionalidade contexto;
     
     private Cpf cpfAluno;
+    private Matricula matriculaAluno;
     private Aula aulaCriada;
-    private Reserva reservaCriada;
     private LocalDate dataCancelamento;
     private String mensagemResposta;
     private DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
     public CancelamentoDeReservaFuncionalidade(AcademiaFuncionalidade contexto) {
         this.contexto = contexto;
@@ -40,8 +41,8 @@ public class CancelamentoDeReservaFuncionalidade {
     @Given("existe uma reserva confirmada para o dia {string} às {string} com duração de {string}")
     public void existe_uma_reserva_confirmada_para_o_dia(String dataStr, String horario, String duracao) {
         cpfAluno = new Cpf("12345678900");
-        Aluno aluno = new Aluno(cpfAluno);
-        aluno.setNome("Aluno Teste");
+        Aluno aluno = new Aluno(cpfAluno, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        matriculaAluno = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
 
         // Parse da data e hora
@@ -57,6 +58,7 @@ public class CancelamentoDeReservaFuncionalidade {
         LocalDateTime fim = inicio.plusMinutes(duracaoMinutos);
 
         aulaCriada = contexto.aulaService.criarAulaUnica(
+                new ProfessorId(1),
                 Modalidade.YOGA,
                 Espaco.ESTUDIO_PILATES,
                 20,
@@ -65,7 +67,7 @@ public class CancelamentoDeReservaFuncionalidade {
         );
 
         // Cria a reserva
-        reservaCriada = contexto.reservaService.reservarVaga(cpfAluno, aulaCriada.getId());
+        contexto.reservaService.reservarVaga(matriculaAluno, aulaCriada.getId());
     }
 
     @When("o aluno solicita o cancelamento em {string}")
@@ -82,7 +84,7 @@ public class CancelamentoDeReservaFuncionalidade {
             );
             
             // Cancela a reserva
-            contexto.reservaService.cancelarReserva(cpfAluno, aulaCriada.getId(), momentoCancelamento);
+            contexto.reservaService.cancelarReserva(matriculaAluno, aulaCriada.getId(), momentoCancelamento);
             
             // Define a mensagem baseada no valor do crédito
             double valorBase = 20.0; // Mesmo valor do ReembolsoService
@@ -114,14 +116,13 @@ public class CancelamentoDeReservaFuncionalidade {
     public void o_aluno_ja_realizou_o_cancelamento_desta_reserva() {
         // Cancela a reserva pela primeira vez
         dataCancelamento = LocalDate.parse("10/09/2025", dateFormatter);
-        contexto.reservaService.cancelarReserva(cpfAluno, aulaCriada.getId(), dataCancelamento.atStartOfDay());
-        reservaCriada = null; // Marca como já cancelada
+        contexto.reservaService.cancelarReserva(matriculaAluno, aulaCriada.getId(), dataCancelamento.atStartOfDay());
     }
 
     @When("o aluno solicita novo cancelamento da mesma reserva")
     public void o_aluno_solicita_novo_cancelamento_da_mesma_reserva() {
         try {
-            contexto.reservaService.cancelarReserva(cpfAluno, aulaCriada.getId(), dataCancelamento.atStartOfDay());
+            contexto.reservaService.cancelarReserva(matriculaAluno, aulaCriada.getId(), dataCancelamento.atStartOfDay());
             mensagemResposta = "cancelamento realizado";
         } catch (IllegalArgumentException e) {
             // A exceção vem de Aula.cancelarReserva() com mensagem "Reserva não encontrada para este aluno"
@@ -135,8 +136,8 @@ public class CancelamentoDeReservaFuncionalidade {
     @Given("não existe reserva confirmada para o aluno na data {string} às {string}")
     public void nao_existe_reserva_confirmada_para_o_aluno_na_data(String dataStr, String horario) {
         cpfAluno = new Cpf("12345678900");
-        Aluno aluno = new Aluno(cpfAluno);
-        aluno.setNome("Aluno Sem Reserva");
+        Aluno aluno = new Aluno(cpfAluno, "Aluno Sem Reserva", LocalDate.of(1990, 1, 1));
+        matriculaAluno = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
 
         // Parse da data e hora
@@ -149,6 +150,7 @@ public class CancelamentoDeReservaFuncionalidade {
         LocalDateTime fim = inicio.plusMinutes(45);
 
         aulaCriada = contexto.aulaService.criarAulaUnica(
+                new ProfessorId(1),
                 Modalidade.SPINNING,
                 Espaco.SALA03_SPINNING,
                 15,
@@ -157,6 +159,5 @@ public class CancelamentoDeReservaFuncionalidade {
         );
 
         // NÃO cria reserva - este é o ponto do cenário
-        reservaCriada = null;
     }
 }

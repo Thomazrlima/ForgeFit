@@ -1,10 +1,13 @@
 package br.com.forgefit.dominio.aula;
 
 import static org.junit.jupiter.api.Assertions.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import br.com.forgefit.dominio.AcademiaFuncionalidade;
 import br.com.forgefit.dominio.aluno.Aluno;
 import br.com.forgefit.dominio.aluno.Cpf;
+import br.com.forgefit.dominio.aluno.Matricula;
+import br.com.forgefit.dominio.professor.ProfessorId;
 import br.com.forgefit.dominio.aula.enums.Espaco;
 import br.com.forgefit.dominio.aula.enums.Modalidade;
 import br.com.forgefit.dominio.aula.enums.StatusReserva;
@@ -16,11 +19,24 @@ public class ListaDeEsperaFuncionalidade {
     private final AcademiaFuncionalidade contexto;
     private Aula aulaCriada;
     private Cpf cpfAlunoAtual;
+    private Matricula matriculaAlunoAtual;
     private Reserva reservaCriada;
     private LocalDateTime momentoCancelamento; // Armazena quando o cancelamento deve ocorrer
+    
+    // Mapeamento de CPFs para matrículas para os testes
+    private Matricula matriculaPrimeiroReservado;
+    private Matricula matriculaPrimeiroDaFila;
+    private Matricula matriculaParaCancelar;
 
     public ListaDeEsperaFuncionalidade(AcademiaFuncionalidade contexto) {
         this.contexto = contexto;
+    }
+    
+    // Helper para encontrar matrícula pelo CPF
+    private Matricula encontrarMatriculaPorCpf(Cpf cpf) {
+        return contexto.repositorio.obterAlunoPorCpf(cpf)
+            .map(aluno -> aluno.getMatricula())
+            .orElseThrow(() -> new IllegalArgumentException("Aluno não encontrado para CPF: " + cpf));
     }
 
     @Given("que exista uma aula ATIVA marcada para {int}\\/{int}\\/{int} {int}:{int} com capacidade {int} e {int} reservas confirmadas")
@@ -28,13 +44,13 @@ public class ListaDeEsperaFuncionalidade {
             Integer dia, Integer mes, Integer ano, Integer hora, Integer minuto, Integer capacidade,
             Integer numReservas) {
         LocalDateTime dataHora = LocalDateTime.of(ano, mes, dia, hora, minuto);
-        aulaCriada = contexto.aulaService.criarAulaUnica(Modalidade.MUSCULACAO, Espaco.SALA01_MULTIUSO,
+        aulaCriada = contexto.aulaService.criarAulaUnica(new ProfessorId(1), Modalidade.MUSCULACAO, Espaco.SALA01_MULTIUSO,
                 capacidade, dataHora, dataHora.plusHours(1));
         for (int i = 0; i < numReservas; i++) {
             Cpf cpf = new Cpf(String.format("%011d", 10000000000L + i));
-            Aluno aluno = new Aluno(cpf);
+            Aluno aluno = new Aluno(cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
             contexto.repositorio.salvar(aluno);
-            contexto.reservaService.reservarVaga(cpf, aulaCriada.getId());
+            contexto.reservaService.reservarVaga(aluno.getMatricula(), aulaCriada.getId());
         }
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
     }
@@ -60,9 +76,9 @@ public class ListaDeEsperaFuncionalidade {
     public void que_exista_uma_aula_com_status_cancelada_marcada_para(Integer dia, Integer mes, Integer ano,
             Integer hora, Integer minuto) {
         LocalDateTime dataHora = LocalDateTime.of(ano, mes, dia, hora, minuto);
-        aulaCriada = contexto.aulaService.criarAulaUnica(Modalidade.YOGA, Espaco.ESTUDIO_PILATES,
+        aulaCriada = contexto.aulaService.criarAulaUnica(new ProfessorId(1), Modalidade.YOGA, Espaco.ESTUDIO_PILATES,
                 20, dataHora, dataHora.plusHours(1));
-        contexto.aulaService.cancelarAula(aulaCriada.getId());
+        contexto.aulaService.cancelarAulaDefinitivamente(aulaCriada.getId());
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
     }
 
@@ -102,7 +118,7 @@ public class ListaDeEsperaFuncionalidade {
         assertTrue(aulaCriada.getListaDeEspera().size() > 0,
                 "Lista de espera deveria conter pelo menos 1 aluno");
         assertTrue(aulaCriada.getListaDeEspera().stream()
-                .anyMatch(p -> p.getAlunoId().equals(cpfAlunoAtual)),
+                .anyMatch(p -> p.getAlunoMatricula().equals(matriculaAlunoAtual)),
                 "Aluno deveria estar na lista de espera");
     }
 
@@ -115,9 +131,9 @@ public class ListaDeEsperaFuncionalidade {
         // Adiciona alunos na lista de espera
         for (int i = 0; i < numEspera; i++) {
             Cpf cpf = new Cpf(String.format("%011d", 90000000000L + i));
-            Aluno aluno = new Aluno(cpf);
+            Aluno aluno = new Aluno(cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
             contexto.repositorio.salvar(aluno);
-            contexto.reservaService.reservarVaga(cpf, aulaCriada.getId());
+            contexto.reservaService.reservarVaga(aluno.getMatricula(), aulaCriada.getId());
         }
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
     }
@@ -125,14 +141,15 @@ public class ListaDeEsperaFuncionalidade {
     @Given("um aluno com CPF {string} tem uma reserva CONFIRMADA")
     public void um_aluno_com_cpf_tem_uma_reserva_confirmada(String cpf) {
         cpfAlunoAtual = new Cpf(cpf);
-        Aluno aluno = new Aluno(cpfAlunoAtual);
+        Aluno aluno = new Aluno(cpfAlunoAtual, "Aluno Atual", LocalDate.of(1990, 1, 1));
+        matriculaAlunoAtual = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
-        reservaCriada = contexto.reservaService.reservarVaga(cpfAlunoAtual, aulaCriada.getId());
+        reservaCriada = contexto.reservaService.reservarVaga(matriculaAlunoAtual, aulaCriada.getId());
     }
 
     @When("o aluno cancela a reserva")
     public void o_aluno_cancela_a_reserva() {
-        contexto.reservaService.cancelarReserva(cpfAlunoAtual, aulaCriada.getId());
+        contexto.reservaService.cancelarReserva(matriculaAlunoAtual, aulaCriada.getId());
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
     }
 
@@ -140,7 +157,7 @@ public class ListaDeEsperaFuncionalidade {
     public void a_reserva_e_removida_da_aula() {
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
         assertFalse(aulaCriada.getReservas().stream()
-                .anyMatch(r -> r.getStatus() == StatusReserva.CONFIRMADA && r.getAlunoId().equals(cpfAlunoAtual)));
+                .anyMatch(r -> r.getStatus() == StatusReserva.CONFIRMADA && r.getAlunoMatricula().equals(matriculaAlunoAtual)));
     }
 
     @Then("a primeira reserva em espera é promovida para CONFIRMADA")
@@ -161,15 +178,16 @@ public class ListaDeEsperaFuncionalidade {
     @Given("um aluno com CPF {string} tem uma reserva EM_ESPERA na posição {int}")
     public void um_aluno_com_cpf_tem_uma_reserva_em_espera_na_posicao(String cpf, Integer posicao) {
         cpfAlunoAtual = new Cpf(cpf);
-        Aluno aluno = new Aluno(cpfAlunoAtual);
+        Aluno aluno = new Aluno(cpfAlunoAtual, "Aluno Atual", LocalDate.of(1990, 1, 1));
+        matriculaAlunoAtual = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
 
         // Adiciona o aluno na lista de espera (aula deve estar lotada)
-        contexto.reservaService.reservarVaga(cpfAlunoAtual, aulaCriada.getId());
+        contexto.reservaService.reservarVaga(matriculaAlunoAtual, aulaCriada.getId());
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
 
         // Verifica que está na posição esperada
-        int posicaoAtual = aulaCriada.getPosicaoNaListaDeEspera(cpfAlunoAtual);
+        int posicaoAtual = aulaCriada.getPosicaoNaListaDeEspera(matriculaAlunoAtual);
         assertEquals(posicao.intValue(), posicaoAtual,
                 "Aluno deveria estar na posição " + posicao);
     }
@@ -179,7 +197,7 @@ public class ListaDeEsperaFuncionalidade {
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
         // Verifica que o aluno continua na lista de espera
         assertTrue(aulaCriada.getListaDeEspera().stream()
-                .anyMatch(p -> p.getAlunoId().equals(cpfAlunoAtual)),
+                .anyMatch(p -> p.getAlunoMatricula().equals(matriculaAlunoAtual)),
                 "Aluno deveria continuar na lista de espera");
     }
 
@@ -200,16 +218,16 @@ public class ListaDeEsperaFuncionalidade {
         // Adiciona alunos na lista de espera
         for (int i = 0; i < numEspera; i++) {
             Cpf cpf = new Cpf(String.format("%011d", 95000000000L + i));
-            Aluno aluno = new Aluno(cpf);
+            Aluno aluno = new Aluno(cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
             contexto.repositorio.salvar(aluno);
-            contexto.reservaService.reservarVaga(cpf, aulaCriada.getId());
+            contexto.reservaService.reservarVaga(aluno.getMatricula(), aulaCriada.getId());
         }
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
     }
 
     @When("a aula é cancelada")
     public void a_aula_e_cancelada() {
-        contexto.aulaService.cancelarAula(aulaCriada.getId());
+        contexto.aulaService.cancelarAulaDefinitivamente(aulaCriada.getId());
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
     }
 
@@ -241,27 +259,24 @@ public class ListaDeEsperaFuncionalidade {
     public void que_exista_uma_aula_ativa_marcada_para_com_capacidade_inicial_de(
             Integer dia, Integer mes, Integer ano, Integer hora, Integer minuto, Integer capacidade) {
         LocalDateTime dataHora = LocalDateTime.of(ano, mes, dia, hora, minuto);
-        aulaCriada = contexto.aulaService.criarAulaUnica(Modalidade.CROSSFIT, Espaco.SALA02_MULTIUSO,
+        aulaCriada = contexto.aulaService.criarAulaUnica(new ProfessorId(1), Modalidade.CROSSFIT, Espaco.SALA02_MULTIUSO,
                 capacidade, dataHora, dataHora.plusHours(1));
     }
 
     @When("a capacidade da aula é alterada para {int}")
     public void a_capacidade_da_aula_e_alterada_para(Integer novaCapacidade) {
-        // TODO: Método alterarCapacidade não existe no AulaService
         // Funcionalidade não implementada no domínio
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
     }
 
     @Then("as {int} primeiras reservas em espera são promovidas para CONFIRMADA")
     public void as_primeiras_reservas_em_espera_sao_promovidas_para_confirmada(Integer quantidade) {
-        // TODO: Depende de alterarCapacidade que não está implementado
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
         assertNotNull(aulaCriada);
     }
 
     @Then("as {int} últimas reservas CONFIRMADAS são movidas para EM_ESPERA")
     public void as_ultimas_reservas_confirmadas_sao_movidas_para_em_espera(Integer quantidade) {
-        // TODO: Depende de alterarCapacidade que não está implementado
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
         assertNotNull(aulaCriada);
     }
@@ -275,9 +290,9 @@ public class ListaDeEsperaFuncionalidade {
         // Adiciona alunos na lista de espera
         for (int i = 0; i < numEspera; i++) {
             Cpf cpf = new Cpf(String.format("%011d", 85000000000L + i));
-            Aluno aluno = new Aluno(cpf);
+            Aluno aluno = new Aluno(cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
             contexto.repositorio.salvar(aluno);
-            contexto.reservaService.reservarVaga(cpf, aulaCriada.getId());
+            contexto.reservaService.reservarVaga(aluno.getMatricula(), aulaCriada.getId());
         }
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
     }
@@ -301,7 +316,7 @@ public class ListaDeEsperaFuncionalidade {
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
         // Verifica que conseguimos obter posição na fila
         if (!aulaCriada.getListaDeEspera().isEmpty()) {
-            Cpf primeiroNaFila = aulaCriada.getListaDeEspera().get(0).getAlunoId();
+            Matricula primeiroNaFila = aulaCriada.getListaDeEspera().get(0).getAlunoMatricula();
             int posicao = aulaCriada.getPosicaoNaListaDeEspera(primeiroNaFila);
             assertEquals(1, posicao, "Primeiro da fila deveria estar na posição 1");
         }
@@ -320,14 +335,14 @@ public class ListaDeEsperaFuncionalidade {
             Integer ano, Integer vagas) {
         LocalDateTime dataHora = LocalDateTime.of(ano, mes, dia, 7, 0);
         int capacidade = vagas + 1; // capacidade total = vagas restantes + já ocupadas
-        aulaCriada = contexto.aulaService.criarAulaUnica(Modalidade.YOGA, Espaco.SALA01_MULTIUSO,
+        aulaCriada = contexto.aulaService.criarAulaUnica(new ProfessorId(1), Modalidade.YOGA, Espaco.SALA01_MULTIUSO,
                 capacidade, dataHora, dataHora.plusHours(1));
         // Criar reservas para deixar apenas 'vagas' livres
         for (int i = 0; i < capacidade - vagas; i++) {
             Cpf cpf = new Cpf(String.format("%011d", 20000000000L + i));
-            Aluno aluno = new Aluno(cpf);
+            Aluno aluno = new Aluno(cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
             contexto.repositorio.salvar(aluno);
-            contexto.reservaService.reservarVaga(cpf, aulaCriada.getId());
+            contexto.reservaService.reservarVaga(aluno.getMatricula(), aulaCriada.getId());
         }
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
     }
@@ -349,18 +364,19 @@ public class ListaDeEsperaFuncionalidade {
     public void que_o_aluno_joao_ja_possua_uma_reserva_ativa_para_a_aula_marcada_no_dia_as_09h00(Integer dia,
             Integer mes, Integer ano) {
         LocalDateTime dataHora = LocalDateTime.of(ano, mes, dia, 9, 0);
-        aulaCriada = contexto.aulaService.criarAulaUnica(Modalidade.CROSSFIT, Espaco.SALA01_MULTIUSO,
+        aulaCriada = contexto.aulaService.criarAulaUnica(new ProfessorId(1), Modalidade.CROSSFIT, Espaco.SALA01_MULTIUSO,
                 20, dataHora, dataHora.plusHours(1));
         cpfAlunoAtual = new Cpf("12345678901");
-        Aluno aluno = new Aluno(cpfAlunoAtual);
+        Aluno aluno = new Aluno(cpfAlunoAtual, "Aluno Atual", LocalDate.of(1990, 1, 1));
+        matriculaAlunoAtual = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
-        reservaCriada = contexto.reservaService.reservarVaga(cpfAlunoAtual, aulaCriada.getId());
+        reservaCriada = contexto.reservaService.reservarVaga(matriculaAlunoAtual, aulaCriada.getId());
     }
 
     @When("João tentar reservar novamente essa aula")
     public void joao_tentar_reservar_novamente_essa_aula() {
         try {
-            contexto.reservaService.reservarVaga(cpfAlunoAtual, aulaCriada.getId());
+            contexto.reservaService.reservarVaga(matriculaAlunoAtual, aulaCriada.getId());
             reservaCriada = null; // Se não lançou exceção, marca como null
         } catch (Exception e) {
             // Esperado - sistema deve bloquear
@@ -383,14 +399,14 @@ public class ListaDeEsperaFuncionalidade {
     public void que_a_aula_de_yoga_avancado_marcada_para_o_dia_as_08h00_tenha_atingido_sua_capacidade_maxima_de_alunos(
             Integer dia, Integer mes, Integer ano, Integer capacidade) {
         LocalDateTime dataHora = LocalDateTime.of(ano, mes, dia, 8, 0);
-        aulaCriada = contexto.aulaService.criarAulaUnica(Modalidade.YOGA, Espaco.ESTUDIO_PILATES,
+        aulaCriada = contexto.aulaService.criarAulaUnica(new ProfessorId(1), Modalidade.YOGA, Espaco.ESTUDIO_PILATES,
                 capacidade, dataHora, dataHora.plusHours(1));
         // Lotar a aula
         for (int i = 0; i < capacidade; i++) {
             Cpf cpf = new Cpf(String.format("%011d", 30000000000L + i));
-            Aluno aluno = new Aluno(cpf);
+            Aluno aluno = new Aluno(cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
             contexto.repositorio.salvar(aluno);
-            contexto.reservaService.reservarVaga(cpf, aulaCriada.getId());
+            contexto.reservaService.reservarVaga(aluno.getMatricula(), aulaCriada.getId());
         }
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
     }
@@ -404,13 +420,13 @@ public class ListaDeEsperaFuncionalidade {
     public void o_aluno_e_incluido_na_lista_de_espera_em_ordem_de_chegada() {
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
         assertTrue(aulaCriada.getListaDeEspera().size() > 0);
-        assertTrue(aulaCriada.getListaDeEspera().get(0).getAlunoId().equals(cpfAlunoAtual));
+        assertTrue(aulaCriada.getListaDeEspera().get(0).getAlunoMatricula().equals(matriculaAlunoAtual));
     }
 
     @Then("o aluno é notificado com a mensagem {string}")
     public void o_aluno_e_notificado_com_a_mensagem(String mensagem) {
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
-        int posicao = aulaCriada.getPosicaoNaListaDeEspera(cpfAlunoAtual);
+        int posicao = aulaCriada.getPosicaoNaListaDeEspera(matriculaAlunoAtual);
         if (mensagem.contains("posição")) {
             assertTrue(posicao > 0, "Aluno deveria estar na lista de espera");
         }
@@ -420,18 +436,19 @@ public class ListaDeEsperaFuncionalidade {
     public void que_o_aluno_maria_ja_esteja_reservada_ou_na_lista_de_espera_da_aula_marcada_para_o_dia_as_18h30(
             Integer dia, Integer mes, Integer ano) {
         LocalDateTime dataHora = LocalDateTime.of(ano, mes, dia, 18, 30);
-        aulaCriada = contexto.aulaService.criarAulaUnica(Modalidade.PILATES, Espaco.ESTUDIO_PILATES,
+        aulaCriada = contexto.aulaService.criarAulaUnica(new ProfessorId(1), Modalidade.PILATES, Espaco.ESTUDIO_PILATES,
                 10, dataHora, dataHora.plusHours(1));
         cpfAlunoAtual = new Cpf("98765432100");
-        Aluno aluno = new Aluno(cpfAlunoAtual);
+        Aluno aluno = new Aluno(cpfAlunoAtual, "Aluno Atual", LocalDate.of(1990, 1, 1));
+        matriculaAlunoAtual = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
-        reservaCriada = contexto.reservaService.reservarVaga(cpfAlunoAtual, aulaCriada.getId());
+        reservaCriada = contexto.reservaService.reservarVaga(matriculaAlunoAtual, aulaCriada.getId());
     }
 
     @When("Maria tentar entrar novamente na lista de espera")
     public void maria_tentar_entrar_novamente_na_lista_de_espera() {
         try {
-            contexto.reservaService.reservarVaga(cpfAlunoAtual, aulaCriada.getId());
+            contexto.reservaService.reservarVaga(matriculaAlunoAtual, aulaCriada.getId());
         } catch (Exception e) {
             contexto.excecao = e;
         }
@@ -453,31 +470,32 @@ public class ListaDeEsperaFuncionalidade {
     public void que_haja_uma_lista_de_espera_de_alunos_para_a_aula_de_pilates_funcional_marcada_para_o_dia_as_07h30_e_uma_vaga_seja_liberada(
             Integer numEspera, Integer dia, Integer mes, Integer ano) {
         LocalDateTime dataHora = LocalDateTime.of(ano, mes, dia, 7, 30);
-        aulaCriada = contexto.aulaService.criarAulaUnica(Modalidade.PILATES, Espaco.ESTUDIO_PILATES,
+        aulaCriada = contexto.aulaService.criarAulaUnica(new ProfessorId(1), Modalidade.PILATES, Espaco.ESTUDIO_PILATES,
                 10, dataHora, dataHora.plusHours(1));
 
         // Lota a aula completamente
         for (int i = 0; i < 10; i++) {
             Cpf cpf = new Cpf(String.format("%011d", 40000000000L + i));
-            Aluno aluno = new Aluno(cpf);
+            Aluno aluno = new Aluno(cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
             contexto.repositorio.salvar(aluno);
-            contexto.reservaService.reservarVaga(cpf, aulaCriada.getId());
+            contexto.reservaService.reservarVaga(aluno.getMatricula(), aulaCriada.getId());
         }
 
         // Adiciona alunos na lista de espera
         for (int i = 0; i < numEspera; i++) {
             Cpf cpf = new Cpf(String.format("%011d", 50000000000L + i));
-            Aluno aluno = new Aluno(cpf);
+            Aluno aluno = new Aluno(cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
             contexto.repositorio.salvar(aluno);
             // Vai para lista de espera automaticamente pois está lotada
-            contexto.reservaService.reservarVaga(cpf, aulaCriada.getId());
+            contexto.reservaService.reservarVaga(aluno.getMatricula(), aulaCriada.getId());
         }
 
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
 
         // Libera uma vaga cancelando a primeira reserva
         Cpf cpfPrimeiroReservado = new Cpf(String.format("%011d", 40000000000L));
-        contexto.reservaService.cancelarReserva(cpfPrimeiroReservado, aulaCriada.getId());
+        matriculaPrimeiroReservado = encontrarMatriculaPorCpf(cpfPrimeiroReservado);
+        contexto.reservaService.cancelarReserva(matriculaPrimeiroReservado, aulaCriada.getId());
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
     }
 
@@ -492,7 +510,8 @@ public class ListaDeEsperaFuncionalidade {
         // Verifica que o primeiro da lista de espera foi promovido
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
         Cpf cpfPrimeiroDaFila = new Cpf(String.format("%011d", 50000000000L));
-        assertTrue(aulaCriada.alunoJaPossuiReserva(cpfPrimeiroDaFila),
+        matriculaPrimeiroDaFila = encontrarMatriculaPorCpf(cpfPrimeiroDaFila);
+        assertTrue(aulaCriada.alunoJaPossuiReserva(matriculaPrimeiroDaFila),
                 "O primeiro da lista de espera deveria ter sido promovido");
     }
 
@@ -500,23 +519,23 @@ public class ListaDeEsperaFuncionalidade {
     public void que_haja_lista_de_espera_para_a_aula_de_spinning_marcada_para_o_dia_as_19h00_e_uma_vaga_seja_liberada(
             Integer dia, Integer mes, Integer ano) {
         LocalDateTime dataHora = LocalDateTime.of(ano, mes, dia, 19, 0);
-        aulaCriada = contexto.aulaService.criarAulaUnica(Modalidade.SPINNING, Espaco.SALA01_MULTIUSO,
+        aulaCriada = contexto.aulaService.criarAulaUnica(new ProfessorId(1), Modalidade.SPINNING, Espaco.SALA01_MULTIUSO,
                 15, dataHora, dataHora.plusHours(1));
 
         // Lota a aula
         for (int i = 0; i < 15; i++) {
             Cpf cpf = new Cpf(String.format("%011d", 60000000000L + i));
-            Aluno aluno = new Aluno(cpf);
+            Aluno aluno = new Aluno(cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
             contexto.repositorio.salvar(aluno);
-            contexto.reservaService.reservarVaga(cpf, aulaCriada.getId());
+            contexto.reservaService.reservarVaga(aluno.getMatricula(), aulaCriada.getId());
         }
 
         // Adiciona na lista de espera
         for (int i = 0; i < 3; i++) {
             Cpf cpf = new Cpf(String.format("%011d", 61000000000L + i));
-            Aluno aluno = new Aluno(cpf);
+            Aluno aluno = new Aluno(cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
             contexto.repositorio.salvar(aluno);
-            contexto.reservaService.reservarVaga(cpf, aulaCriada.getId());
+            contexto.reservaService.reservarVaga(aluno.getMatricula(), aulaCriada.getId());
         }
 
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
@@ -526,7 +545,8 @@ public class ListaDeEsperaFuncionalidade {
     public void o_prazo_de_minutos_expirar_sem_resposta(Integer minutos) {
         // Libera uma vaga - promoção é automática
         Cpf cpfPrimeiroReservado = new Cpf(String.format("%011d", 60000000000L));
-        contexto.reservaService.cancelarReserva(cpfPrimeiroReservado, aulaCriada.getId());
+        matriculaPrimeiroReservado = encontrarMatriculaPorCpf(cpfPrimeiroReservado);
+        contexto.reservaService.cancelarReserva(matriculaPrimeiroReservado, aulaCriada.getId());
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
     }
 
@@ -534,7 +554,8 @@ public class ListaDeEsperaFuncionalidade {
     public void o_sistema_convida_automaticamente_o_proximo_elegivel_da_fila() {
         // Verifica que o primeiro da fila foi promovido automaticamente
         Cpf cpfPrimeiroDaFila = new Cpf(String.format("%011d", 61000000000L));
-        assertTrue(aulaCriada.alunoJaPossuiReserva(cpfPrimeiroDaFila),
+        matriculaPrimeiroDaFila = encontrarMatriculaPorCpf(cpfPrimeiroDaFila);
+        assertTrue(aulaCriada.alunoJaPossuiReserva(matriculaPrimeiroDaFila),
                 "O primeiro da fila deveria ter sido automaticamente promovido");
         // Verifica que a lista de espera diminuiu
         assertEquals(2, aulaCriada.getListaDeEspera().size(),
@@ -545,12 +566,13 @@ public class ListaDeEsperaFuncionalidade {
     public void que_o_aluno_pedro_possua_reserva_ativa_na_aula_do_dia_as_08h00_e_cancele_com_horas_de_antecedencia_dentro_do_prazo_de_reembolso(
             Integer dia, Integer mes, Integer ano, Integer horas) {
         LocalDateTime dataHora = LocalDateTime.of(ano, mes, dia, 8, 0);
-        aulaCriada = contexto.aulaService.criarAulaUnica(Modalidade.YOGA, Espaco.ESTUDIO_PILATES,
+        aulaCriada = contexto.aulaService.criarAulaUnica(new ProfessorId(1), Modalidade.YOGA, Espaco.ESTUDIO_PILATES,
                 10, dataHora, dataHora.plusHours(1));
         cpfAlunoAtual = new Cpf("11122233344");
-        Aluno aluno = new Aluno(cpfAlunoAtual);
+        Aluno aluno = new Aluno(cpfAlunoAtual, "Aluno Atual", LocalDate.of(1990, 1, 1));
+        matriculaAlunoAtual = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
-        reservaCriada = contexto.reservaService.reservarVaga(cpfAlunoAtual, aulaCriada.getId());
+        reservaCriada = contexto.reservaService.reservarVaga(matriculaAlunoAtual, aulaCriada.getId());
 
         // Define o momento do cancelamento (X horas antes da aula)
         momentoCancelamento = dataHora.minusHours(horas);
@@ -560,18 +582,18 @@ public class ListaDeEsperaFuncionalidade {
     public void o_sistema_processar_o_cancelamento() {
         if (momentoCancelamento != null) {
             // Usa momento específico configurado no @Given
-            contexto.reservaService.cancelarReserva(cpfAlunoAtual, aulaCriada.getId(), momentoCancelamento);
+            contexto.reservaService.cancelarReserva(matriculaAlunoAtual, aulaCriada.getId(), momentoCancelamento);
             momentoCancelamento = null; // Reset para próximos cenários
         } else {
             // Usa momento atual (comportamento padrão)
-            contexto.reservaService.cancelarReserva(cpfAlunoAtual, aulaCriada.getId());
+            contexto.reservaService.cancelarReserva(matriculaAlunoAtual, aulaCriada.getId());
         }
     }
 
     @Then("o crédito interno é calculado conforme percentual previsto pela política")
     public void o_credito_interno_e_calculado_conforme_percentual_previsto_pela_politica() {
         // Verifica que o aluno recebeu crédito (reembolso de 100%)
-        var aluno = contexto.repositorio.obterPorCpf(cpfAlunoAtual).get();
+        var aluno = contexto.repositorio.obterAlunoPorCpf(cpfAlunoAtual).get();
         assertTrue(aluno.getCreditos() > 0, "Aluno deveria ter recebido crédito de reembolso");
         assertEquals(20.0, aluno.getCreditos(), 0.01, "Reembolso deveria ser de R$ 20,00 (100%)");
     }
@@ -588,12 +610,13 @@ public class ListaDeEsperaFuncionalidade {
     public void que_o_aluno_lucas_possua_reserva_ativa_na_aula_do_dia_as_19h00_e_cancele_horas_antes_fora_do_prazo_de_reembolso(
             Integer dia, Integer mes, Integer ano, Integer horas) {
         LocalDateTime dataHora = LocalDateTime.of(ano, mes, dia, 19, 0);
-        aulaCriada = contexto.aulaService.criarAulaUnica(Modalidade.CROSSFIT, Espaco.SALA01_MULTIUSO,
+        aulaCriada = contexto.aulaService.criarAulaUnica(new ProfessorId(1), Modalidade.CROSSFIT, Espaco.SALA01_MULTIUSO,
                 20, dataHora, dataHora.plusHours(1));
         cpfAlunoAtual = new Cpf("55566677788");
-        Aluno aluno = new Aluno(cpfAlunoAtual);
+        Aluno aluno = new Aluno(cpfAlunoAtual, "Aluno Atual", LocalDate.of(1990, 1, 1));
+        matriculaAlunoAtual = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
-        reservaCriada = contexto.reservaService.reservarVaga(cpfAlunoAtual, aulaCriada.getId());
+        reservaCriada = contexto.reservaService.reservarVaga(matriculaAlunoAtual, aulaCriada.getId());
 
         // Define o momento do cancelamento (X horas antes da aula)
         momentoCancelamento = dataHora.minusHours(horas);
@@ -602,7 +625,7 @@ public class ListaDeEsperaFuncionalidade {
     @Then("nenhum reembolso é devido")
     public void nenhum_reembolso_e_devido() {
         // Verifica que o aluno NÃO recebeu crédito (cancelou tarde demais)
-        var aluno = contexto.repositorio.obterPorCpf(cpfAlunoAtual).get();
+        var aluno = contexto.repositorio.obterAlunoPorCpf(cpfAlunoAtual).get();
         assertEquals(0.0, aluno.getCreditos(), 0.01, "Não deveria haver reembolso");
     }
 
@@ -610,7 +633,7 @@ public class ListaDeEsperaFuncionalidade {
     public void o_aluno_e_notificado_sobre_a_regra_aplicada() {
         // Validação de que o cancelamento foi processado
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
-        assertFalse(aulaCriada.alunoJaPossuiReserva(cpfAlunoAtual),
+        assertFalse(aulaCriada.alunoJaPossuiReserva(matriculaAlunoAtual),
                 "Reserva deveria ter sido cancelada");
     }
 
@@ -618,23 +641,23 @@ public class ListaDeEsperaFuncionalidade {
     public void que_exista_lista_de_espera_para_a_aula_de_cross_training_marcada_para_o_dia_as_09h00(
             Integer dia, Integer mes, Integer ano) {
         LocalDateTime dataHora = LocalDateTime.of(ano, mes, dia, 9, 0);
-        aulaCriada = contexto.aulaService.criarAulaUnica(Modalidade.CROSSFIT, Espaco.SALA01_MULTIUSO,
+        aulaCriada = contexto.aulaService.criarAulaUnica(new ProfessorId(1), Modalidade.CROSSFIT, Espaco.SALA01_MULTIUSO,
                 15, dataHora, dataHora.plusHours(1));
 
         // Lota a aula
         for (int i = 0; i < 15; i++) {
             Cpf cpf = new Cpf(String.format("%011d", 70000000000L + i));
-            Aluno aluno = new Aluno(cpf);
+            Aluno aluno = new Aluno(cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
             contexto.repositorio.salvar(aluno);
-            contexto.reservaService.reservarVaga(cpf, aulaCriada.getId());
+            contexto.reservaService.reservarVaga(aluno.getMatricula(), aulaCriada.getId());
         }
 
         // Adiciona 2 alunos na lista de espera
         for (int i = 0; i < 2; i++) {
             Cpf cpf = new Cpf(String.format("%011d", 71000000000L + i));
-            Aluno aluno = new Aluno(cpf);
+            Aluno aluno = new Aluno(cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
             contexto.repositorio.salvar(aluno);
-            contexto.reservaService.reservarVaga(cpf, aulaCriada.getId());
+            contexto.reservaService.reservarVaga(aluno.getMatricula(), aulaCriada.getId());
         }
 
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
@@ -645,7 +668,8 @@ public class ListaDeEsperaFuncionalidade {
         // Libera uma vaga cancelando uma reserva
         // Usa cpfAlunoAtual se definido, senão usa CPF padrão do cenário de promoção
         Cpf cpfParaCancelar = cpfAlunoAtual != null ? cpfAlunoAtual : new Cpf(String.format("%011d", 70000000000L));
-        contexto.reservaService.cancelarReserva(cpfParaCancelar, aulaCriada.getId());
+        matriculaParaCancelar = encontrarMatriculaPorCpf(cpfParaCancelar);
+        contexto.reservaService.cancelarReserva(matriculaParaCancelar, aulaCriada.getId());
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
     }
 
@@ -653,7 +677,8 @@ public class ListaDeEsperaFuncionalidade {
     public void o_sistema_inicia_imediatamente_a_promocao_automatica_para_o_primeiro_da_fila() {
         // Verifica que o primeiro da fila foi promovido automaticamente
         Cpf cpfPrimeiroDaFila = new Cpf(String.format("%011d", 71000000000L));
-        assertTrue(aulaCriada.alunoJaPossuiReserva(cpfPrimeiroDaFila),
+        matriculaPrimeiroDaFila = encontrarMatriculaPorCpf(cpfPrimeiroDaFila);
+        assertTrue(aulaCriada.alunoJaPossuiReserva(matriculaPrimeiroDaFila),
                 "Primeiro da fila deveria ter sido promovido automaticamente");
         assertEquals(1, aulaCriada.getListaDeEspera().size(),
                 "Lista de espera deveria ter 1 aluno restante");
@@ -663,15 +688,15 @@ public class ListaDeEsperaFuncionalidade {
     public void que_a_aula_de_alongamento_do_dia_as_17h00_nao_possua_lista_de_espera(
             Integer dia, Integer mes, Integer ano) {
         LocalDateTime dataHora = LocalDateTime.of(ano, mes, dia, 17, 0);
-        aulaCriada = contexto.aulaService.criarAulaUnica(Modalidade.YOGA, Espaco.ESTUDIO_PILATES,
+        aulaCriada = contexto.aulaService.criarAulaUnica(new ProfessorId(1), Modalidade.YOGA, Espaco.ESTUDIO_PILATES,
                 10, dataHora, dataHora.plusHours(1));
 
         // Adiciona apenas 5 reservas (50% da capacidade)
         for (int i = 0; i < 5; i++) {
             Cpf cpf = new Cpf(String.format("%011d", 80000000000L + i));
-            Aluno aluno = new Aluno(cpf);
+            Aluno aluno = new Aluno(cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
             contexto.repositorio.salvar(aluno);
-            contexto.reservaService.reservarVaga(cpf, aulaCriada.getId());
+            contexto.reservaService.reservarVaga(aluno.getMatricula(), aulaCriada.getId());
         }
 
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
@@ -693,10 +718,11 @@ public class ListaDeEsperaFuncionalidade {
     private void criarEReservarComoNovoAluno() {
         long timestamp = System.nanoTime();
         cpfAlunoAtual = new Cpf(String.format("%011d", timestamp % 100000000000L));
-        Aluno aluno = new Aluno(cpfAlunoAtual);
+        Aluno aluno = new Aluno(cpfAlunoAtual, "Aluno Atual", LocalDate.of(1990, 1, 1));
+        matriculaAlunoAtual = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
         try {
-            reservaCriada = contexto.reservaService.reservarVaga(cpfAlunoAtual, aulaCriada.getId());
+            reservaCriada = contexto.reservaService.reservarVaga(matriculaAlunoAtual, aulaCriada.getId());
         } catch (Exception e) {
             reservaCriada = null;
         }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import br.com.forgefit.dominio.aluno.Aluno;
+import br.com.forgefit.dominio.aluno.AlunoService;
 import br.com.forgefit.dominio.aula.Aula;
 import br.com.forgefit.dominio.aula.AulaService;
 import br.com.forgefit.dominio.aula.ReembolsoService;
@@ -30,6 +31,7 @@ public class AcademiaFuncionalidade implements EventoBarramento {
     public final CheckinService checkinService;
     public final TorneioService torneioService;
     public final AulaService aulaService;
+    public final AlunoService alunoService;
     public final ReservaService reservaService;
     public final RankingService rankingService;
     public final AvaliacaoService avaliacaoService;
@@ -55,7 +57,8 @@ public class AcademiaFuncionalidade implements EventoBarramento {
         this.torneioService = new TorneioService(this.repositorio);
         this.aulaService = new AulaService(this.repositorio);
         this.reembolsoService = new ReembolsoService();
-        this.reservaService = new ReservaService(this.repositorio, this.repositorio, this.reembolsoService);
+        this.alunoService = new AlunoService(this.repositorio);
+        this.reservaService = new ReservaService(this.repositorio, this.alunoService, this.reembolsoService);
         this.rankingService = new RankingService(this.repositorio);
         this.avaliacaoService = new AvaliacaoService(this.repositorio);
         this.treinoService = new TreinoService(this.repositorio);

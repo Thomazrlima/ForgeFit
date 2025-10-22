@@ -4,12 +4,12 @@ import static org.apache.commons.lang3.Validate.notNull;
 
 import java.time.LocalDate;
 
-import br.com.forgefit.dominio.aluno.Cpf;
+import br.com.forgefit.dominio.aluno.Matricula;
 import br.com.forgefit.dominio.guilda.GuildaId;
 
 public class Checkin {
     private final CheckinId id;
-    private final Cpf alunoId;
+    private final Matricula alunoMatricula;
     private final GuildaId guildaId;
     private final LocalDate dataDoCheckin;
     private final int pontuacaoGerada;
@@ -17,13 +17,13 @@ public class Checkin {
     private final String urlImagem;
     private final ContextoDoCheckin contexto;
 
-    public Checkin(CheckinId id, Cpf alunoId, GuildaId guildaId, LocalDate dataDoCheckin,
+    public Checkin(CheckinId id, Matricula alunoMatricula, GuildaId guildaId, LocalDate dataDoCheckin,
                    int pontuacaoGerada, String mensagem, String urlImagem, ContextoDoCheckin contexto) {
         notNull(id, "O id não pode ser nulo");
         this.id = id;
 
-        notNull(alunoId, "O CPF do aluno não pode ser nulo");
-        this.alunoId = alunoId;
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
+        this.alunoMatricula = alunoMatricula;
 
         notNull(guildaId, "O id da guilda não pode ser nulo");
         this.guildaId = guildaId;
@@ -43,8 +43,8 @@ public class Checkin {
         return id;
     }
 
-    public Cpf getAlunoId() {
-        return alunoId;
+    public Matricula getAlunoMatricula() {
+        return alunoMatricula;
     }
 
     public GuildaId getGuildaId() {

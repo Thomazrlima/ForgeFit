@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,6 +13,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import br.com.forgefit.dominio.AcademiaFuncionalidade;
+import br.com.forgefit.dominio.professor.ProfessorId;
 
 public class AvaliacaoFisicaFuncionalidade {
     private final AcademiaFuncionalidade contexto;
@@ -30,11 +30,9 @@ public class AvaliacaoFisicaFuncionalidade {
     @Given("que o aluno é cadastrado com o CPF {string}")
     public void queOAlunoECadastradoComOCPF(String cpf) {
         this.cpfAluno = new Cpf(cpf.replaceAll("[^0-9]", ""));
-        Optional<Aluno> aluno = contexto.repositorio.obterPorCpf(cpfAluno);
+        Optional<Aluno> aluno = contexto.repositorio.obterAlunoPorCpf(cpfAluno);
         if (aluno.isEmpty()) {
-            Aluno novoAluno = new Aluno(cpfAluno);
-            novoAluno.setNome("Aluno Teste");
-            novoAluno.setDataNascimento(LocalDate.now());
+            Aluno novoAluno = new Aluno(cpfAluno, "Aluno Teste", LocalDate.now().minusYears(25));
             contexto.repositorio.salvar(novoAluno);
             contexto.alunoAtual = novoAluno;
         } else {
@@ -44,8 +42,7 @@ public class AvaliacaoFisicaFuncionalidade {
 
     @When("o aluno registra uma nova avaliação física informando:")
     public void oAlunoRegistraUmaNovaAvaliacaoFisicaInformando(io.cucumber.datatable.DataTable dataTable) {
-        avaliacaoAtual = new AvaliacaoFisica();
-        avaliacaoAtual.setDataDaAvaliacao(new Date());
+        avaliacaoAtual = new AvaliacaoFisica(new ProfessorId(1), LocalDate.now());
 
         try {
             for (String linha : dataTable.asList()) {
@@ -90,7 +87,7 @@ public class AvaliacaoFisicaFuncionalidade {
                 }
             }
 
-            contexto.avaliacaoFisicaService.registrarAvaliacaoFisica(cpfAluno, new ProfessorId(1), avaliacaoAtual);
+            contexto.avaliacaoFisicaService.registrarAvaliacaoFisica(contexto.alunoAtual.getMatricula(), avaliacaoAtual);
             mensagemSistema = "Avaliação física salva com sucesso";
         } catch (Exception e) {
             mensagemSistema = "É necessário preencher todos os campos da avaliação física";
@@ -104,12 +101,12 @@ public class AvaliacaoFisicaFuncionalidade {
         }
         LocalDate dataAvaliacao = LocalDate.parse(data, FORMATTER);
         AvaliacaoFisica avaliacao = criarAvaliacaoPadrao(dataAvaliacao);
-        contexto.avaliacaoFisicaService.registrarAvaliacaoFisica(cpfAluno, new ProfessorId(1), avaliacao);
+        contexto.avaliacaoFisicaService.registrarAvaliacaoFisica(contexto.alunoAtual.getMatricula(), avaliacao);
     }
 
     @When("o aluno solicita o histórico de avaliações")
     public void oAlunoSolicitaOHistoricoDeAvaliacoes() {
-        Optional<Aluno> aluno = contexto.repositorio.obterPorCpf(cpfAluno);
+        Optional<Aluno> aluno = contexto.repositorio.obterAlunoPorCpf(cpfAluno);
         if (aluno.isPresent() && !aluno.get().getHistoricoDeAvaliacoes().isEmpty()) {
             historicoAvaliacoes = aluno.get().getHistoricoDeAvaliacoes();
         } else {
@@ -128,8 +125,8 @@ public class AvaliacaoFisicaFuncionalidade {
         AvaliacaoFisica avaliacao1 = criarAvaliacaoPadrao(dataAvaliacao1);
         AvaliacaoFisica avaliacao2 = criarAvaliacaoPadrao(dataAvaliacao2);
         
-        contexto.avaliacaoFisicaService.registrarAvaliacaoFisica(cpfAluno, new ProfessorId(1), avaliacao1);
-        contexto.avaliacaoFisicaService.registrarAvaliacaoFisica(cpfAluno, new ProfessorId(1), avaliacao2);
+        contexto.avaliacaoFisicaService.registrarAvaliacaoFisica(contexto.alunoAtual.getMatricula(), avaliacao1);
+        contexto.avaliacaoFisicaService.registrarAvaliacaoFisica(contexto.alunoAtual.getMatricula(), avaliacao2);
     }
 
     @When("o sistema compara os campos:")
@@ -183,8 +180,7 @@ public class AvaliacaoFisicaFuncionalidade {
 
     @When("o aluno tenta registrar uma avaliação física com os campos:")
     public void o_aluno_tenta_registrar_uma_avaliação_física_com_os_campos(io.cucumber.datatable.DataTable dataTable) {
-        avaliacaoAtual = new AvaliacaoFisica();
-        avaliacaoAtual.setDataDaAvaliacao(new Date());
+        avaliacaoAtual = new AvaliacaoFisica(new ProfessorId(1), LocalDate.now());
 
         try {
             for (String linha : dataTable.asList()) {
@@ -257,9 +253,7 @@ public class AvaliacaoFisicaFuncionalidade {
 
         StringBuilder resultado = new StringBuilder();
         for (AvaliacaoFisica avaliacao : historicoAvaliacoes) {
-            String dataFormatada = FORMATTER.format(avaliacao.getDataDaAvaliacao().toInstant()
-                .atZone(java.time.ZoneId.systemDefault())
-                .toLocalDate());
+            String dataFormatada = FORMATTER.format(avaliacao.getDataDaAvaliacao());
 
             resultado.append("Avaliação de \"").append(dataFormatada).append("\":\n")
                 .append("O porcentual de massa gorda como \"").append(avaliacao.getMassaGordaPercentual()).append("\",\n")
@@ -287,11 +281,9 @@ public class AvaliacaoFisicaFuncionalidade {
     @Given("que o aluno com o CPF {string} ainda não possui avaliações físicas registradas")
     public void que_o_aluno_com_o_cpf_ainda_não_possui_avaliações_físicas_registradas(String cpf) {
         this.cpfAluno = new Cpf(cpf.replaceAll("[^0-9]", ""));
-        Optional<Aluno> aluno = contexto.repositorio.obterPorCpf(cpfAluno);
+        Optional<Aluno> aluno = contexto.repositorio.obterAlunoPorCpf(cpfAluno);
         if (aluno.isEmpty()) {
-            Aluno novoAluno = new Aluno(cpfAluno);
-            novoAluno.setNome("Aluno Teste");
-            novoAluno.setDataNascimento(LocalDate.now());
+            Aluno novoAluno = new Aluno(cpfAluno, "Aluno Teste", LocalDate.now().minusYears(25));
             contexto.repositorio.salvar(novoAluno);
             contexto.alunoAtual = novoAluno;
         } else {
@@ -312,8 +304,7 @@ public class AvaliacaoFisicaFuncionalidade {
     }
 
     private AvaliacaoFisica criarAvaliacaoPadrao(LocalDate data) {
-        AvaliacaoFisica avaliacao = new AvaliacaoFisica();
-        avaliacao.setDataDaAvaliacao(java.sql.Date.valueOf(data));
+        AvaliacaoFisica avaliacao = new AvaliacaoFisica(new ProfessorId(1), data);
         avaliacao.setMassaGordaPercentual(18.5);
         avaliacao.setMassaGordaKg(12.3);
         avaliacao.setMassaMagraKg(54.2);

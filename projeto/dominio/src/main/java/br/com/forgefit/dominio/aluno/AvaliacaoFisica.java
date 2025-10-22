@@ -1,9 +1,13 @@
 package br.com.forgefit.dominio.aluno;
 
-import java.util.Date;
+import java.time.LocalDate;
+import static org.apache.commons.lang3.Validate.notNull;
+
+import br.com.forgefit.dominio.professor.ProfessorId;
 
 public class AvaliacaoFisica {
-    private Date dataDaAvaliacao;
+    private final ProfessorId professorResponsavel;
+    private final LocalDate dataDaAvaliacao;
     private double massaGordaPercentual;
     private double massaGordaKg;
     private double massaMagraKg;
@@ -23,12 +27,19 @@ public class AvaliacaoFisica {
     private double coxaCm;
     private double panturrilhaCm;
 
-    public Date getDataDaAvaliacao() {
-        return dataDaAvaliacao;
+    public AvaliacaoFisica(ProfessorId professorResponsavel, LocalDate dataDaAvaliacao) {
+        notNull(professorResponsavel, "O ID do professor responsável não pode ser nulo");
+        notNull(dataDaAvaliacao, "A data da avaliação não pode ser nula");
+        this.professorResponsavel = professorResponsavel;
+        this.dataDaAvaliacao = dataDaAvaliacao;
     }
 
-    public void setDataDaAvaliacao(Date dataDaAvaliacao) {
-        this.dataDaAvaliacao = dataDaAvaliacao;
+    public ProfessorId getProfessorResponsavel() {
+        return professorResponsavel;
+    }
+
+    public LocalDate getDataDaAvaliacao() {
+        return dataDaAvaliacao;
     }
 
     public double getMassaGordaPercentual() {

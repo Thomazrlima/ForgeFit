@@ -13,9 +13,7 @@ import br.com.forgefit.dominio.aula.Aula;
 import br.com.forgefit.dominio.aula.AulaId;
 import br.com.forgefit.dominio.aula.enums.Espaco;
 import br.com.forgefit.dominio.aula.enums.Modalidade;
-import br.com.forgefit.dominio.aluno.ProfessorId;
-import br.com.forgefit.dominio.avaliacao.Avaliacao;
-import br.com.forgefit.dominio.avaliacao.Notas;
+import br.com.forgefit.dominio.professor.ProfessorId;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -24,6 +22,7 @@ public class AvaliacaoProfessorFuncionalidade {
 
     private final AcademiaFuncionalidade contexto;
     private Cpf cpfProfessor;
+    private ProfessorId professorId;
     private String mensagemSistema;
     private Notas notas;
 
@@ -35,17 +34,23 @@ public class AvaliacaoProfessorFuncionalidade {
     public void que_um_aluno_teve_aula_com_o_professor_do_cpf(String cpfString) {
         // Configura o aluno atual para o teste
         Cpf cpfAluno = new Cpf("12345678900");
-        contexto.alunoAtual = new Aluno(cpfAluno);
+        contexto.alunoAtual = new Aluno(cpfAluno, "Aluno Teste", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(contexto.alunoAtual);
 
         // Configura o professor para o teste
         String cpfNumeros = cpfString.replaceAll("[^0-9]", "");
         cpfProfessor = new Cpf(cpfNumeros);
+        professorId = new ProfessorId(1); // ID do professor para a aula
+        
+        // Valida CPF do professor (usado para validação nos testes)
+        if (cpfProfessor.getNumero().length() != 11) {
+            throw new IllegalArgumentException("CPF do professor deve ter 11 dígitos");
+        }
 
         // Configura uma aula de teste
         AulaId aulaId = new AulaId(1);
         LocalDateTime agora = LocalDateTime.now();
-        contexto.aulaAtual = new Aula(aulaId, Modalidade.YOGA, Espaco.SALA01_MULTIUSO, 10, agora, agora.plusHours(1));
+        contexto.aulaAtual = new Aula(aulaId, professorId, Modalidade.YOGA, Espaco.SALA01_MULTIUSO, 10, agora, agora.plusHours(1));
         contexto.repositorio.salvar(contexto.aulaAtual);
     }
 
@@ -59,7 +64,8 @@ public class AvaliacaoProfessorFuncionalidade {
 
         try {
             contexto.avaliacaoService.criarAvaliacao(
-                contexto.alunoAtual.getCpf(),
+                contexto.alunoAtual.getMatricula(),
+                professorId,
                 contexto.aulaAtual.getId(),
                 LocalDate.now(),
                 notas,
@@ -75,7 +81,8 @@ public class AvaliacaoProfessorFuncionalidade {
     public void o_aluno_nao_preenche_todas_as_metricas() {
         try {
             contexto.avaliacaoService.criarAvaliacao(
-                contexto.alunoAtual.getCpf(),
+                contexto.alunoAtual.getMatricula(),
+                professorId,
                 contexto.aulaAtual.getId(),
                 LocalDate.now(),
                 notas,
@@ -97,7 +104,8 @@ public class AvaliacaoProfessorFuncionalidade {
 
         try {
             contexto.avaliacaoService.criarAvaliacao(
-                contexto.alunoAtual.getCpf(),
+                contexto.alunoAtual.getMatricula(),
+                professorId,
                 contexto.aulaAtual.getId(),
                 LocalDate.now(),
                 notas,

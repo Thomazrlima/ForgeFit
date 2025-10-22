@@ -4,7 +4,7 @@ import static org.apache.commons.lang3.Validate.notNull;
 
 import java.time.LocalDate;
 
-import br.com.forgefit.dominio.aluno.Cpf;
+import br.com.forgefit.dominio.aluno.Matricula;
 import br.com.forgefit.dominio.aula.AulaId;
 import br.com.forgefit.dominio.frequencia.enums.StatusFrequencia;
 
@@ -12,14 +12,14 @@ import br.com.forgefit.dominio.frequencia.enums.StatusFrequencia;
  * Value Object que representa o registro de frequência de um aluno em uma aula.
  */
 public class Frequencia {
-    private final Cpf alunoId;
+    private final Matricula alunoMatricula;
     private final AulaId aulaId;
     private final LocalDate dataDaOcorrencia;
     private final StatusFrequencia status;
 
-    public Frequencia(Cpf alunoId, AulaId aulaId, LocalDate dataDaOcorrencia, StatusFrequencia status) {
-        notNull(alunoId, "O CPF do aluno não pode ser nulo");
-        this.alunoId = alunoId;
+    public Frequencia(Matricula alunoMatricula, AulaId aulaId, LocalDate dataDaOcorrencia, StatusFrequencia status) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
+        this.alunoMatricula = alunoMatricula;
         
         notNull(aulaId, "O ID da aula não pode ser nulo");
         this.aulaId = aulaId;
@@ -31,8 +31,8 @@ public class Frequencia {
         this.status = status;
     }
 
-    public Cpf getAlunoId() {
-        return alunoId;
+    public Matricula getAlunoMatricula() {
+        return alunoMatricula;
     }
 
     public AulaId getAulaId() {
@@ -50,6 +50,6 @@ public class Frequencia {
     @Override
     public String toString() {
         return String.format("Frequencia[aluno=%s, aula=%s, data=%s, status=%s]",
-                alunoId, aulaId, dataDaOcorrencia, status);
+                alunoMatricula, aulaId, dataDaOcorrencia, status);
     }
 }

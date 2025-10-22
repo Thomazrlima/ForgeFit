@@ -4,25 +4,25 @@ import static org.apache.commons.lang3.Validate.notNull;
 
 import java.time.LocalDateTime;
 
-import br.com.forgefit.dominio.aluno.Cpf;
+import br.com.forgefit.dominio.aluno.Matricula;
 import br.com.forgefit.dominio.aula.enums.StatusReserva;
 
 public class Reserva {
-    private final Cpf alunoId;
+    private final Matricula alunoMatricula;
     private final LocalDateTime dataDaReserva;
     private StatusReserva status;
 
-    public Reserva(Cpf alunoId, LocalDateTime dataDaReserva) {
-        notNull(alunoId, "O CPF do aluno não pode ser nulo");
+    public Reserva(Matricula alunoMatricula, LocalDateTime dataDaReserva) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         notNull(dataDaReserva, "A data da reserva não pode ser nula");
         
-        this.alunoId = alunoId;
+        this.alunoMatricula = alunoMatricula;
         this.dataDaReserva = dataDaReserva;
         this.status = StatusReserva.CONFIRMADA;
     }
 
-    public Cpf getAlunoId() {
-        return alunoId;
+    public Matricula getAlunoMatricula() {
+        return alunoMatricula;
     }
 
     public LocalDateTime getDataDaReserva() {

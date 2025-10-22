@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import br.com.forgefit.dominio.aluno.Aluno;
 import br.com.forgefit.dominio.aluno.AlunoRepositorio;
 import br.com.forgefit.dominio.aluno.Cpf;
+import br.com.forgefit.dominio.aluno.Matricula;
 import br.com.forgefit.dominio.checkin.Checkin;
 import br.com.forgefit.dominio.checkin.CheckinRepositorio;
 import br.com.forgefit.dominio.checkin.enums.TipoDeCheckin;
@@ -20,7 +21,6 @@ import br.com.forgefit.dominio.guilda.CodigoConvite;
 import br.com.forgefit.dominio.guilda.Guilda;
 import br.com.forgefit.dominio.guilda.GuildaId;
 import br.com.forgefit.dominio.guilda.GuildaRepositorio;
-import br.com.forgefit.dominio.repositorio.RepositorioGeral;
 import br.com.forgefit.dominio.torneio.Torneio;
 import br.com.forgefit.dominio.torneio.TorneioId;
 import br.com.forgefit.dominio.torneio.TorneioRepositorio;
@@ -36,7 +36,9 @@ import br.com.forgefit.dominio.aula.AulaRepositorio;
 import br.com.forgefit.dominio.avaliacao.Avaliacao;
 import br.com.forgefit.dominio.avaliacao.AvaliacaoId;
 import br.com.forgefit.dominio.avaliacao.AvaliacaoRepositorio;
-import br.com.forgefit.dominio.aluno.ProfessorId;
+import br.com.forgefit.dominio.professor.Professor;
+import br.com.forgefit.dominio.professor.ProfessorId;
+import br.com.forgefit.dominio.professor.ProfessorRepository;
 import br.com.forgefit.dominio.ranking.Ranking;
 import br.com.forgefit.dominio.ranking.RankingRepositorio;
 import br.com.forgefit.dominio.ranking.enums.PeriodoRanking;
@@ -48,24 +50,48 @@ import br.com.forgefit.dominio.frequencia.enums.StatusFrequencia;
  * Implementação em memória dos repositórios para testes BDD.
  * Usa HashMaps e Lists para simular persistência.
  */
-public class Repositorio implements AlunoRepositorio, RepositorioGeral, 
+public class Repositorio implements AlunoRepositorio, 
                                      GuildaRepositorio, CheckinRepositorio, TorneioRepositorio,
                                      AulaRepositorio, RankingRepositorio, AvaliacaoRepositorio,
-                                     TreinoRepositorio, FrequenciaRepositorio { 
+                                     TreinoRepositorio, FrequenciaRepositorio, ProfessorRepository { 
 
     /*-----------------------------------------------------------------------*/
-    private Map<Cpf, Aluno> alunos = new HashMap<>();
+    private Map<Matricula, Aluno> alunos = new HashMap<>();
+    private Map<Cpf, Aluno> alunosPorCpf = new HashMap<>();
 
     @Override
     public void salvar(Aluno aluno) {
         notNull(aluno, "O aluno não pode ser nulo");
-        alunos.put(aluno.getCpf(), aluno);
+        alunos.put(aluno.getMatricula(), aluno);
+        alunosPorCpf.put(aluno.getCpf(), aluno);
     }
 
     @Override
-    public Optional<Aluno> obterPorCpf(Cpf cpf) {
+    public Optional<Aluno> obterPorMatricula(Matricula matricula) {
+        notNull(matricula, "A matrícula não pode ser nula");
+        return Optional.ofNullable(alunos.get(matricula));
+    }
+
+    @Override
+    public Optional<Aluno> obterAlunoPorCpf(Cpf cpf) {
         notNull(cpf, "O CPF não pode ser nulo");
-        return Optional.ofNullable(alunos.get(cpf));
+        return Optional.ofNullable(alunosPorCpf.get(cpf));
+    }
+    /*-----------------------------------------------------------------------*/
+
+    /*-----------------------------------------------------------------------*/
+    private Map<ProfessorId, Professor> professores = new HashMap<>();
+
+    @Override
+    public void salvar(Professor professor) {
+        notNull(professor, "O professor não pode ser nulo");
+        professores.put(professor.getId(), professor);
+    }
+
+    @Override
+    public Optional<Professor> obterPorId(ProfessorId id) {
+        notNull(id, "O id do professor não pode ser nulo");
+        return Optional.ofNullable(professores.get(id));
     }
     /*-----------------------------------------------------------------------*/
 
@@ -116,24 +142,24 @@ public class Repositorio implements AlunoRepositorio, RepositorioGeral,
     }
 
     @Override
-    public List<Checkin> buscarPorAluno(Cpf alunoId) {
-        notNull(alunoId, "O CPF do aluno não pode ser nulo");
+    public List<Checkin> buscarPorAluno(Matricula alunoMatricula) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         return checkins.stream()
-            .filter(c -> c.getAlunoId().equals(alunoId))
+            .filter(c -> c.getAlunoMatricula().equals(alunoMatricula))
             .collect(Collectors.toList());
     }
 
     @Override
-    public boolean existeCheckinDeTreino(Cpf alunoId, PlanoDeTreinoId planoDeTreinoId, 
+    public boolean existeCheckinDeTreino(Matricula alunoMatricula, PlanoDeTreinoId planoDeTreinoId, 
                                          LetraDoTreino letra, LocalDate data) {
-        notNull(alunoId, "O CPF do aluno não pode ser nulo");
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         notNull(planoDeTreinoId, "O id do plano de treino não pode ser nulo");
         notNull(letra, "A letra do treino não pode ser nula");
         notNull(data, "A data não pode ser nula");
 
         return checkins.stream()
             .filter(c -> c.getContexto().getTipo() == TipoDeCheckin.TREINO)
-            .filter(c -> c.getAlunoId().equals(alunoId))
+            .filter(c -> c.getAlunoMatricula().equals(alunoMatricula))
             .filter(c -> c.getDataDoCheckin().equals(data))
             .filter(c -> c.getContexto().getPlanoDeTreinoId().equals(planoDeTreinoId))
             .filter(c -> c.getContexto().getLetraDoTreino() == letra)
@@ -220,6 +246,18 @@ public class Repositorio implements AlunoRepositorio, RepositorioGeral,
             .filter(a -> !(a.getFim().isBefore(inicio) || a.getInicio().isAfter(fim)))
             .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Aula> buscarPorProfessorEPeriodo(ProfessorId professorId, java.time.LocalDateTime inicio, java.time.LocalDateTime fim) {
+        notNull(professorId, "O ID do professor não pode ser nulo");
+        notNull(inicio, "A data de início não pode ser nula");
+        notNull(fim, "A data de fim não pode ser nula");
+
+        return aulas.values().stream()
+            .filter(a -> a.getProfessorId().equals(professorId))
+            .filter(a -> !(a.getFim().isBefore(inicio) || a.getInicio().isAfter(fim)))
+            .collect(Collectors.toList());
+    }
     /*-----------------------------------------------------------------------*/
 
     /*-----------------------------------------------------------------------*/
@@ -264,9 +302,9 @@ public class Repositorio implements AlunoRepositorio, RepositorioGeral,
     }
 
     @Override
-    public boolean existeAvaliacao(Cpf alunoId, AulaId aulaId, LocalDate dataDaOcorrencia) {
+    public boolean existeAvaliacao(Matricula alunoMatricula, AulaId aulaId, LocalDate dataDaOcorrencia) {
         return avaliacoes.values().stream()
-            .anyMatch(a -> a.getAlunoId().equals(alunoId) 
+            .anyMatch(a -> a.getAlunoMatricula().equals(alunoMatricula) 
                 && a.getAulaId().equals(aulaId)
                 && a.getDataDaOcorrenciaDaAula().equals(dataDaOcorrencia));
     }
@@ -299,26 +337,26 @@ public class Repositorio implements AlunoRepositorio, RepositorioGeral,
     }
 
     @Override
-    public List<Frequencia> buscarPorAlunoEPeriodo(Cpf alunoId, LocalDate inicio, LocalDate fim) {
-        notNull(alunoId, "O CPF do aluno não pode ser nulo");
+    public List<Frequencia> buscarPorAlunoEPeriodo(Matricula alunoMatricula, LocalDate inicio, LocalDate fim) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         notNull(inicio, "A data de início não pode ser nula");
         notNull(fim, "A data de fim não pode ser nula");
 
         return frequencias.stream()
-                .filter(f -> f.getAlunoId().equals(alunoId))
+                .filter(f -> f.getAlunoMatricula().equals(alunoMatricula))
                 .filter(f -> !f.getDataDaOcorrencia().isBefore(inicio))
                 .filter(f -> !f.getDataDaOcorrencia().isAfter(fim))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Frequencia buscarPorAlunoAulaEData(Cpf alunoId, AulaId aulaId, LocalDate data) {
-        notNull(alunoId, "O CPF do aluno não pode ser nulo");
+    public Frequencia buscarPorAlunoAulaEData(Matricula alunoMatricula, AulaId aulaId, LocalDate data) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         notNull(aulaId, "O ID da aula não pode ser nulo");
         notNull(data, "A data não pode ser nula");
 
         return frequencias.stream()
-                .filter(f -> f.getAlunoId().equals(alunoId))
+                .filter(f -> f.getAlunoMatricula().equals(alunoMatricula))
                 .filter(f -> f.getAulaId().equals(aulaId))
                 .filter(f -> f.getDataDaOcorrencia().equals(data))
                 .findFirst()
@@ -326,13 +364,13 @@ public class Repositorio implements AlunoRepositorio, RepositorioGeral,
     }
 
     @Override
-    public long contarFaltasPorPeriodo(Cpf alunoId, LocalDate inicio, LocalDate fim) {
-        notNull(alunoId, "O CPF do aluno não pode ser nulo");
+    public long contarFaltasPorPeriodo(Matricula alunoMatricula, LocalDate inicio, LocalDate fim) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         notNull(inicio, "A data de início não pode ser nula");
         notNull(fim, "A data de fim não pode ser nula");
 
         return frequencias.stream()
-                .filter(f -> f.getAlunoId().equals(alunoId))
+                .filter(f -> f.getAlunoMatricula().equals(alunoMatricula))
                 .filter(f -> f.getStatus() == StatusFrequencia.FALTA)
                 .filter(f -> !f.getDataDaOcorrencia().isBefore(inicio))
                 .filter(f -> !f.getDataDaOcorrencia().isAfter(fim))

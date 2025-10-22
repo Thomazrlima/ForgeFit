@@ -1,6 +1,7 @@
 package br.com.forgefit.dominio.ranking;
 
 import static org.junit.jupiter.api.Assertions.*;
+import java.time.LocalDate;
 import br.com.forgefit.dominio.AcademiaFuncionalidade;
 import br.com.forgefit.dominio.aluno.Aluno;
 import br.com.forgefit.dominio.aluno.Cpf;
@@ -26,7 +27,7 @@ public class RankingAlunosFuncionalidade {
     public void que_o_aluno_joao_tenha_comparecido_a_aula_de_cross_training_no_dia_as_18h00(Integer dia, Integer mes,
             Integer ano) {
         cpfAluno = new Cpf("12345678901");
-        Aluno aluno = new Aluno(cpfAluno);
+        Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(aluno);
     }
 
@@ -57,7 +58,7 @@ public class RankingAlunosFuncionalidade {
     public void que_a_aluna_maria_tenha_participado_da_atividade_coletiva_da_guilda_fenix_no_dia(Integer dia,
             Integer mes, Integer ano) {
         cpfAluno = new Cpf("98765432100");
-        Aluno aluno = new Aluno(cpfAluno);
+        Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(aluno);
     }
 
@@ -88,7 +89,7 @@ public class RankingAlunosFuncionalidade {
     public void que_o_professor_tenha_avaliado_o_aluno_pedro_com_nota_na_aula_de_yoga_do_dia(Double nota, Integer dia,
             Integer mes, Integer ano) {
         cpfAluno = new Cpf("11122233344");
-        Aluno aluno = new Aluno(cpfAluno);
+        Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(aluno);
     }
 
@@ -119,7 +120,7 @@ public class RankingAlunosFuncionalidade {
     public void que_a_semana_vigente_termine_no_dia(Integer dia, Integer mes, Integer ano) {
         // Prepara dados de exemplo no ranking semanal
         cpfAluno = new Cpf("12312312312");
-        Aluno aluno = new Aluno(cpfAluno);
+        Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(aluno);
         contexto.rankingService.registrarPontosFrequencia(cpfAluno, 50, PeriodoRanking.SEMANAL);
     }
@@ -150,7 +151,7 @@ public class RankingAlunosFuncionalidade {
     public void que_o_mes_de_outubro_de_tenha_sido_encerrado(Integer ano) {
         // Prepara dados no ranking mensal
         cpfAluno = new Cpf("45645645645");
-        Aluno aluno = new Aluno(cpfAluno);
+        Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(aluno);
         contexto.rankingService.registrarPontosFrequencia(cpfAluno, 600, PeriodoRanking.MENSAL);
     }
@@ -189,8 +190,8 @@ public class RankingAlunosFuncionalidade {
     public void que_dois_alunos_tenham_a_mesma_pontuacao_total_no_ranking() {
         cpfAlunoA = new Cpf("11111111111");
         cpfAlunoB = new Cpf("22222222222");
-        Aluno alunoA = new Aluno(cpfAlunoA);
-        Aluno alunoB = new Aluno(cpfAlunoB);
+        Aluno alunoA = new Aluno(cpfAlunoA, "Aluno A", LocalDate.of(1990, 1, 1));
+        Aluno alunoB = new Aluno(cpfAlunoB, "Aluno B", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(alunoA);
         contexto.repositorio.salvar(alunoB);
     }
@@ -263,8 +264,8 @@ public class RankingAlunosFuncionalidade {
     public void que_dois_alunos_empatem_em_pontuacao_e_frequencia() {
         cpfAlunoC = new Cpf("33333333333");
         cpfAlunoD = new Cpf("44444444444");
-        Aluno alunoC = new Aluno(cpfAlunoC);
-        Aluno alunoD = new Aluno(cpfAlunoD);
+        Aluno alunoC = new Aluno(cpfAlunoC, "Aluno C", LocalDate.of(1990, 1, 1));
+        Aluno alunoD = new Aluno(cpfAlunoD, "Aluno D", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(alunoC);
         contexto.repositorio.salvar(alunoD);
 
@@ -327,7 +328,7 @@ public class RankingAlunosFuncionalidade {
     public void que_o_aluno_rafael_tenha_falta_nao_justificada_na_aula_do_dia_as_19h00(Integer dia, Integer mes,
             Integer ano) {
         cpfAluno = new Cpf("55555555555");
-        Aluno aluno = new Aluno(cpfAluno);
+        Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(aluno);
         // Aluno tinha pontos antes
         contexto.rankingService.registrarPontosFrequencia(cpfAluno, 50, PeriodoRanking.SEMANAL);
@@ -361,7 +362,7 @@ public class RankingAlunosFuncionalidade {
     @Dado("que a administradora Ana precise corrigir a pontuação de um aluno")
     public void que_a_administradora_ana_precise_corrigir_a_pontuacao_de_um_aluno() {
         cpfAluno = new Cpf("66666666666");
-        Aluno aluno = new Aluno(cpfAluno);
+        Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(aluno);
         contexto.rankingService.registrarPontosFrequencia(cpfAluno, 100, PeriodoRanking.GERAL);
     }
@@ -394,7 +395,7 @@ public class RankingAlunosFuncionalidade {
     @Dado("que o aluno Lucas tenha mantido presença em todas as semanas do mês")
     public void que_o_aluno_lucas_tenha_mantido_presenca_em_todas_as_semanas_do_mes() {
         cpfAluno = new Cpf("77777777777");
-        Aluno aluno = new Aluno(cpfAluno);
+        Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(aluno);
     }
 
@@ -440,7 +441,7 @@ public class RankingAlunosFuncionalidade {
     @Dado("que o aluno acesse seu painel de desempenho")
     public void que_o_aluno_acesse_seu_painel_de_desempenho() {
         cpfAluno = new Cpf("88888888888");
-        Aluno aluno = new Aluno(cpfAluno);
+        Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(aluno);
         contexto.rankingService.registrarPontosFrequencia(cpfAluno, 50, PeriodoRanking.GERAL);
         contexto.rankingService.registrarPontosGuilda(cpfAluno, 30, PeriodoRanking.GERAL);
@@ -483,7 +484,7 @@ public class RankingAlunosFuncionalidade {
     @Dado("que o aluno possua histórico de ranking das últimas {int} semanas")
     public void que_o_aluno_possua_historico_de_ranking_das_ultimas_semanas(Integer semanas) {
         cpfAluno = new Cpf("99999999999");
-        Aluno aluno = new Aluno(cpfAluno);
+        Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(aluno);
         contexto.rankingService.registrarPontosFrequencia(cpfAluno, 200, PeriodoRanking.GERAL);
     }
@@ -519,7 +520,7 @@ public class RankingAlunosFuncionalidade {
     @Dado("que o mês de outubro encerre no dia {int}\\/{int}\\/{int}")
     public void que_o_mes_de_outubro_encerre_no_dia(Integer dia, Integer mes, Integer ano) {
         cpfAluno = new Cpf("10101010101");
-        Aluno aluno = new Aluno(cpfAluno);
+        Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(aluno);
         contexto.rankingService.registrarPontosFrequencia(cpfAluno, 300, PeriodoRanking.SEMANAL);
     }
@@ -550,7 +551,7 @@ public class RankingAlunosFuncionalidade {
     @Dado("que o ranking de outubro tenha sido encerrado")
     public void que_o_ranking_de_outubro_tenha_sido_encerrado() {
         cpfAluno = new Cpf("20202020202");
-        Aluno aluno = new Aluno(cpfAluno);
+        Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
         contexto.repositorio.salvar(aluno);
         contexto.rankingService.registrarPontosFrequencia(cpfAluno, 500, PeriodoRanking.MENSAL);
     }

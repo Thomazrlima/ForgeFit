@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import br.com.forgefit.dominio.aluno.Cpf;
-import br.com.forgefit.dominio.aluno.ProfessorId;
+import br.com.forgefit.dominio.aluno.Matricula;
+import br.com.forgefit.dominio.professor.ProfessorId;
 import br.com.forgefit.dominio.treino.enums.LetraDoTreino;
 
 /**
@@ -25,14 +25,14 @@ public class TreinoService {
         this.treinoRepositorio = treinoRepositorio;
     }
 
-    public PlanoDeTreinoCompleto criarPlanoDeTreino(Cpf alunoCpf, ProfessorId professorId,
+    public PlanoDeTreinoCompleto criarPlanoDeTreino(Matricula alunoMatricula, ProfessorId professorId,
                                                      List<TreinoDiario> treinos) {
-        return criarPlanoDeTreino(alunoCpf, professorId, treinos, null);
+        return criarPlanoDeTreino(alunoMatricula, professorId, treinos, null);
     }
 
-    public PlanoDeTreinoCompleto criarPlanoDeTreino(Cpf alunoCpf, ProfessorId professorId,
+    public PlanoDeTreinoCompleto criarPlanoDeTreino(Matricula alunoMatricula, ProfessorId professorId,
                                                      List<TreinoDiario> treinos, LocalDate validadeSugerida) {
-        notNull(alunoCpf, "O CPF do aluno não pode ser nulo");
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         notNull(professorId, "O ID do professor não pode ser nulo");
         notNull(treinos, "A lista de treinos não pode ser nula");
 
@@ -46,7 +46,7 @@ public class TreinoService {
         LocalDate dataCriacao = LocalDate.now();
 
         PlanoDeTreinoCompleto plano = new PlanoDeTreinoCompleto(
-            id, alunoCpf, professorId, dataCriacao, validadeSugerida, treinos);
+            id, alunoMatricula, professorId, dataCriacao, validadeSugerida, treinos);
 
         treinoRepositorio.salvar(plano);
         return plano;
@@ -67,7 +67,7 @@ public class TreinoService {
         treinosAtualizados.sort(Comparator.comparing(TreinoDiario::getLetra));
         
         PlanoDeTreinoCompleto planoAtualizado = new PlanoDeTreinoCompleto(
-            plano.getId(), plano.getAlunoCpf(), plano.getProfessorId(),
+            plano.getId(), plano.getAlunoMatricula(), plano.getProfessorId(),
             plano.getDataCriacao(), plano.getDataValidadeSugerida(), treinosAtualizados);
         
         treinoRepositorio.salvar(planoAtualizado);
@@ -87,7 +87,7 @@ public class TreinoService {
         treinosAtualizados.sort(Comparator.comparing(TreinoDiario::getLetra));
         
         PlanoDeTreinoCompleto planoAtualizado = new PlanoDeTreinoCompleto(
-            plano.getId(), plano.getAlunoCpf(), plano.getProfessorId(),
+            plano.getId(), plano.getAlunoMatricula(), plano.getProfessorId(),
             plano.getDataCriacao(), plano.getDataValidadeSugerida(), treinosAtualizados);
         
         treinoRepositorio.salvar(planoAtualizado);
@@ -115,7 +115,7 @@ public class TreinoService {
         }
         
         PlanoDeTreinoCompleto planoAtualizado = new PlanoDeTreinoCompleto(
-            plano.getId(), plano.getAlunoCpf(), plano.getProfessorId(),
+            plano.getId(), plano.getAlunoMatricula(), plano.getProfessorId(),
             plano.getDataCriacao(), plano.getDataValidadeSugerida(), treinosReordenados);
         
         treinoRepositorio.salvar(planoAtualizado);

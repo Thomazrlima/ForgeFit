@@ -6,7 +6,7 @@ import static org.apache.commons.lang3.Validate.notNull;
 import java.util.ArrayList;
 import java.util.List;
 
-import br.com.forgefit.dominio.aluno.Cpf;
+import br.com.forgefit.dominio.aluno.Matricula;
 import br.com.forgefit.dominio.guilda.enums.StatusGuilda;
 
 public class Guilda {
@@ -16,12 +16,12 @@ public class Guilda {
     private String imagemURL;
     private StatusGuilda status;
     private final CodigoConvite codigoConvite;
-    private final Cpf mestreDaGuilda;
-    private List<Cpf> membros;
+    private final Matricula mestreDaGuilda;
+    private List<Matricula> membros;
     private int pontuacaoTotal;
 
     public Guilda(GuildaId id, String nome, String descricao, String imagemURL, 
-                  CodigoConvite codigoConvite, Cpf mestreDaGuilda) {
+                  CodigoConvite codigoConvite, Matricula mestreDaGuilda) {
         notNull(id, "O id não pode ser nulo");
         this.id = id;
 
@@ -79,11 +79,11 @@ public class Guilda {
         return codigoConvite;
     }
 
-    public Cpf getMestreDaGuilda() {
+    public Matricula getMestreDaGuilda() {
         return mestreDaGuilda;
     }
 
-    public List<Cpf> getMembros() {
+    public List<Matricula> getMembros() {
         return new ArrayList<>(membros);
     }
 
@@ -91,7 +91,7 @@ public class Guilda {
         return pontuacaoTotal;
     }
 
-    public void alterarDados(Cpf solicitante, String novoNome, String novaDescricao, String novaImagemURL) {
+    public void alterarDados(Matricula solicitante, String novoNome, String novaDescricao, String novaImagemURL) {
         if (!mestreDaGuilda.equals(solicitante)) {
             throw new IllegalStateException("Apenas o mestre da guilda pode editar seus dados");
         }
@@ -107,39 +107,39 @@ public class Guilda {
         }
     }
 
-    public void adicionarMembro(Cpf membroCpf) {
-        notNull(membroCpf, "O CPF do membro não pode ser nulo");
+    public void adicionarMembro(Matricula membroMatricula) {
+        notNull(membroMatricula, "A matrícula do membro não pode ser nula");
         
-        if (membros.contains(membroCpf)) {
+        if (membros.contains(membroMatricula)) {
             throw new IllegalArgumentException("O aluno já é membro da guilda");
         }
         
-        membros.add(membroCpf);
+        membros.add(membroMatricula);
     }
 
-    public void removerMembro(Cpf membroCpf) {
-        notNull(membroCpf, "O CPF do membro não pode ser nulo");
+    public void removerMembro(Matricula membroMatricula) {
+        notNull(membroMatricula, "A matrícula do membro não pode ser nula");
         
-        if (mestreDaGuilda.equals(membroCpf)) {
+        if (mestreDaGuilda.equals(membroMatricula)) {
             throw new IllegalStateException("O mestre não pode sair da guilda");
         }
         
-        if (!membros.contains(membroCpf)) {
+        if (!membros.contains(membroMatricula)) {
             throw new IllegalArgumentException("O aluno não é membro da guilda");
         }
         
-        membros.remove(membroCpf);
+        membros.remove(membroMatricula);
     }
 
-    public boolean isMembro(Cpf cpf) {
-        return membros.contains(cpf);
+    public boolean isMembro(Matricula matricula) {
+        return membros.contains(matricula);
     }
 
-    public boolean isMestre(Cpf cpf) {
-        return mestreDaGuilda.equals(cpf);
+    public boolean isMestre(Matricula matricula) {
+        return mestreDaGuilda.equals(matricula);
     }
 
-    public void excluir(Cpf solicitante) {
+    public void excluir(Matricula solicitante) {
         if (!mestreDaGuilda.equals(solicitante)) {
             throw new IllegalStateException("Apenas o mestre pode excluir a guilda");
         }

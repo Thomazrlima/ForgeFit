@@ -12,11 +12,11 @@
 
 <p align="center">
   <a href="#-sobre-o-projeto">Sobre</a> •
-  <a href="#-funcionalidades">Funcionalidades</a> •
+  <a href="#-funcionalidades-principais">Funcionalidades</a> •
   <a href="#-demonstração">Demonstração</a> •
   <a href="#-distribuição-de-tarefas">Tarefas</a> •
   <a href="#-domínio-de-negócio">Domínio</a> •
-  <a href="#-equipe">Equipe</a>
+  <a href="#-nossa-equipe">Equipe</a>
 </p>
 
 ## 🚀 **Sobre o Projeto**

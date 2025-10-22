@@ -30,7 +30,7 @@ public class PersonalizarTreinosFuncionalidade {
     private ProfessorId professorId;
     private Cpf cpfAluno;
     private Aluno aluno;
-    private PlanoDeTreinoCompleto planoAtual;
+    private PlanoDeTreino planoAtual;
     private TreinoDiario treinoSelecionado;
     
     public PersonalizarTreinosFuncionalidade(AcademiaFuncionalidade contexto) {
@@ -53,7 +53,7 @@ public class PersonalizarTreinosFuncionalidade {
         treinos.add(criarTreinoDiario(LetraDoTreino.A, TipoDoTreino.SUPERIORES));
         treinos.add(criarTreinoDiario(LetraDoTreino.B, TipoDoTreino.INFERIORES));
         
-        planoAtual = contexto.treinoService.criarPlanoDeTreino(aluno.getMatricula(), professorId, treinos);
+        planoAtual = contexto.treinoService.criarPlanoDeTreino(professorId, treinos);
     }
 
     @When("o treino {string} é selecionado, e escolhe o tipo {string} e os exercicios que irao compor o treino daqele aluno")
@@ -99,7 +99,7 @@ public class PersonalizarTreinosFuncionalidade {
         treinos.add(criarTreinoDiario(LetraDoTreino.F, TipoDoTreino.FOCO_PEITO));
         treinos.add(criarTreinoDiario(LetraDoTreino.G, TipoDoTreino.FOCO_COSTAS));
         
-        planoAtual = contexto.treinoService.criarPlanoDeTreino(aluno.getMatricula(), professorId, treinos);
+        planoAtual = contexto.treinoService.criarPlanoDeTreino(professorId, treinos);
     }
 
     @When("o Professor decide adicionar um novo treino\\({string})")
@@ -107,7 +107,7 @@ public class PersonalizarTreinosFuncionalidade {
         try {
             // Tenta adicionar um 8º treino (ultrapassando o limite de 7)
             // Verifica se já atingiu o limite antes de acessar o array
-            int quantidadeAtual = planoAtual.getQuantidadeTreinos();
+            int quantidadeAtual = planoAtual.getTreinosDaSemana().size();
             
             if (quantidadeAtual >= LetraDoTreino.values().length) {
                 // Se já tem 7 treinos, força a chamada do service para lançar a exceção correta
@@ -149,7 +149,7 @@ public class PersonalizarTreinosFuncionalidade {
         List<TreinoDiario> treinos = new ArrayList<>();
         treinos.add(criarTreinoDiario(LetraDoTreino.A, TipoDoTreino.CORPO_INTEIRO));
         
-        planoAtual = contexto.treinoService.criarPlanoDeTreino(aluno.getMatricula(), professorId, treinos);
+        planoAtual = contexto.treinoService.criarPlanoDeTreino(professorId, treinos);
     }
 
     @When("o professor cria um novo treino do tipo {string} e escolhe os exercicios {string}, {string} e {string}")
@@ -164,7 +164,7 @@ public class PersonalizarTreinosFuncionalidade {
         
         try {
             // Determina a próxima letra automaticamente baseado na quantidade de treinos
-            int quantidadeAtual = planoAtual.getQuantidadeTreinos();
+            int quantidadeAtual = planoAtual.getTreinosDaSemana().size();
             
             // Verifica se já atingiu o limite antes de acessar o array
             if (quantidadeAtual >= LetraDoTreino.values().length) {
@@ -185,11 +185,11 @@ public class PersonalizarTreinosFuncionalidade {
     public void o_treino_é_cadastrado_se_tornando_automaticamente_o_treino(String letraEsperada) {
         assertTrue(contexto.excecao == null, "Não deveria ter ocorrido exceção");
         
-        PlanoDeTreinoCompleto planoAtualizado = contexto.treinoService.obterPlano(planoAtual.getId());
-        assertEquals(2, planoAtualizado.getTreinos().size(), "Deveria ter 2 treinos");
+        PlanoDeTreino planoAtualizado = contexto.treinoService.obterPlano(planoAtual.getId());
+        assertEquals(2, planoAtualizado.getTreinosDaSemana().size(), "Deveria ter 2 treinos");
         
         // Verifica que o novo treino é o B
-        boolean temTreinoB = planoAtualizado.getTreinos().stream()
+        boolean temTreinoB = planoAtualizado.getTreinosDaSemana().stream()
             .anyMatch(t -> t.getLetra() == LetraDoTreino.B);
         assertTrue(temTreinoB, "Deveria ter o treino B");
     }
@@ -242,12 +242,12 @@ public class PersonalizarTreinosFuncionalidade {
     public void o_treino_é_excluído_com_sucesso_ficando_disponivel_para_a_criacao_de_um_novo_treino() {
         assertTrue(contexto.excecao == null, "Não deveria ter ocorrido exceção");
         
-        PlanoDeTreinoCompleto planoAtualizado = contexto.treinoService.obterPlano(planoAtual.getId());
-        assertEquals(6, planoAtualizado.getTreinos().size(), "Deveria ter 6 treinos após a exclusão");
+        PlanoDeTreino planoAtualizado = contexto.treinoService.obterPlano(planoAtual.getId());
+        assertEquals(6, planoAtualizado.getTreinosDaSemana().size(), "Deveria ter 6 treinos após a exclusão");
         
         // Após a exclusão e reordenação, deve ter treinos A, B, C, D, E, F
         // (o antigo C virou B, D virou C, etc.)
-        assertEquals(6, planoAtualizado.getQuantidadeTreinos(), 
+        assertEquals(6, planoAtualizado.getTreinosDaSemana().size(), 
             "Deve ter 6 treinos, ficando disponível para criar um novo");
     }
 
@@ -255,15 +255,15 @@ public class PersonalizarTreinosFuncionalidade {
     public void o_treino_permanece_inalterado_e_a_ordem_é_alterada(
             String treinoInalterado, String t1, String t2, String t3, String t4, String t5,
             String n1, String n2, String n3, String n4, String n5) {
-        PlanoDeTreinoCompleto planoAtualizado = contexto.treinoService.obterPlano(planoAtual.getId());
+        PlanoDeTreino planoAtualizado = contexto.treinoService.obterPlano(planoAtual.getId());
         
         // Verifica que o treino A permanece
-        boolean temTreinoA = planoAtualizado.getTreinos().stream()
+        boolean temTreinoA = planoAtualizado.getTreinosDaSemana().stream()
             .anyMatch(t -> t.getLetra() == LetraDoTreino.A);
         assertTrue(temTreinoA, "O treino A deveria permanecer inalterado");
         
         // Verifica a reordenação
-        List<TreinoDiario> treinosOrdenados = planoAtualizado.getTreinos();
+        List<TreinoDiario> treinosOrdenados = planoAtualizado.getTreinosDaSemana();
         assertEquals(LetraDoTreino.A, treinosOrdenados.get(0).getLetra(), "Primeiro treino deveria ser A");
         assertEquals(LetraDoTreino.B, treinosOrdenados.get(1).getLetra(), "Segundo treino deveria ser B (antigo C)");
         assertEquals(LetraDoTreino.C, treinosOrdenados.get(2).getLetra(), "Terceiro treino deveria ser C (antigo D)");

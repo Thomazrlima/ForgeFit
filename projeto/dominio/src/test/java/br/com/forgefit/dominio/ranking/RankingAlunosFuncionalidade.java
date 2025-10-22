@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import br.com.forgefit.dominio.AcademiaFuncionalidade;
 import br.com.forgefit.dominio.aluno.Aluno;
 import br.com.forgefit.dominio.aluno.Cpf;
+import br.com.forgefit.dominio.aluno.Matricula;
 import br.com.forgefit.dominio.ranking.enums.PeriodoRanking;
 import io.cucumber.java.pt.*;
 
@@ -15,6 +16,11 @@ public class RankingAlunosFuncionalidade {
     private Cpf cpfAlunoB;
     private Cpf cpfAlunoC;
     private Cpf cpfAlunoD;
+    private Matricula matriculaAluno;
+    private Matricula matriculaAlunoA;
+    private Matricula matriculaAlunoB;
+    private Matricula matriculaAlunoC;
+    private Matricula matriculaAlunoD;
     private ItemRanking itemRanking;
     private Ranking ranking;
 
@@ -28,19 +34,20 @@ public class RankingAlunosFuncionalidade {
             Integer ano) {
         cpfAluno = new Cpf("12345678901");
         Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
+        matriculaAluno = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
     }
 
     @Quando("o sistema registrar a presença do aluno")
     public void o_sistema_registrar_a_presenca_do_aluno() {
         // Simula registro de presença com 10 pontos
-        contexto.rankingService.registrarPontosFrequencia(cpfAluno, 10, PeriodoRanking.GERAL);
+        contexto.rankingService.registrarPontosFrequencia(matriculaAluno, 10, PeriodoRanking.GERAL);
     }
 
     @Então("o aluno recebe {int} pontos por frequência")
     public void o_aluno_recebe_pontos_por_frequencia(Integer pontos) {
         ranking = contexto.rankingService.obterRanking(PeriodoRanking.GERAL);
-        itemRanking = ranking.getItemPorCpf(cpfAluno);
+        itemRanking = ranking.getItemPorMatricula(matriculaAluno);
         assertNotNull(itemRanking);
         assertEquals(pontos, itemRanking.getPontosFrequencia());
     }
@@ -48,7 +55,7 @@ public class RankingAlunosFuncionalidade {
     @Então("o total de pontos é atualizado no ranking geral")
     public void o_total_de_pontos_e_atualizado_no_ranking_geral() {
         ranking = contexto.rankingService.obterRanking(PeriodoRanking.GERAL);
-        itemRanking = ranking.getItemPorCpf(cpfAluno);
+        itemRanking = ranking.getItemPorMatricula(matriculaAluno);
         assertNotNull(itemRanking);
         assertTrue(itemRanking.getPontuacaoTotal() > 0);
     }
@@ -58,20 +65,21 @@ public class RankingAlunosFuncionalidade {
     public void que_a_aluna_maria_tenha_participado_da_atividade_coletiva_da_guilda_fenix_no_dia(Integer dia,
             Integer mes, Integer ano) {
         cpfAluno = new Cpf("98765432100");
-        Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(cpfAluno, "Maria", LocalDate.of(1990, 1, 1));
+        matriculaAluno = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
     }
 
     @Quando("o sistema registrar a contribuição")
     public void o_sistema_registrar_a_contribuicao() {
         // Simula pontos de guilda
-        contexto.rankingService.registrarPontosGuilda(cpfAluno, 15, PeriodoRanking.GERAL);
+        contexto.rankingService.registrarPontosGuilda(matriculaAluno, 15, PeriodoRanking.GERAL);
     }
 
     @Então("a aluna recebe {int} pontos de engajamento")
     public void a_aluna_recebe_pontos_de_engajamento(Integer pontos) {
         ranking = contexto.rankingService.obterRanking(PeriodoRanking.GERAL);
-        itemRanking = ranking.getItemPorCpf(cpfAluno);
+        itemRanking = ranking.getItemPorMatricula(matriculaAluno);
         assertNotNull(itemRanking);
         assertEquals(pontos, itemRanking.getPontosGuilda());
     }
@@ -79,7 +87,7 @@ public class RankingAlunosFuncionalidade {
     @Então("o ranking da guilda e o ranking geral são atualizados")
     public void o_ranking_da_guilda_e_o_ranking_geral_sao_atualizados() {
         ranking = contexto.rankingService.obterRanking(PeriodoRanking.GERAL);
-        itemRanking = ranking.getItemPorCpf(cpfAluno);
+        itemRanking = ranking.getItemPorMatricula(matriculaAluno);
         assertNotNull(itemRanking);
         assertTrue(itemRanking.getPontuacaoTotal() > 0);
     }
@@ -89,20 +97,21 @@ public class RankingAlunosFuncionalidade {
     public void que_o_professor_tenha_avaliado_o_aluno_pedro_com_nota_na_aula_de_yoga_do_dia(Double nota, Integer dia,
             Integer mes, Integer ano) {
         cpfAluno = new Cpf("11122233344");
-        Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(cpfAluno, "Pedro", LocalDate.of(1990, 1, 1));
+        matriculaAluno = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
     }
 
     @Quando("a avaliação for registrada")
     public void a_avaliacao_for_registrada() {
         // Simula registro de performance com nota 9.5 = 20 pontos
-        contexto.rankingService.registrarPontosPerformance(cpfAluno, 20, 9.5, PeriodoRanking.GERAL);
+        contexto.rankingService.registrarPontosPerformance(matriculaAluno, 20, 9.5, PeriodoRanking.GERAL);
     }
 
     @Então("o sistema converte a nota em {int} pontos de performance")
     public void o_sistema_converte_a_nota_em_pontos_de_performance(Integer pontos) {
         ranking = contexto.rankingService.obterRanking(PeriodoRanking.GERAL);
-        itemRanking = ranking.getItemPorCpf(cpfAluno);
+        itemRanking = ranking.getItemPorMatricula(matriculaAluno);
         assertNotNull(itemRanking);
         assertEquals(pontos, itemRanking.getPontosPerformance());
     }
@@ -110,7 +119,7 @@ public class RankingAlunosFuncionalidade {
     @Então("adiciona esses pontos ao total acumulado do aluno")
     public void adiciona_esses_pontos_ao_total_acumulado_do_aluno() {
         ranking = contexto.rankingService.obterRanking(PeriodoRanking.GERAL);
-        itemRanking = ranking.getItemPorCpf(cpfAluno);
+        itemRanking = ranking.getItemPorMatricula(matriculaAluno);
         assertNotNull(itemRanking);
         assertTrue(itemRanking.getPontuacaoTotal() >= 20);
     }
@@ -121,8 +130,9 @@ public class RankingAlunosFuncionalidade {
         // Prepara dados de exemplo no ranking semanal
         cpfAluno = new Cpf("12312312312");
         Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
+        matriculaAluno = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
-        contexto.rankingService.registrarPontosFrequencia(cpfAluno, 50, PeriodoRanking.SEMANAL);
+        contexto.rankingService.registrarPontosFrequencia(matriculaAluno, 50, PeriodoRanking.SEMANAL);
     }
 
     @Quando("o sistema executar o fechamento semanal")
@@ -152,8 +162,9 @@ public class RankingAlunosFuncionalidade {
         // Prepara dados no ranking mensal
         cpfAluno = new Cpf("45645645645");
         Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
+        matriculaAluno = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
-        contexto.rankingService.registrarPontosFrequencia(cpfAluno, 600, PeriodoRanking.MENSAL);
+        contexto.rankingService.registrarPontosFrequencia(matriculaAluno, 600, PeriodoRanking.MENSAL);
     }
 
     @Quando("o sistema consolidar as pontuações mensais")
@@ -192,6 +203,8 @@ public class RankingAlunosFuncionalidade {
         cpfAlunoB = new Cpf("22222222222");
         Aluno alunoA = new Aluno(cpfAlunoA, "Aluno A", LocalDate.of(1990, 1, 1));
         Aluno alunoB = new Aluno(cpfAlunoB, "Aluno B", LocalDate.of(1990, 1, 1));
+        matriculaAlunoA = alunoA.getMatricula();
+        matriculaAlunoB = alunoB.getMatricula();
         contexto.repositorio.salvar(alunoA);
         contexto.repositorio.salvar(alunoB);
     }
@@ -200,7 +213,7 @@ public class RankingAlunosFuncionalidade {
     public void o_aluno_a_tenha_participado_de_aulas(Integer aulas) {
         // Registra frequência para cada aula (10 pontos por aula)
         for (int i = 0; i < aulas; i++) {
-            contexto.rankingService.registrarPontosFrequencia(cpfAlunoA, 10, PeriodoRanking.GERAL);
+            contexto.rankingService.registrarPontosFrequencia(matriculaAlunoA, 10, PeriodoRanking.GERAL);
         }
     }
 
@@ -208,11 +221,11 @@ public class RankingAlunosFuncionalidade {
     public void o_aluno_b_tenha_participado_de_aulas(Integer aulas) {
         // Registra frequência para cada aula (10 pontos por aula)
         for (int i = 0; i < aulas; i++) {
-            contexto.rankingService.registrarPontosFrequencia(cpfAlunoB, 10, PeriodoRanking.GERAL);
+            contexto.rankingService.registrarPontosFrequencia(matriculaAlunoB, 10, PeriodoRanking.GERAL);
         }
         // Adiciona pontos de guilda para igualar total (12*10 = 120, 10*10 = 100,
         // diferença = 20)
-        contexto.rankingService.registrarPontosGuilda(cpfAlunoB, 20, PeriodoRanking.GERAL);
+        contexto.rankingService.registrarPontosGuilda(matriculaAlunoB, 20, PeriodoRanking.GERAL);
     }
 
     @Quando("o sistema aplicar o critério de desempate")
@@ -227,8 +240,8 @@ public class RankingAlunosFuncionalidade {
         var itens = ranking.getItens();
 
         // Encontra as posições dos alunos no ranking
-        ItemRanking itemA = ranking.getItemPorCpf(cpfAlunoA);
-        ItemRanking itemB = ranking.getItemPorCpf(cpfAlunoB);
+        ItemRanking itemA = ranking.getItemPorMatricula(matriculaAlunoA);
+        ItemRanking itemB = ranking.getItemPorMatricula(matriculaAlunoB);
 
         assertNotNull(itemA, "Aluno A deveria estar no ranking");
         assertNotNull(itemB, "Aluno B deveria estar no ranking");
@@ -247,10 +260,10 @@ public class RankingAlunosFuncionalidade {
         int posicaoB = -1;
         for (int i = 0; i < itens.size(); i++) {
             ItemRanking item = itens.get(i);
-            if (item.getCpf().equals(cpfAlunoA)) {
+            if (item.getAlunoMatricula().equals(matriculaAlunoA)) {
                 posicaoA = i;
             }
-            if (item.getCpf().equals(cpfAlunoB)) {
+            if (item.getAlunoMatricula().equals(matriculaAlunoB)) {
                 posicaoB = i;
             }
         }
@@ -266,26 +279,28 @@ public class RankingAlunosFuncionalidade {
         cpfAlunoD = new Cpf("44444444444");
         Aluno alunoC = new Aluno(cpfAlunoC, "Aluno C", LocalDate.of(1990, 1, 1));
         Aluno alunoD = new Aluno(cpfAlunoD, "Aluno D", LocalDate.of(1990, 1, 1));
+        matriculaAlunoC = alunoC.getMatricula();
+        matriculaAlunoD = alunoD.getMatricula();
         contexto.repositorio.salvar(alunoC);
         contexto.repositorio.salvar(alunoD);
 
         // Mesma frequência: 10 aulas para cada um (10 pontos por aula = 100 pontos)
         for (int i = 0; i < 10; i++) {
-            contexto.rankingService.registrarPontosFrequencia(cpfAlunoC, 10, PeriodoRanking.GERAL);
-            contexto.rankingService.registrarPontosFrequencia(cpfAlunoD, 10, PeriodoRanking.GERAL);
+            contexto.rankingService.registrarPontosFrequencia(matriculaAlunoC, 10, PeriodoRanking.GERAL);
+            contexto.rankingService.registrarPontosFrequencia(matriculaAlunoD, 10, PeriodoRanking.GERAL);
         }
     }
 
     @Dado("o aluno C tenha média de {double} em performance")
     public void o_aluno_c_tenha_media_de_em_performance(Double media) {
         // Registra 5 pontos de performance com a nota especificada
-        contexto.rankingService.registrarPontosPerformance(cpfAlunoC, 10, media, PeriodoRanking.GERAL);
+        contexto.rankingService.registrarPontosPerformance(matriculaAlunoC, 10, media, PeriodoRanking.GERAL);
     }
 
     @Dado("o aluno D tenha média de {double}")
     public void o_aluno_d_tenha_media_de(Double media) {
         // Registra 5 pontos de performance com a nota especificada
-        contexto.rankingService.registrarPontosPerformance(cpfAlunoD, 10, media, PeriodoRanking.GERAL);
+        contexto.rankingService.registrarPontosPerformance(matriculaAlunoD, 10, media, PeriodoRanking.GERAL);
     }
 
     @Quando("o sistema recalcular o ranking")
@@ -300,8 +315,8 @@ public class RankingAlunosFuncionalidade {
         var itens = ranking.getItens();
 
         // Encontra os itens dos alunos
-        var itemC = ranking.getItemPorCpf(cpfAlunoC);
-        var itemD = ranking.getItemPorCpf(cpfAlunoD);
+        var itemC = ranking.getItemPorMatricula(matriculaAlunoC);
+        var itemD = ranking.getItemPorMatricula(matriculaAlunoD);
 
         assertNotNull(itemC, "Aluno C deveria estar no ranking");
         assertNotNull(itemD, "Aluno D deveria estar no ranking");
@@ -328,22 +343,23 @@ public class RankingAlunosFuncionalidade {
     public void que_o_aluno_rafael_tenha_falta_nao_justificada_na_aula_do_dia_as_19h00(Integer dia, Integer mes,
             Integer ano) {
         cpfAluno = new Cpf("55555555555");
-        Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(cpfAluno, "Rafael", LocalDate.of(1990, 1, 1));
+        matriculaAluno = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
         // Aluno tinha pontos antes
-        contexto.rankingService.registrarPontosFrequencia(cpfAluno, 50, PeriodoRanking.SEMANAL);
+        contexto.rankingService.registrarPontosFrequencia(matriculaAluno, 50, PeriodoRanking.SEMANAL);
     }
 
     @Quando("o sistema processar a ausência")
     public void o_sistema_processar_a_ausencia() {
         // Remove 5 pontos
-        contexto.rankingService.removerPontos(cpfAluno, 5, PeriodoRanking.SEMANAL);
+        contexto.rankingService.removerPontos(matriculaAluno, 5, PeriodoRanking.SEMANAL);
     }
 
     @Então("o aluno perde {int} pontos no ranking semanal")
     public void o_aluno_perde_pontos_no_ranking_semanal(Integer pontos) {
         ranking = contexto.rankingService.obterRanking(PeriodoRanking.SEMANAL);
-        itemRanking = ranking.getItemPorCpf(cpfAluno);
+        itemRanking = ranking.getItemPorMatricula(matriculaAluno);
         assertNotNull(itemRanking);
         assertEquals(45, itemRanking.getPontuacaoTotal()); // 50 - 5 = 45
     }
@@ -354,7 +370,7 @@ public class RankingAlunosFuncionalidade {
         // persistência/infraestrutura
         // O domínio já processou a penalização de pontos corretamente
         ranking = contexto.rankingService.obterRanking(PeriodoRanking.SEMANAL);
-        itemRanking = ranking.getItemPorCpf(cpfAluno);
+        itemRanking = ranking.getItemPorMatricula(matriculaAluno);
         assertNotNull(itemRanking, "Aluno deveria permanecer no ranking após penalização");
     }
 
@@ -363,19 +379,20 @@ public class RankingAlunosFuncionalidade {
     public void que_a_administradora_ana_precise_corrigir_a_pontuacao_de_um_aluno() {
         cpfAluno = new Cpf("66666666666");
         Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
+        matriculaAluno = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
-        contexto.rankingService.registrarPontosFrequencia(cpfAluno, 100, PeriodoRanking.GERAL);
+        contexto.rankingService.registrarPontosFrequencia(matriculaAluno, 100, PeriodoRanking.GERAL);
     }
 
     @Quando("ela registrar o ajuste de {int} pontos no sistema")
     public void ela_registrar_o_ajuste_de_pontos_no_sistema(Integer ajuste) {
-        contexto.rankingService.ajustarPontos(cpfAluno, ajuste, PeriodoRanking.GERAL);
+        contexto.rankingService.ajustarPontos(matriculaAluno, ajuste, PeriodoRanking.GERAL);
     }
 
     @Então("o total de pontos do aluno é atualizado imediatamente")
     public void o_total_de_pontos_do_aluno_e_atualizado_imediatamente() {
         ranking = contexto.rankingService.obterRanking(PeriodoRanking.GERAL);
-        itemRanking = ranking.getItemPorCpf(cpfAluno);
+        itemRanking = ranking.getItemPorMatricula(matriculaAluno);
         assertNotNull(itemRanking);
         assertEquals(90, itemRanking.getPontuacaoTotal()); // 100 + (-10) = 90
     }
@@ -386,7 +403,7 @@ public class RankingAlunosFuncionalidade {
         // infraestrutura/observabilidade
         // O domínio processou o ajuste corretamente
         ranking = contexto.rankingService.obterRanking(PeriodoRanking.GERAL);
-        itemRanking = ranking.getItemPorCpf(cpfAluno);
+        itemRanking = ranking.getItemPorMatricula(matriculaAluno);
         assertNotNull(itemRanking, "Aluno deveria estar no ranking após ajuste");
         assertEquals(90, itemRanking.getPontuacaoTotal(), "Ajuste deveria ter sido aplicado corretamente");
     }
@@ -395,14 +412,15 @@ public class RankingAlunosFuncionalidade {
     @Dado("que o aluno Lucas tenha mantido presença em todas as semanas do mês")
     public void que_o_aluno_lucas_tenha_mantido_presenca_em_todas_as_semanas_do_mes() {
         cpfAluno = new Cpf("77777777777");
-        Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(cpfAluno, "Lucas", LocalDate.of(1990, 1, 1));
+        matriculaAluno = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
     }
 
     @Dado("acumulado mais de {int} pontos de engajamento")
     public void acumulado_mais_de_pontos_de_engajamento(Integer pontos) {
-        contexto.rankingService.registrarPontosFrequencia(cpfAluno, 250, PeriodoRanking.MENSAL);
-        contexto.rankingService.registrarPontosGuilda(cpfAluno, 200, PeriodoRanking.MENSAL);
+        contexto.rankingService.registrarPontosFrequencia(matriculaAluno, 250, PeriodoRanking.MENSAL);
+        contexto.rankingService.registrarPontosGuilda(matriculaAluno, 200, PeriodoRanking.MENSAL);
     }
 
     @Quando("o sistema gerar o ranking mensal")
@@ -417,7 +435,7 @@ public class RankingAlunosFuncionalidade {
         // 400)
         // A exibição do título é responsabilidade da camada de apresentação
         ranking = contexto.rankingService.obterRanking(PeriodoRanking.MENSAL);
-        itemRanking = ranking.getItemPorCpf(cpfAluno);
+        itemRanking = ranking.getItemPorMatricula(matriculaAluno);
 
         assertNotNull(itemRanking, "Aluno deveria estar no ranking mensal");
         assertTrue(itemRanking.getPontuacaoTotal() > 400,
@@ -442,16 +460,17 @@ public class RankingAlunosFuncionalidade {
     public void que_o_aluno_acesse_seu_painel_de_desempenho() {
         cpfAluno = new Cpf("88888888888");
         Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
+        matriculaAluno = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
-        contexto.rankingService.registrarPontosFrequencia(cpfAluno, 50, PeriodoRanking.GERAL);
-        contexto.rankingService.registrarPontosGuilda(cpfAluno, 30, PeriodoRanking.GERAL);
-        contexto.rankingService.registrarPontosPerformance(cpfAluno, 40, 8.5, PeriodoRanking.GERAL);
+        contexto.rankingService.registrarPontosFrequencia(matriculaAluno, 50, PeriodoRanking.GERAL);
+        contexto.rankingService.registrarPontosGuilda(matriculaAluno, 30, PeriodoRanking.GERAL);
+        contexto.rankingService.registrarPontosPerformance(matriculaAluno, 40, 8.5, PeriodoRanking.GERAL);
     }
 
     @Quando("o sistema carregar o histórico")
     public void o_sistema_carregar_o_historico() {
         ranking = contexto.rankingService.obterRanking(PeriodoRanking.GERAL);
-        itemRanking = ranking.getItemPorCpf(cpfAluno);
+        itemRanking = ranking.getItemPorMatricula(matriculaAluno);
     }
 
     @Então("exibe o detalhamento de pontos por categoria \\(frequência, guilda, performance)")
@@ -485,8 +504,9 @@ public class RankingAlunosFuncionalidade {
     public void que_o_aluno_possua_historico_de_ranking_das_ultimas_semanas(Integer semanas) {
         cpfAluno = new Cpf("99999999999");
         Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
+        matriculaAluno = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
-        contexto.rankingService.registrarPontosFrequencia(cpfAluno, 200, PeriodoRanking.GERAL);
+        contexto.rankingService.registrarPontosFrequencia(matriculaAluno, 200, PeriodoRanking.GERAL);
     }
 
     @Quando("ele acessar a aba Minha Evolução")
@@ -509,7 +529,7 @@ public class RankingAlunosFuncionalidade {
         assertNotNull(ranking, "Ranking deveria estar disponível");
 
         // Valida que o aluno tem histórico suficiente para conquistas
-        var itemAluno = ranking.getItemPorCpf(cpfAluno);
+        var itemAluno = ranking.getItemPorMatricula(matriculaAluno);
         if (itemAluno != null) {
             assertTrue(itemAluno.getPontuacaoTotal() > 0,
                     "Aluno deveria ter pontuação para gerar conquistas");
@@ -521,8 +541,9 @@ public class RankingAlunosFuncionalidade {
     public void que_o_mes_de_outubro_encerre_no_dia(Integer dia, Integer mes, Integer ano) {
         cpfAluno = new Cpf("10101010101");
         Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
+        matriculaAluno = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
-        contexto.rankingService.registrarPontosFrequencia(cpfAluno, 300, PeriodoRanking.SEMANAL);
+        contexto.rankingService.registrarPontosFrequencia(matriculaAluno, 300, PeriodoRanking.SEMANAL);
     }
 
     @Quando("o sistema iniciar o novo ciclo em {int}\\/{int}\\/{int}")
@@ -534,7 +555,7 @@ public class RankingAlunosFuncionalidade {
     @Então("o ranking semanal é zerado")
     public void o_ranking_semanal_e_zerado() {
         ranking = contexto.rankingService.obterRanking(PeriodoRanking.SEMANAL);
-        itemRanking = ranking.getItemPorCpf(cpfAluno);
+        itemRanking = ranking.getItemPorMatricula(matriculaAluno);
         if (itemRanking != null) {
             assertEquals(0, itemRanking.getPontuacaoTotal());
         }
@@ -552,8 +573,9 @@ public class RankingAlunosFuncionalidade {
     public void que_o_ranking_de_outubro_tenha_sido_encerrado() {
         cpfAluno = new Cpf("20202020202");
         Aluno aluno = new Aluno(cpfAluno, "João", LocalDate.of(1990, 1, 1));
+        matriculaAluno = aluno.getMatricula();
         contexto.repositorio.salvar(aluno);
-        contexto.rankingService.registrarPontosFrequencia(cpfAluno, 500, PeriodoRanking.MENSAL);
+        contexto.rankingService.registrarPontosFrequencia(matriculaAluno, 500, PeriodoRanking.MENSAL);
     }
 
     @Quando("o sistema iniciar o novo ciclo")
@@ -575,7 +597,7 @@ public class RankingAlunosFuncionalidade {
         assertNotNull(ranking, "Ranking deveria estar disponível para arquivamento");
 
         // Valida que o ranking tem dados significativos para arquivar
-        var itemAluno = ranking.getItemPorCpf(cpfAluno);
+        var itemAluno = ranking.getItemPorMatricula(matriculaAluno);
         assertNotNull(itemAluno, "Aluno deveria estar no histórico");
         assertEquals(500, itemAluno.getPontuacaoTotal(), "Pontuação do período deveria estar preservada");
     }

@@ -25,7 +25,7 @@ import br.com.forgefit.dominio.torneio.Torneio;
 import br.com.forgefit.dominio.torneio.TorneioId;
 import br.com.forgefit.dominio.torneio.TorneioRepositorio;
 import br.com.forgefit.dominio.torneio.enums.StatusTorneio;
-import br.com.forgefit.dominio.treino.PlanoDeTreinoCompleto;
+import br.com.forgefit.dominio.treino.PlanoDeTreino;
 import br.com.forgefit.dominio.treino.PlanoDeTreinoId;
 import br.com.forgefit.dominio.treino.TreinoRepositorio;
 import br.com.forgefit.dominio.treino.enums.LetraDoTreino;
@@ -311,16 +311,16 @@ public class Repositorio implements AlunoRepositorio,
     /*-----------------------------------------------------------------------*/
 
     /*-----------------------------------------------------------------------*/
-    private Map<PlanoDeTreinoId, PlanoDeTreinoCompleto> planosTreino = new HashMap<>();
+    private Map<PlanoDeTreinoId, PlanoDeTreino> planosTreino = new HashMap<>();
 
     @Override
-    public void salvar(PlanoDeTreinoCompleto plano) {
+    public void salvar(PlanoDeTreino plano) {
         notNull(plano, "O plano de treino não pode ser nulo");
         planosTreino.put(plano.getId(), plano);
     }
 
     @Override
-    public Optional<PlanoDeTreinoCompleto> obterPorId(PlanoDeTreinoId id) {
+    public Optional<PlanoDeTreino> obterPorId(PlanoDeTreinoId id) {
         notNull(id, "O ID do plano de treino não pode ser nulo");
         return Optional.ofNullable(planosTreino.get(id));
     }

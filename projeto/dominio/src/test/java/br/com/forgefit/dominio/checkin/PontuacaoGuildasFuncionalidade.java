@@ -60,7 +60,8 @@ public class PontuacaoGuildasFuncionalidade {
         var planoId = new PlanoDeTreinoId(1);
         var treinos = new ArrayList<TreinoDiario>();
         planoAtivo = new PlanoDeTreino(planoId, new ProfessorId(1), LocalDate.now(), LocalDate.now().plusMonths(3), treinos);
-        aluno.setPlanoAtivo(planoAtivo);
+        contexto.repositorio.salvar(planoAtivo); // Salva o plano primeiro
+        aluno.setPlanoAtivoId(planoId);
         
         // Cria a guilda e associa o aluno à guilda
         guilda = contexto.guildaService.criarGuilda(nomeGuilda, "Descrição da guilda", null, matriculaAluno);
@@ -121,7 +122,8 @@ public class PontuacaoGuildasFuncionalidade {
         var planoId = new PlanoDeTreinoId(1);
         var treinos = new ArrayList<TreinoDiario>();
         planoAtivo = new PlanoDeTreino(planoId, new ProfessorId(1), LocalDate.now(), LocalDate.now().plusMonths(3), treinos);
-        aluno.setPlanoAtivo(planoAtivo);
+        contexto.repositorio.salvar(planoAtivo); // Salva o plano primeiro
+        aluno.setPlanoAtivoId(planoId);
         
         // Cria a guilda
         guilda = contexto.guildaService.criarGuilda(nomeGuilda, "Descrição", null, matriculaAluno);
@@ -267,7 +269,8 @@ public class PontuacaoGuildasFuncionalidade {
         var planoId = new PlanoDeTreinoId(1);
         var treinos = new ArrayList<TreinoDiario>();
         planoAtivo = new PlanoDeTreino(planoId, new ProfessorId(1), LocalDate.now(), LocalDate.now().plusMonths(3), treinos);
-        aluno.setPlanoAtivo(planoAtivo);
+        contexto.repositorio.salvar(planoAtivo); // Salva o plano primeiro
+        aluno.setPlanoAtivoId(planoId);
         
         guilda = contexto.guildaService.criarGuilda(nomeGuilda, "Descrição", null, matriculaAluno);
         

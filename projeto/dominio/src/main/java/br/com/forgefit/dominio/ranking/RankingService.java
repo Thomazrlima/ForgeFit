@@ -2,7 +2,7 @@ package br.com.forgefit.dominio.ranking;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
-import br.com.forgefit.dominio.aluno.Cpf;
+import br.com.forgefit.dominio.aluno.Matricula;
 import br.com.forgefit.dominio.ranking.enums.PeriodoRanking;
 
 public class RankingService {
@@ -22,42 +22,42 @@ public class RankingService {
             });
     }
 
-    public void registrarPontosFrequencia(Cpf cpf, int pontos, PeriodoRanking periodo) {
+    public void registrarPontosFrequencia(Matricula alunoMatricula, int pontos, PeriodoRanking periodo) {
         Ranking ranking = obterRanking(periodo);
-        ranking.adicionarOuAtualizar(cpf);
-        ItemRanking item = ranking.getItemPorCpf(cpf);
+        ranking.adicionarOuAtualizar(alunoMatricula);
+        ItemRanking item = ranking.getItemPorMatricula(alunoMatricula);
         item.adicionarPontosFrequencia(pontos);
         rankingRepositorio.salvar(ranking);
     }
 
-    public void registrarPontosGuilda(Cpf cpf, int pontos, PeriodoRanking periodo) {
+    public void registrarPontosGuilda(Matricula alunoMatricula, int pontos, PeriodoRanking periodo) {
         Ranking ranking = obterRanking(periodo);
-        ranking.adicionarOuAtualizar(cpf);
-        ItemRanking item = ranking.getItemPorCpf(cpf);
+        ranking.adicionarOuAtualizar(alunoMatricula);
+        ItemRanking item = ranking.getItemPorMatricula(alunoMatricula);
         item.adicionarPontosGuilda(pontos);
         rankingRepositorio.salvar(ranking);
     }
 
-    public void registrarPontosPerformance(Cpf cpf, int pontos, double nota, PeriodoRanking periodo) {
+    public void registrarPontosPerformance(Matricula alunoMatricula, int pontos, double nota, PeriodoRanking periodo) {
         Ranking ranking = obterRanking(periodo);
-        ranking.adicionarOuAtualizar(cpf);
-        ItemRanking item = ranking.getItemPorCpf(cpf);
+        ranking.adicionarOuAtualizar(alunoMatricula);
+        ItemRanking item = ranking.getItemPorMatricula(alunoMatricula);
         item.adicionarPontosPerformance(pontos, nota);
         rankingRepositorio.salvar(ranking);
     }
 
-    public void removerPontos(Cpf cpf, int pontos, PeriodoRanking periodo) {
+    public void removerPontos(Matricula alunoMatricula, int pontos, PeriodoRanking periodo) {
         Ranking ranking = obterRanking(periodo);
-        ItemRanking item = ranking.getItemPorCpf(cpf);
+        ItemRanking item = ranking.getItemPorMatricula(alunoMatricula);
         if (item != null) {
             item.removerPontos(pontos);
             rankingRepositorio.salvar(ranking);
         }
     }
 
-    public void ajustarPontos(Cpf cpf, int ajuste, PeriodoRanking periodo) {
+    public void ajustarPontos(Matricula alunoMatricula, int ajuste, PeriodoRanking periodo) {
         Ranking ranking = obterRanking(periodo);
-        ItemRanking item = ranking.getItemPorCpf(cpf);
+        ItemRanking item = ranking.getItemPorMatricula(alunoMatricula);
         if (item != null) {
             item.ajustarPontos(ajuste);
             rankingRepositorio.salvar(ranking);

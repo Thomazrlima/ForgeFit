@@ -10,8 +10,8 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 import br.com.forgefit.dominio.aluno.enums.StatusAluno;
-
-import br.com.forgefit.dominio.treino.PlanoDeTreino;
+import br.com.forgefit.dominio.frequencia.Frequencia;
+import br.com.forgefit.dominio.treino.PlanoDeTreinoId;
 import br.com.forgefit.dominio.guilda.GuildaId;
 
 public class Aluno {
@@ -25,9 +25,12 @@ public class Aluno {
     private double creditos;
     private StatusAluno status;
     private LocalDate bloqueioAte;
-    private PlanoDeTreino planoAtivo;
+    private PlanoDeTreinoId planoAtivoId;
     private GuildaId guildaId;
+
     private final List<AvaliacaoFisica> historicoDeAvaliacoes = new ArrayList<>();
+    private final List<PlanoDeTreinoId> historicoDeplanosIds = new ArrayList<>();
+    private final List<Frequencia> historicoDeFrequencia = new ArrayList<>();
 
     public Aluno(Matricula matricula, Cpf cpf, String nome, LocalDate dataNascimento) {
         notNull(matricula, "A matrícula não pode ser nula");
@@ -111,12 +114,12 @@ public class Aluno {
         this.bloqueioAte = bloqueioAte;
     }
 
-    public PlanoDeTreino getPlanoAtivo() {
-        return planoAtivo;
+    public PlanoDeTreinoId getPlanoAtivoId() {
+        return planoAtivoId;
     }
 
-    public void setPlanoAtivo(PlanoDeTreino planoAtivo) {
-        this.planoAtivo = planoAtivo;
+    public void setPlanoAtivoId(PlanoDeTreinoId planoAtivoId) {
+        this.planoAtivoId = planoAtivoId;
     }
 
     public GuildaId getGuildaId() {
@@ -128,7 +131,7 @@ public class Aluno {
     }
 
     public boolean temPlanoAtivo() {
-        return planoAtivo != null && planoAtivo.isAtivo();
+        return planoAtivoId != null;
     }
 
     public List<AvaliacaoFisica> getHistoricoDeAvaliacoes() {
@@ -138,6 +141,24 @@ public class Aluno {
     public void adicionarAvaliacaoFisica(AvaliacaoFisica avaliacao) {
         notNull(avaliacao, "A avaliação física não pode ser nula");
         historicoDeAvaliacoes.add(avaliacao);
+    }
+
+    public List<PlanoDeTreinoId> getHistoricoDeplanosIds() {
+        return Collections.unmodifiableList(historicoDeplanosIds);
+    }
+
+    public void adicionarPlanoDeTreinoId(PlanoDeTreinoId planoId) {
+        notNull(planoId, "O ID do plano de treino não pode ser nulo");
+        historicoDeplanosIds.add(planoId);
+    }
+
+    public List<Frequencia> getHistoricoDeFrequencia() {
+        return Collections.unmodifiableList(historicoDeFrequencia);
+    }
+
+    public void adicionarFrequencia(Frequencia frequencia) {
+        notNull(frequencia, "A frequência não pode ser nula");
+        historicoDeFrequencia.add(frequencia);
     }
     
     @Override

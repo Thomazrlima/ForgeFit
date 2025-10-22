@@ -1,8 +1,10 @@
 package br.com.forgefit.dominio.aula;
 
+import br.com.forgefit.dominio.aula.enums.DiaDaSemana;
 import br.com.forgefit.dominio.aula.enums.Espaco;
 import br.com.forgefit.dominio.aula.enums.Modalidade;
 import br.com.forgefit.dominio.aula.enums.StatusAula;
+import br.com.forgefit.dominio.aula.enums.TipoRecorrencia;
 import br.com.forgefit.dominio.professor.ProfessorId;
 
 import java.time.LocalDate;
@@ -33,11 +35,21 @@ public class AulaService {
     }
 
     public Aula criarAulaRecorrente(ProfessorId professorId, Modalidade modalidade, Espaco espaco, int capacidade,
-                                    LocalDateTime inicio, LocalDateTime fim, Recorrencia recorrencia) {
+                                   LocalDateTime inicio, LocalDateTime fim, TipoRecorrencia tipoRecorrencia, 
+                                   List<DiaDaSemana> diasDaSemana, LocalDate dataFimRecorrencia) {
+        notNull(tipoRecorrencia, "O tipo de recorrência não pode ser nulo");
+        notNull(diasDaSemana, "Os dias da semana não podem ser nulos");
+        notNull(dataFimRecorrencia, "A data fim da recorrência não pode ser nula");
+        
+        // Monta a recorrência dentro do método
+        Recorrencia recorrencia = new Recorrencia(tipoRecorrencia, diasDaSemana, dataFimRecorrencia);
+        
+        // Verifica conflito apenas para o horário base da recorrência
         verificarConflitoHorario(espaco, professorId, inicio, fim, null);
-
+        
         AulaId id = new AulaId(aulaIdCounter.getAndIncrement());
         Aula aula = new Aula(id, professorId, modalidade, espaco, capacidade, inicio, fim, recorrencia);
+        
         aulaRepositorio.salvar(aula);
         return aula;
     }
@@ -132,4 +144,5 @@ public class AulaService {
             throw new IllegalStateException("Conflito de horário: O professor já está alocado em outra aula.");
         }
     }
+
 }

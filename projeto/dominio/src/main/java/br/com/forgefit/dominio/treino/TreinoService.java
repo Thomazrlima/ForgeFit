@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import br.com.forgefit.dominio.aluno.Matricula;
 import br.com.forgefit.dominio.professor.ProfessorId;
 import br.com.forgefit.dominio.treino.enums.LetraDoTreino;
 
@@ -19,43 +18,42 @@ import br.com.forgefit.dominio.treino.enums.LetraDoTreino;
 public class TreinoService {
     private final TreinoRepositorio treinoRepositorio;
     private final AtomicInteger contadorId = new AtomicInteger(1);
+    private static final int LIMITE_MAX_TREINOS = 7;
 
     public TreinoService(TreinoRepositorio treinoRepositorio) {
         notNull(treinoRepositorio, "O repositório de treinos não pode ser nulo");
         this.treinoRepositorio = treinoRepositorio;
     }
 
-    public PlanoDeTreinoCompleto criarPlanoDeTreino(Matricula alunoMatricula, ProfessorId professorId,
-                                                     List<TreinoDiario> treinos) {
-        return criarPlanoDeTreino(alunoMatricula, professorId, treinos, null);
+    public PlanoDeTreino criarPlanoDeTreino(ProfessorId professorId, List<TreinoDiario> treinos) {
+        return criarPlanoDeTreino(professorId, treinos, null);
     }
 
-    public PlanoDeTreinoCompleto criarPlanoDeTreino(Matricula alunoMatricula, ProfessorId professorId,
-                                                     List<TreinoDiario> treinos, LocalDate validadeSugerida) {
-        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
+    public PlanoDeTreino criarPlanoDeTreino(ProfessorId professorId, List<TreinoDiario> treinos, 
+                                           LocalDate validadeSugerida) {
         notNull(professorId, "O ID do professor não pode ser nulo");
         notNull(treinos, "A lista de treinos não pode ser nula");
 
-        if (treinos.size() > PlanoDeTreinoCompleto.getLimiteMaxTreinos()) {
+        if (treinos.size() > LIMITE_MAX_TREINOS) {
             throw new IllegalArgumentException(
-                "Não é possível criar mais de " + PlanoDeTreinoCompleto.getLimiteMaxTreinos() + 
+                "Não é possível criar mais de " + LIMITE_MAX_TREINOS + 
                 " treinos, pois superou o numero de dias da semana");
         }
 
         PlanoDeTreinoId id = new PlanoDeTreinoId(contadorId.getAndIncrement());
         LocalDate dataCriacao = LocalDate.now();
 
-        PlanoDeTreinoCompleto plano = new PlanoDeTreinoCompleto(
-            id, alunoMatricula, professorId, dataCriacao, validadeSugerida, treinos);
+        PlanoDeTreino plano = new PlanoDeTreino(
+            id, professorId, dataCriacao, validadeSugerida, treinos);
 
         treinoRepositorio.salvar(plano);
         return plano;
     }
 
     public void atualizarTreinoDiario(PlanoDeTreinoId planoId, TreinoDiario treinoAtualizado) {
-        PlanoDeTreinoCompleto plano = obterPlano(planoId);
+        PlanoDeTreino plano = obterPlano(planoId);
         
-        List<TreinoDiario> treinosAtualizados = new ArrayList<>(plano.getTreinos());
+        List<TreinoDiario> treinosAtualizados = new ArrayList<>(plano.getTreinosDaSemana());
         
         // Remove o treino com a mesma letra se existir
         treinosAtualizados.removeIf(t -> t.getLetra() == treinoAtualizado.getLetra());
@@ -66,37 +64,37 @@ public class TreinoService {
         // Ordena por letra
         treinosAtualizados.sort(Comparator.comparing(TreinoDiario::getLetra));
         
-        PlanoDeTreinoCompleto planoAtualizado = new PlanoDeTreinoCompleto(
-            plano.getId(), plano.getAlunoMatricula(), plano.getProfessorId(),
+        PlanoDeTreino planoAtualizado = new PlanoDeTreino(
+            plano.getId(), plano.getProfessorId(),
             plano.getDataCriacao(), plano.getDataValidadeSugerida(), treinosAtualizados);
         
         treinoRepositorio.salvar(planoAtualizado);
     }
 
     public void adicionarTreinoDiario(PlanoDeTreinoId planoId, TreinoDiario novoTreino) {
-        PlanoDeTreinoCompleto plano = obterPlano(planoId);
+        PlanoDeTreino plano = obterPlano(planoId);
         
-        if (plano.getQuantidadeTreinos() >= PlanoDeTreinoCompleto.getLimiteMaxTreinos()) {
+        if (plano.getTreinosDaSemana().size() >= LIMITE_MAX_TREINOS) {
             throw new IllegalArgumentException(
                 "Não é possível adicionar mais treinos, pois superou o numero de dias da semana, " +
                 "impossibilitando a criação do treino " + novoTreino.getLetra());
         }
         
-        List<TreinoDiario> treinosAtualizados = new ArrayList<>(plano.getTreinos());
+        List<TreinoDiario> treinosAtualizados = new ArrayList<>(plano.getTreinosDaSemana());
         treinosAtualizados.add(novoTreino);
         treinosAtualizados.sort(Comparator.comparing(TreinoDiario::getLetra));
         
-        PlanoDeTreinoCompleto planoAtualizado = new PlanoDeTreinoCompleto(
-            plano.getId(), plano.getAlunoMatricula(), plano.getProfessorId(),
+        PlanoDeTreino planoAtualizado = new PlanoDeTreino(
+            plano.getId(), plano.getProfessorId(),
             plano.getDataCriacao(), plano.getDataValidadeSugerida(), treinosAtualizados);
         
         treinoRepositorio.salvar(planoAtualizado);
     }
 
     public void excluirTreinoDiario(PlanoDeTreinoId planoId, LetraDoTreino letraParaExcluir) {
-        PlanoDeTreinoCompleto plano = obterPlano(planoId);
+        PlanoDeTreino plano = obterPlano(planoId);
         
-        List<TreinoDiario> treinosAtualizados = plano.getTreinos().stream()
+        List<TreinoDiario> treinosAtualizados = plano.getTreinosDaSemana().stream()
             .filter(t -> t.getLetra() != letraParaExcluir)
             .collect(Collectors.toList());
         
@@ -114,14 +112,14 @@ public class TreinoService {
             treinosReordenados.add(treinoReordenado);
         }
         
-        PlanoDeTreinoCompleto planoAtualizado = new PlanoDeTreinoCompleto(
-            plano.getId(), plano.getAlunoMatricula(), plano.getProfessorId(),
+        PlanoDeTreino planoAtualizado = new PlanoDeTreino(
+            plano.getId(), plano.getProfessorId(),
             plano.getDataCriacao(), plano.getDataValidadeSugerida(), treinosReordenados);
         
         treinoRepositorio.salvar(planoAtualizado);
     }
 
-    public PlanoDeTreinoCompleto obterPlano(PlanoDeTreinoId planoId) {
+    public PlanoDeTreino obterPlano(PlanoDeTreinoId planoId) {
         return treinoRepositorio.obterPorId(planoId)
             .orElseThrow(() -> new IllegalArgumentException("Plano de treino não encontrado"));
     }

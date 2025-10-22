@@ -2,10 +2,10 @@ package br.com.forgefit.dominio.ranking;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
-import br.com.forgefit.dominio.aluno.Cpf;
+import br.com.forgefit.dominio.aluno.Matricula;
 
 public class ItemRanking {
-    private final Cpf cpf;
+    private final Matricula alunoMatricula;
     private int pontosFrequencia;
     private int pontosGuilda;
     private int pontosPerformance;
@@ -15,9 +15,9 @@ public class ItemRanking {
     private double mediaPerformance;
     private int numeroDeAvaliacoes; // Contador separado para avaliações
 
-    public ItemRanking(Cpf cpf) {
-        notNull(cpf, "O CPF não pode ser nulo");
-        this.cpf = cpf;
+    public ItemRanking(Matricula alunoMatricula) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
+        this.alunoMatricula = alunoMatricula;
         this.pontosFrequencia = 0;
         this.pontosGuilda = 0;
         this.pontosPerformance = 0;
@@ -75,8 +75,8 @@ public class ItemRanking {
     }
 
     // Getters
-    public Cpf getCpf() {
-        return cpf;
+    public Matricula getAlunoMatricula() {
+        return alunoMatricula;
     }
 
     public int getPontosFrequencia() {

@@ -34,13 +34,7 @@ public class Aula {
     private final List<PosicaoListaDeEspera> listaDeEspera;
     private final List<OcorrenciaExcecao> excecoes;
 
-    // Construtor para Aula Única
-    public Aula(AulaId id, ProfessorId professorId, Modalidade modalidade, Espaco espaco, int capacidade,
-            LocalDateTime inicio, LocalDateTime fim) {
-        this(id, professorId, modalidade, espaco, capacidade, inicio, fim, null);
-    }
-
-    // Construtor para Aula Recorrente
+    // Construtor unificado - a lógica de recorrência será tratada no AulaService
     public Aula(AulaId id, ProfessorId professorId, Modalidade modalidade, Espaco espaco, int capacidade,
             LocalDateTime inicio, LocalDateTime fim, Recorrencia recorrencia) {
         notNull(id, "O ID da aula não pode ser nulo");
@@ -64,6 +58,12 @@ public class Aula {
         this.reservas = new ArrayList<>();
         this.listaDeEspera = new ArrayList<>();
         this.excecoes = new ArrayList<>();
+    }
+
+    // Construtor para Aula Única (sem recorrência)
+    public Aula(AulaId id, ProfessorId professorId, Modalidade modalidade, Espaco espaco, int capacidade,
+            LocalDateTime inicio, LocalDateTime fim) {
+        this(id, professorId, modalidade, espaco, capacidade, inicio, fim, null);
     }
 
     // Getters

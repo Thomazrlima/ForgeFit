@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import br.com.forgefit.dominio.aluno.Cpf;
+import br.com.forgefit.dominio.aluno.Matricula;
 import br.com.forgefit.dominio.ranking.enums.PeriodoRanking;
 
 public class Ranking {
@@ -19,15 +19,15 @@ public class Ranking {
         this.itens = new ArrayList<>();
     }
 
-    public void adicionarOuAtualizar(Cpf cpf) {
-        if (getItemPorCpf(cpf) == null) {
-            itens.add(new ItemRanking(cpf));
+    public void adicionarOuAtualizar(Matricula alunoMatricula) {
+        if (getItemPorMatricula(alunoMatricula) == null) {
+            itens.add(new ItemRanking(alunoMatricula));
         }
     }
 
-    public ItemRanking getItemPorCpf(Cpf cpf) {
+    public ItemRanking getItemPorMatricula(Matricula alunoMatricula) {
         return itens.stream()
-                .filter(item -> item.getCpf().equals(cpf))
+                .filter(item -> item.getAlunoMatricula().equals(alunoMatricula))
                 .findFirst()
                 .orElse(null);
     }

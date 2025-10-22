@@ -113,9 +113,11 @@ BoundedContext AcademiaContext implements CoreAcademia {
             int pontuacaoTotal
             double creditos
             -StatusAluno status
-            
+            -GuildaId guildaId
+            -PlanoDeTreinoId planoAtivoId
+            Date bloqueioAte
             -List<AvaliacaoFisica> historicoDeAvaliacoes
-            -List<PlanoDeTreino> historicoDePlanos
+            -List<PlanoDeTreinoId> historicoDeplanosIds
             -List<Frequencia> historicoDeFrequencia
 
             Repository AlunoRepository {
@@ -127,10 +129,7 @@ BoundedContext AcademiaContext implements CoreAcademia {
 
         Service AlunoService {
             void adicionarCreditos(@Matricula alunoMatricula, double creditos);
-        }
-
-        Service TreinoService {
-            @PlanoDeTreino criarPlanoDeTreino(@Matricula alunoMatricula, @ProfessorId professorId, Date validadeSugerida, List<@TreinoDiario> treinos);
+            void atribuirPlanoDetreino(@Matricula alunoMatricula, @PlanoDeTreinoId planoId);
         }
 
         Service AvaliacaoFisicaService {
@@ -180,16 +179,31 @@ BoundedContext AcademiaContext implements CoreAcademia {
             double coxaCm
             double panturrilhaCm
         }
-        
+    }
+
+    Aggregate PlanoDeTreino {
         Entity PlanoDeTreino {
+            aggregateRoot
             -PlanoDeTreinoId id
             -ProfessorId professorResponsavel
             Date dataCriacao
             Date dataValidadeSugerida
             -List<TreinoDiario> treinosDaSemana
+
+            Repository PlanoDeTreinoRepository {
+                void salvar(@PlanoDeTreino plano);
+                @PlanoDeTreino obterPorId(@PlanoDeTreinoId id);
+            }
+        }
+
+        Service TreinoService {
+            @PlanoDeTreino criarPlanoDeTreino(@ProfessorId professorId, Date validadeSugerida, List<@TreinoDiario> treinos);
+            void atualizarTreinoDiario(@PlanoDeTreinoId planoId, @TreinoDiario treinoAtualizado);
+            void adicionarTreinoDiario(@PlanoDeTreinoId planoId, @TreinoDiario novoTreino);
+            void excluirTreinoDiario(@PlanoDeTreinoId planoId, @LetraDoTreino letraParaExcluir);
         }
         
-        Entity TreinoDiario {
+        ValueObject TreinoDiario {
             -LetraDoTreino letra
             -TipoDoTreino tipo
             -List<ItemDeExercicio> exercicios
@@ -263,15 +277,20 @@ BoundedContext AcademiaContext implements CoreAcademia {
                 @Guilda obterPorId(@GuildaId id);
                 List<@Guilda> listarGuildas();
                 @Guilda buscarPorCodigoConvite(@CodigoConvite codigo);
+                @Guilda buscarPorNome(String nome);
             }
         }
 
         Service GuildaService {
             @Guilda criarGuilda(@Matricula mestreMatricula, String nome, String descricao, String imagemURL);
-            void alterarDadosGuilda(@GuildaId guildaId, String novoNome, String novaDescricao, String novaImagemURL);
-            void excluirGuilda(@GuildaId guildaId);
+            void alterarDadosGuilda(@Matricula mestreMatricula, @GuildaId guildaId, String novoNome, String novaDescricao, String novaImagemURL);
+            void excluirGuilda(@Matricula mestreMatricula, @GuildaId guildaId);
             void entrarEmGuilda(@Matricula alunoMatricula, @CodigoConvite codigo);
             void sairDaGuilda(@Matricula alunoMatricula, @GuildaId guildaId);
+            void adicionarMembro(@GuildaId guildaId, @Matricula novoMembroMatricula);
+            void removerMembro(@GuildaId guildaId, @Matricula membroParaRemoverMatricula);
+            @Guilda obter(@GuildaId guildaId);
+
         }
 
         enum StatusGuilda { ATIVA, INATIVA }
@@ -394,5 +413,41 @@ BoundedContext AcademiaContext implements CoreAcademia {
         }
 
         enum TipoDeCheckin { AULA, TREINO }
+    }
+
+    Aggregate Ranking {
+        Entity Ranking {
+            aggregateRoot
+            -PeriodoRanking periodo
+            -List<ItemRanking> itens
+
+            Repository RankingRepository {
+                void salvar(@Ranking ranking);
+                @Ranking obterPorPeriodo(@PeriodoRanking periodo);
+            }
+        }
+
+        Service RankingService {
+            @Ranking obterRanking(@PeriodoRanking periodo);
+            void registrarPontosFrequencia(@Matricula alunoMatricula, int pontos, @PeriodoRanking periodo);
+            void registrarPontosGuilda(@Matricula alunoMatricula, int pontos, @PeriodoRanking periodo);
+            void registrarPontosPerformance(@Matricula alunoMatricula, int pontos, double nota, @PeriodoRanking periodo);
+            void removerPontos(@Matricula alunoMatricula, int pontos, @PeriodoRanking periodo);
+            void ajustarPontos(@Matricula alunoMatricula, int ajuste, @PeriodoRanking periodo);
+        }
+
+        ValueObject ItemRanking {
+            -Matricula alunoMatricula
+            int pontosFrequencia
+            int pontosGuilda
+            int pontosPerformance
+            int pontuacaoTotal
+            int posicao
+            int numeroDeAulasParticipadas
+            double mediaPerformance
+            int numeroDeAvaliacoes
+        }
+
+        enum PeriodoRanking { SEMANAL, MENSAL, GERAL }
     }
 }

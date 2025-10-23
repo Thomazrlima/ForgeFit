@@ -235,10 +235,35 @@ public class AvaliacaoFisicaFuncionalidade {
 
     @Then("o sistema exibe a lista com os dados de cada avaliação:")
     public void o_sistema_exibe_a_lista_com_os_dados_de_cada_avaliação(io.cucumber.datatable.DataTable dataTable) {
+        // BUSCA DO REPOSITÓRIO - valida que as avaliações foram persistidas
+        Optional<Aluno> alunoDoRepositorio = contexto.repositorio.obterPorMatricula(matriculaAluno);
+        assertTrue(alunoDoRepositorio.isPresent(), 
+                "O aluno deveria estar no repositório");
+        
+        Aluno alunoSalvo = alunoDoRepositorio.get();
+        assertNotNull(alunoSalvo.getHistoricoDeAvaliacoes(), 
+                "O histórico de avaliações não pode ser nulo");
+        assertFalse(alunoSalvo.getHistoricoDeAvaliacoes().isEmpty(), 
+                "O histórico de avaliações deveria ter pelo menos uma avaliação");
+        
+        // Valida que cada avaliação salva tem todos os atributos preenchidos
+        for (AvaliacaoFisica avaliacaoSalva : alunoSalvo.getHistoricoDeAvaliacoes()) {
+            assertNotNull(avaliacaoSalva.getDataDaAvaliacao(), 
+                    "Cada avaliação deveria ter data registrada");
+            assertNotNull(avaliacaoSalva.getProfessorResponsavel(), 
+                    "Cada avaliação deveria ter professorId registrado");
+            // Valida que os principais campos foram salvos
+            assertTrue(avaliacaoSalva.getMassaGordaPercentual() > 0 || 
+                       avaliacaoSalva.getMassaGordaKg() > 0 ||
+                       avaliacaoSalva.getMassaMagraKg() > 0,
+                    "Cada avaliação deveria ter pelo menos um campo de medição preenchido");
+        }
+        
+        // Formata a mensagem do histórico
         if (historicoAvaliacoes == null || historicoAvaliacoes.isEmpty()) {
             mensagemSistema = contexto.avaliacaoFisicaService.verificarHistoricoAvaliacoes(matriculaAluno);
         } else {
-            mensagemSistema = contexto.avaliacaoFisicaService.formatarHistoricoAvaliacoes(historicoAvaliacoes);
+            mensagemSistema = contexto.avaliacaoFisicaService.formatarHistoricoAvaliacoes(alunoSalvo.getHistoricoDeAvaliacoes());
         }
     }
 
@@ -320,6 +345,25 @@ public class AvaliacaoFisicaFuncionalidade {
     public void o_sistema_em_relacao_a_evolucao_fisica_informa(String mensagemEsperada) {
         assertNotNull(mensagemSistema, "A mensagem do sistema não pode ser nula");
         assertEquals(mensagemEsperada, mensagemSistema);
+        
+        // BUSCA DO REPOSITÓRIO - valida que as avaliações usadas na comparação foram persistidas
+        Optional<Aluno> alunoDoRepositorio = contexto.repositorio.obterPorMatricula(matriculaAluno);
+        assertTrue(alunoDoRepositorio.isPresent(), 
+                "O aluno deveria estar no repositório");
+        
+        Aluno alunoSalvo = alunoDoRepositorio.get();
+        assertNotNull(alunoSalvo.getHistoricoDeAvaliacoes(), 
+                "O histórico de avaliações não pode ser nulo");
+        assertTrue(alunoSalvo.getHistoricoDeAvaliacoes().size() >= 2, 
+                "Deveria ter pelo menos 2 avaliações para comparar evolução");
+        
+        // Valida que as avaliações têm dados completos para comparação
+        for (AvaliacaoFisica avaliacao : alunoSalvo.getHistoricoDeAvaliacoes()) {
+            assertNotNull(avaliacao.getDataDaAvaliacao(), 
+                    "Cada avaliação deveria ter data registrada");
+            assertNotNull(avaliacao.getProfessorResponsavel(), 
+                    "Cada avaliação deveria ter professorId registrado");
+        }
     }
 
     private AvaliacaoFisica criarAvaliacaoPadrao(LocalDate data) {

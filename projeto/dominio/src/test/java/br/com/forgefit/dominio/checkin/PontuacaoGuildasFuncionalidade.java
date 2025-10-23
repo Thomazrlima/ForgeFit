@@ -1,11 +1,14 @@
 package br.com.forgefit.dominio.checkin;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Optional;
 
 import br.com.forgefit.dominio.AcademiaFuncionalidade;
 import br.com.forgefit.dominio.aluno.Aluno;
@@ -21,7 +24,6 @@ import br.com.forgefit.dominio.treino.PlanoDeTreinoId;
 import br.com.forgefit.dominio.treino.TreinoDiario;
 import br.com.forgefit.dominio.treino.enums.LetraDoTreino;
 import br.com.forgefit.dominio.professor.ProfessorId;
-import java.util.ArrayList;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -119,13 +121,18 @@ public class PontuacaoGuildasFuncionalidade {
     public void a_pontuação_do_aluno_e_da_guilda_é_incrementada_em_pontos(String nomeGuilda, String pontosStr) {
         int pontos = Integer.parseInt(pontosStr);
         
-        // Valida pontuação do aluno no repositório
+        // BUSCA DO REPOSITÓRIO - valida pontuação do aluno
         Aluno aluno = contexto.repositorio.obterPorMatricula(matriculaAluno).get();
         assertEquals(pontuacaoAlunoAntes + pontos, aluno.getPontuacaoTotal());
         
-        // Valida pontuação da guilda no repositório
-        var guildaPersistida = contexto.guildaService.obter(guilda.getId());
-        assertEquals(pontuacaoGuildaAntes + pontos, guildaPersistida.getPontuacaoTotal());
+        // BUSCA DO REPOSITÓRIO - valida pontuação da guilda
+        Optional<Guilda> guildaPersistidaOpt = contexto.repositorio.obterPorId(guilda.getId());
+        assertTrue(guildaPersistidaOpt.isPresent(), 
+                "A guilda deveria estar persistida no repositório");
+        
+        Guilda guildaPersistida = guildaPersistidaOpt.get();
+        assertEquals(pontuacaoGuildaAntes + pontos, guildaPersistida.getPontuacaoTotal(),
+                "A pontuação da guilda deveria ter sido incrementada");
         
         // Valida que o check-in foi persistido com a pontuação correta
         var checkinsDoAluno = contexto.repositorio.buscarPorAluno(matriculaAluno);
@@ -181,11 +188,17 @@ public class PontuacaoGuildasFuncionalidade {
 
     @And("a pontuação do aluno e da guilda não é alterada")
     public void a_pontuação_do_aluno_e_da_guilda_não_é_alterada() {
+        // BUSCA DO REPOSITÓRIO - valida aluno
         Aluno aluno = contexto.repositorio.obterPorMatricula(matriculaAluno).get();
-        guilda = contexto.guildaService.obter(guilda.getId());
-        
         assertEquals(pontuacaoAlunoAntes, aluno.getPontuacaoTotal());
-        assertEquals(pontuacaoGuildaAntes, guilda.getPontuacaoTotal());
+        
+        // BUSCA DO REPOSITÓRIO - valida guilda
+        Optional<Guilda> guildaPersistidaOpt = contexto.repositorio.obterPorId(guilda.getId());
+        assertTrue(guildaPersistidaOpt.isPresent(), 
+                "A guilda deveria estar persistida no repositório");
+        
+        Guilda guildaPersistida = guildaPersistidaOpt.get();
+        assertEquals(pontuacaoGuildaAntes, guildaPersistida.getPontuacaoTotal());
     }
 
     @Given("um torneio com status {string} não existe no sistema")
@@ -209,10 +222,14 @@ public class PontuacaoGuildasFuncionalidade {
     public void o_torneio_é_criado_com_o_status(String status) {
         assertNotNull(torneio);
         
-        // Valida persistência no repositório
-        var torneioPersistido = contexto.torneioService.obter(torneio.getId());
+        // BUSCA DO REPOSITÓRIO - valida persistência do torneio
+        Optional<Torneio> torneioPersistidoOpt = contexto.repositorio.obterPorId(torneio.getId());
+        assertTrue(torneioPersistidoOpt.isPresent(), 
+                "O torneio deveria estar persistido no repositório");
         
-        // Valida atributos do torneio persistido
+        Torneio torneioPersistido = torneioPersistidoOpt.get();
+        
+        // VALIDA ATRIBUTOS DO TORNEIO PERSISTIDO
         assertEquals(StatusTorneio.valueOf(status), torneioPersistido.getStatus());
         assertEquals("Torneio Teste", torneioPersistido.getNome());
         assertNotNull(torneioPersistido.getDataInicio());
@@ -254,8 +271,12 @@ public class PontuacaoGuildasFuncionalidade {
 
     @Then("o sistema atribui o prêmio à posição correspondente do torneio")
     public void o_sistema_atribui_o_prêmio_à_posição_correspondente_do_torneio() {
-        // Valida persistência no repositório
-        var torneioPersistido = contexto.torneioService.obter(torneio.getId());
+        // BUSCA DO REPOSITÓRIO - valida persistência do torneio
+        Optional<Torneio> torneioPersistidoOpt = contexto.repositorio.obterPorId(torneio.getId());
+        assertTrue(torneioPersistidoOpt.isPresent(), 
+                "O torneio deveria estar persistido no repositório");
+        
+        Torneio torneioPersistido = torneioPersistidoOpt.get();
         
         assertNotNull(torneioPersistido.getPremioPrimeiroLugar());
         assertEquals("1kg de Whey Protein", torneioPersistido.getPremioPrimeiroLugar().getNome());
@@ -331,8 +352,12 @@ public class PontuacaoGuildasFuncionalidade {
 
     @Then("o status do torneio é alterado para {string}")
     public void o_status_do_torneio_é_alterado_para(String status) {
-        // Valida persistência no repositório
-        var torneioPersistido = contexto.torneioService.obter(torneio.getId());
+        // BUSCA DO REPOSITÓRIO - valida persistência do torneio
+        Optional<Torneio> torneioPersistidoOpt = contexto.repositorio.obterPorId(torneio.getId());
+        assertTrue(torneioPersistidoOpt.isPresent(), 
+                "O torneio deveria estar persistido no repositório");
+        
+        Torneio torneioPersistido = torneioPersistidoOpt.get();
         
         assertEquals(StatusTorneio.valueOf(status), torneioPersistido.getStatus());
     }
@@ -341,13 +366,34 @@ public class PontuacaoGuildasFuncionalidade {
     public void a_guilda_é_declarada_vencedora_do_torneio_com_pontos(String nomeGuilda, String pontosStr) {
         int pontos = Integer.parseInt(pontosStr);
         
-        // Valida persistência no repositório
-        var torneioPersistido = contexto.torneioService.obter(torneio.getId());
+        // BUSCA DO REPOSITÓRIO - valida que o torneio foi persistido completamente
+        Optional<Torneio> torneioPersistidoOpt = contexto.repositorio.obterPorId(torneio.getId());
+        assertTrue(torneioPersistidoOpt.isPresent(), 
+                "O torneio deveria estar persistido no repositório");
         
-        assertNotNull(torneioPersistido.getRankingFinal());
-        assertEquals(1, torneioPersistido.getRankingFinal().size());
-        assertEquals(1, torneioPersistido.getRankingFinal().get(0).getPosicao());
-        assertEquals(pontos, torneioPersistido.getRankingFinal().get(0).getPontuacaoNoTorneio());
+        Torneio torneioPersistido = torneioPersistidoOpt.get();
+        
+        // VALIDA TODOS OS ATRIBUTOS DO RANKING FINAL
+        assertNotNull(torneioPersistido.getRankingFinal(), 
+                "O ranking final não pode ser nulo");
+        assertFalse(torneioPersistido.getRankingFinal().isEmpty(), 
+                "O ranking final não pode estar vazio");
+        assertEquals(1, torneioPersistido.getRankingFinal().size(),
+                "Deveria ter exatamente 1 guilda no ranking");
+        
+        // Valida atributos da guilda vencedora
+        var primeiraColocada = torneioPersistido.getRankingFinal().get(0);
+        assertNotNull(primeiraColocada, "A primeira colocada não pode ser nula");
+        assertEquals(1, primeiraColocada.getPosicao(),
+                "A posição da vencedora deveria ser 1");
+        assertEquals(pontos, primeiraColocada.getPontuacaoNoTorneio(),
+                "A pontuação da vencedora deveria ser " + pontos);
+        assertEquals(guilda.getId(), primeiraColocada.getGuildaId(),
+                "A guilda vencedora deveria ser a que participou");
+        
+        // Valida que o status do torneio foi atualizado para FINALIZADO
+        assertEquals(StatusTorneio.FINALIZADO, torneioPersistido.getStatus(),
+                "O torneio deveria estar com status FINALIZADO");
     }
 
     @Given("que o torneio {string} está com status {string} com início em {string} e fim em {string}")
@@ -377,10 +423,35 @@ public class PontuacaoGuildasFuncionalidade {
 
     @And("o ranking do torneio é registrado como vazio sem vencedores")
     public void o_ranking_do_torneio_é_registrado_como_vazio_sem_vencedores() {
-        // Valida persistência no repositório
-        var torneioPersistido = contexto.torneioService.obter(torneio.getId());
+        // BUSCA DO REPOSITÓRIO - valida que o torneio foi persistido completamente
+        Optional<Torneio> torneioPersistidoOpt = contexto.repositorio.obterPorId(torneio.getId());
+        assertTrue(torneioPersistidoOpt.isPresent(), 
+                "O torneio deveria estar persistido no repositório");
         
-        assertTrue(torneioPersistido.getRankingFinal().isEmpty());
+        Torneio torneioPersistido = torneioPersistidoOpt.get();
+        
+        // VALIDA ATRIBUTOS DO TORNEIO FINALIZADO SEM VENCEDORES
+        assertNotNull(torneioPersistido, "O torneio deveria estar persistido no repositório");
+        assertNotNull(torneioPersistido.getId(), "O ID do torneio não pode ser nulo");
+        assertEquals(torneio.getId(), torneioPersistido.getId(),
+                "O ID do torneio deveria ser o mesmo");
+        
+        // Valida que o status foi alterado para FINALIZADO
+        assertEquals(StatusTorneio.FINALIZADO, torneioPersistido.getStatus(),
+                "O torneio deveria estar com status FINALIZADO");
+        
+        // Valida que o ranking final existe mas está vazio
+        assertNotNull(torneioPersistido.getRankingFinal(), 
+                "O ranking final não pode ser nulo, mesmo vazio");
+        assertTrue(torneioPersistido.getRankingFinal().isEmpty(),
+                "O ranking final deveria estar vazio sem vencedores");
+        assertEquals(0, torneioPersistido.getRankingFinal().size(),
+                "Não deveria ter nenhuma guilda no ranking");
+        
+        // Valida que as datas foram mantidas
+        assertNotNull(torneioPersistido.getDataInicio(), 
+                "A data de início deveria estar registrada");
+        assertNotNull(torneioPersistido.getDataFim(), 
+                "A data de fim deveria estar registrada");
     }
 }
-

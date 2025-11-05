@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CheckinRepositorio extends JpaRepository<Checkin, Integer> {
+public interface CheckinRepositorioJpa extends JpaRepository<Checkin, Integer> {
 	
 	List<Checkin> findByAlunoMatricula(String alunoMatricula);
 	

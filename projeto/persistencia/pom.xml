@@ -26,6 +26,13 @@
 		  <version>${project.version}</version>		  
 	  </dependency>
 	  
+	  <!-- Dependência do módulo aplicação -->
+	  <dependency>
+		  <groupId>br.com.forgefit</groupId>
+		  <artifactId>forgefit-aplicacao</artifactId>
+		  <version>${project.version}</version>		  
+	  </dependency>
+	  
 	  <!-- Spring Data JPA -->
 	  <dependency>
 		  <groupId>org.springframework.boot</groupId>

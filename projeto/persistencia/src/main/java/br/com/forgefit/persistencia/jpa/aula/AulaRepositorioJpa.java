@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import br.com.forgefit.persistencia.jpa.enums.Espaco;
 import br.com.forgefit.persistencia.jpa.enums.StatusAula;
 
-public interface AulaRepositorio extends JpaRepository<Aula, Integer> {
+public interface AulaRepositorioJpa extends JpaRepository<Aula, Integer> {
 	
 	List<Aula> findByStatus(StatusAula status);
 	

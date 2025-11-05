@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.forgefit.persistencia.jpa.aluno.Aluno;
-import br.com.forgefit.persistencia.jpa.aluno.AlunoRepositorio;
+import br.com.forgefit.persistencia.jpa.aluno.AlunoRepositorioJpa;
 import br.com.forgefit.persistencia.jpa.aluno.AvaliacaoFisica;
 import br.com.forgefit.persistencia.jpa.aula.Aula;
-import br.com.forgefit.persistencia.jpa.aula.AulaRepositorio;
+import br.com.forgefit.persistencia.jpa.aula.AulaRepositorioJpa;
 import br.com.forgefit.persistencia.jpa.aula.Recorrencia;
 import br.com.forgefit.persistencia.jpa.aula.Reserva;
 import br.com.forgefit.persistencia.jpa.enums.DiaDaSemana;
@@ -21,7 +21,7 @@ import br.com.forgefit.persistencia.jpa.enums.Modalidade;
 import br.com.forgefit.persistencia.jpa.enums.StatusReserva;
 import br.com.forgefit.persistencia.jpa.enums.TipoRecorrencia;
 import br.com.forgefit.persistencia.jpa.guilda.Guilda;
-import br.com.forgefit.persistencia.jpa.guilda.GuildaRepositorio;
+import br.com.forgefit.persistencia.jpa.guilda.GuildaRepositorioJpa;
 import br.com.forgefit.persistencia.jpa.professor.Professor;
 import br.com.forgefit.persistencia.jpa.professor.ProfessorRepositorio;
 
@@ -32,13 +32,13 @@ public class Populador {
 	private ProfessorRepositorio professorRepositorio;
 	
 	@Autowired
-	private AlunoRepositorio alunoRepositorio;
+	private AlunoRepositorioJpa alunoRepositorio;
 	
 	@Autowired
-	private AulaRepositorio aulaRepositorio;
+	private AulaRepositorioJpa aulaRepositorio;
 	
 	@Autowired
-	private GuildaRepositorio guildaRepositorio;
+	private GuildaRepositorioJpa guildaRepositorio;
 
 	@SuppressWarnings("deprecation")
 	public void popular() {

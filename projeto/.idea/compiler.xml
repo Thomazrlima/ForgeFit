@@ -6,16 +6,23 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="forgefit-infraestrutura (1)" />
         <module name="forgefit-dominio" />
         <module name="forgefit-aplicacao" />
-        <module name="forgefit-persistencia" />
         <module name="forgefit-frontend" />
+        <module name="forgefit-infraestrutura" />
         <module name="forgefit-backend" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="forgefit-persistencia" target="17" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="forgefit-backend" options="-parameters" />
+      <module name="forgefit-infraestrutura" options="-parameters" />
+      <module name="forgefit-infraestrutura (1)" options="-parameters" />
       <module name="forgefit-persistencia" options="-parameters" />
     </option>
   </component>

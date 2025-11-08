@@ -1,0 +1,27 @@
+services:
+  -postgres:
+     container_name: postgres  
+     image: postgres:18
+     environment:
+       POSTGRES_DB: sgb
+       POSTGRES_USER: sgb       
+       POSTGRES_PASSWORD: sgb
+     volumes:
+       - postgres:/var/lib/postgresql/18/docker
+     ports:
+       - 5432:5432
+
+  -sgb:
+     image: sgb-apresentacao-frontend:0.0.1-SNAPSHOT
+     environment:
+       SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sgb
+       SPRING_DATASOURCE_USERNAME: sgb
+       SPRING__DATASOURCE_PASSWORD: sgb
+     volumes:
+       - postgres:/var/lib/postgresql/18/docker
+     ports:
+       - 8080:8080
+
+volumes:
+  postgres:

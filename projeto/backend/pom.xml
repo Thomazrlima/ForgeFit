@@ -61,10 +61,10 @@
       <version>${project.version}</version>
     </dependency>
     
-    <!-- Módulo de Persistência (runtime) -->
+    <!-- Módulo de Infraestrutura (runtime) -->
     <dependency>
       <groupId>br.com.forgefit</groupId>
-      <artifactId>forgefit-persistencia</artifactId>
+      <artifactId>forgefit-infraestrutura</artifactId>
       <version>${project.version}</version>
       <scope>runtime</scope>
     </dependency>

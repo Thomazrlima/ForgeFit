@@ -1,0 +1,16 @@
+.classpath
+.project
+.settings
+
+target
+
+schema.sql
+src-gen
+
+*.db
+
+**/src/main/frontend
+
+**/node_modules
+**/src/main/angular/node
+**/src/main/resources/static

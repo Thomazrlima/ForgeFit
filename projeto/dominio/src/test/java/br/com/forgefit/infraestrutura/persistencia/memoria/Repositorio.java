@@ -50,10 +50,10 @@ import br.com.forgefit.dominio.frequencia.enums.StatusFrequencia;
  * Implementação em memória dos repositórios para testes BDD.
  * Usa HashMaps e Lists para simular persistência.
  */
-public class Repositorio implements AlunoRepositorio, 
-                                     GuildaRepositorio, CheckinRepositorio, TorneioRepositorio,
-                                     AulaRepositorio, RankingRepositorio, AvaliacaoRepositorio,
-                                     TreinoRepositorio, FrequenciaRepositorio, ProfessorRepository { 
+public class Repositorio implements AlunoRepositorio,
+        GuildaRepositorio, CheckinRepositorio, TorneioRepositorio,
+        AulaRepositorio, RankingRepositorio, AvaliacaoRepositorio,
+        TreinoRepositorio, FrequenciaRepositorio, ProfessorRepository {
 
     /*-----------------------------------------------------------------------*/
     private Map<Matricula, Aluno> alunos = new HashMap<>();
@@ -89,9 +89,13 @@ public class Repositorio implements AlunoRepositorio,
     }
 
     @Override
-    public Optional<Professor> obterPorId(ProfessorId id) {
+    public Professor obter(ProfessorId id) {
         notNull(id, "O id do professor não pode ser nulo");
-        return Optional.ofNullable(professores.get(id));
+        Professor professor = professores.get(id);
+        if (professor == null) {
+            throw new IllegalArgumentException("Professor não encontrado com id: " + id);
+        }
+        return professor;
     }
     /*-----------------------------------------------------------------------*/
 
@@ -119,16 +123,16 @@ public class Repositorio implements AlunoRepositorio,
     public Optional<Guilda> buscarPorCodigoConvite(CodigoConvite codigo) {
         notNull(codigo, "O código de convite não pode ser nulo");
         return guildas.values().stream()
-            .filter(g -> g.getCodigoConvite().equals(codigo))
-            .findFirst();
+                .filter(g -> g.getCodigoConvite().equals(codigo))
+                .findFirst();
     }
 
     @Override
     public Optional<Guilda> buscarPorNome(String nome) {
         notNull(nome, "O nome não pode ser nulo");
         return guildas.values().stream()
-            .filter(g -> g.getNome().equals(nome))
-            .findFirst();
+                .filter(g -> g.getNome().equals(nome))
+                .findFirst();
     }
     /*-----------------------------------------------------------------------*/
 
@@ -145,26 +149,26 @@ public class Repositorio implements AlunoRepositorio,
     public List<Checkin> buscarPorAluno(Matricula alunoMatricula) {
         notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         return checkins.stream()
-            .filter(c -> c.getAlunoMatricula().equals(alunoMatricula))
-            .collect(Collectors.toList());
+                .filter(c -> c.getAlunoMatricula().equals(alunoMatricula))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public boolean existeCheckinDeTreino(Matricula alunoMatricula, PlanoDeTreinoId planoDeTreinoId, 
-                                         LetraDoTreino letra, LocalDate data) {
+    public boolean existeCheckinDeTreino(Matricula alunoMatricula, PlanoDeTreinoId planoDeTreinoId,
+            LetraDoTreino letra, LocalDate data) {
         notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         notNull(planoDeTreinoId, "O id do plano de treino não pode ser nulo");
         notNull(letra, "A letra do treino não pode ser nula");
         notNull(data, "A data não pode ser nula");
 
         return checkins.stream()
-            .filter(c -> c.getContexto().getTipo() == TipoDeCheckin.TREINO)
-            .filter(c -> c.getAlunoMatricula().equals(alunoMatricula))
-            .filter(c -> c.getDataDoCheckin().equals(data))
-            .filter(c -> c.getContexto().getPlanoDeTreinoId().equals(planoDeTreinoId))
-            .filter(c -> c.getContexto().getLetraDoTreino() == letra)
-            .findFirst()
-            .isPresent();
+                .filter(c -> c.getContexto().getTipo() == TipoDeCheckin.TREINO)
+                .filter(c -> c.getAlunoMatricula().equals(alunoMatricula))
+                .filter(c -> c.getDataDoCheckin().equals(data))
+                .filter(c -> c.getContexto().getPlanoDeTreinoId().equals(planoDeTreinoId))
+                .filter(c -> c.getContexto().getLetraDoTreino() == letra)
+                .findFirst()
+                .isPresent();
     }
 
     @Override
@@ -174,10 +178,10 @@ public class Repositorio implements AlunoRepositorio,
         notNull(fim, "A data de fim não pode ser nula");
 
         return checkins.stream()
-            .filter(c -> c.getGuildaId().equals(guildaId))
-            .filter(c -> !c.getDataDoCheckin().isBefore(inicio))
-            .filter(c -> !c.getDataDoCheckin().isAfter(fim))
-            .collect(Collectors.toList());
+                .filter(c -> c.getGuildaId().equals(guildaId))
+                .filter(c -> !c.getDataDoCheckin().isBefore(inicio))
+                .filter(c -> !c.getDataDoCheckin().isAfter(fim))
+                .collect(Collectors.toList());
     }
     /*-----------------------------------------------------------------------*/
 
@@ -200,10 +204,10 @@ public class Repositorio implements AlunoRepositorio,
     public Optional<Torneio> buscarTorneioAtivo(LocalDate dataAtual) {
         notNull(dataAtual, "A data atual não pode ser nula");
         return torneios.values().stream()
-            .filter(t -> t.getStatus() == StatusTorneio.ATIVO)
-            .filter(t -> !dataAtual.isBefore(t.getDataInicio()))
-            .filter(t -> !dataAtual.isAfter(t.getDataFim()))
-            .findFirst();
+                .filter(t -> t.getStatus() == StatusTorneio.ATIVO)
+                .filter(t -> !dataAtual.isBefore(t.getDataInicio()))
+                .filter(t -> !dataAtual.isAfter(t.getDataFim()))
+                .findFirst();
     }
 
     @Override
@@ -234,29 +238,30 @@ public class Repositorio implements AlunoRepositorio,
     }
 
     @Override
-    public List<Aula> buscarPorEspacoEPeriodo(br.com.forgefit.dominio.aula.enums.Espaco espaco, 
-                                                java.time.LocalDateTime inicio, 
-                                                java.time.LocalDateTime fim) {
+    public List<Aula> buscarPorEspacoEPeriodo(br.com.forgefit.dominio.aula.enums.Espaco espaco,
+            java.time.LocalDateTime inicio,
+            java.time.LocalDateTime fim) {
         notNull(espaco, "O espaço não pode ser nulo");
         notNull(inicio, "A data de início não pode ser nula");
         notNull(fim, "A data de fim não pode ser nula");
-        
+
         return aulas.values().stream()
-            .filter(a -> a.getEspaco() == espaco)
-            .filter(a -> !(a.getFim().isBefore(inicio) || a.getInicio().isAfter(fim)))
-            .collect(Collectors.toList());
+                .filter(a -> a.getEspaco() == espaco)
+                .filter(a -> !(a.getFim().isBefore(inicio) || a.getInicio().isAfter(fim)))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Aula> buscarPorProfessorEPeriodo(ProfessorId professorId, java.time.LocalDateTime inicio, java.time.LocalDateTime fim) {
+    public List<Aula> buscarPorProfessorEPeriodo(ProfessorId professorId, java.time.LocalDateTime inicio,
+            java.time.LocalDateTime fim) {
         notNull(professorId, "O ID do professor não pode ser nulo");
         notNull(inicio, "A data de início não pode ser nula");
         notNull(fim, "A data de fim não pode ser nula");
 
         return aulas.values().stream()
-            .filter(a -> a.getProfessorId().equals(professorId))
-            .filter(a -> !(a.getFim().isBefore(inicio) || a.getInicio().isAfter(fim)))
-            .collect(Collectors.toList());
+                .filter(a -> a.getProfessorId().equals(professorId))
+                .filter(a -> !(a.getFim().isBefore(inicio) || a.getInicio().isAfter(fim)))
+                .collect(Collectors.toList());
     }
     /*-----------------------------------------------------------------------*/
 
@@ -297,16 +302,16 @@ public class Repositorio implements AlunoRepositorio,
     public List<Avaliacao> buscarPorProfessor(ProfessorId professorId) {
         notNull(professorId, "O ID do professor não pode ser nulo");
         return avaliacoes.values().stream()
-            .filter(a -> a.getProfessorId().equals(professorId))
-            .collect(Collectors.toList());
+                .filter(a -> a.getProfessorId().equals(professorId))
+                .collect(Collectors.toList());
     }
 
     @Override
     public boolean existeAvaliacao(Matricula alunoMatricula, AulaId aulaId, LocalDate dataDaOcorrencia) {
         return avaliacoes.values().stream()
-            .anyMatch(a -> a.getAlunoMatricula().equals(alunoMatricula) 
-                && a.getAulaId().equals(aulaId)
-                && a.getDataDaOcorrenciaDaAula().equals(dataDaOcorrencia));
+                .anyMatch(a -> a.getAlunoMatricula().equals(alunoMatricula)
+                        && a.getAulaId().equals(aulaId)
+                        && a.getDataDaOcorrenciaDaAula().equals(dataDaOcorrencia));
     }
     /*-----------------------------------------------------------------------*/
 

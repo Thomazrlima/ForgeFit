@@ -4,5 +4,6 @@ import java.util.List;
 
 public interface GuildaRepositorioAplicacao {
     List<GuildaResumo> listarGuildasAtivasOrdenadas();
-    GuildaResumo buscarPorNome(String nome);
+
+    GuildaResumo buscarResumoPorNome(String nome);
 }

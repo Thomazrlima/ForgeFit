@@ -18,6 +18,6 @@ public class GuildaServicoAplicacao {
 
     public GuildaResumo buscarPorNome(String nome) {
         notNull(nome, "O nome não pode ser nulo");
-        return repositorio.buscarPorNome(nome);
+        return repositorio.buscarResumoPorNome(nome);
     }
 }

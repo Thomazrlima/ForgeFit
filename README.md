@@ -19,9 +19,12 @@
   <a href="#-nossa-equipe">Equipe</a>
 </p>
 
-## 🚀 **Sobre o Projeto**
+## 🤔 **Sobre o Projeto**
 
 O **ForgeFit** é um sistema de gerenciamento de academias voltado a modernizar a administração de aulas, alunos, professores e treinos. Desenvolvido com **Design Patterns**, oferece uma arquitetura robusta e escalável, garantindo organização, eficiência e facilidade de manutenção.
+
+### 🚀 **Acesse o sistema em produção:**
+**[https://forgefit.vercel.app/](https://forgefit.vercel.app/)**
 
 ---
 

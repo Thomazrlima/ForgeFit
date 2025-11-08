@@ -1,0 +1,21 @@
+services:
+  postgres:
+    container_name: forgefit-postgres
+    image: postgres:18
+    environment:
+      POSTGRES_DB: forgefit
+      POSTGRES_USER: forgefit
+      POSTGRES_PASSWORD: forgefit
+    volumes:
+      - forgefit-postgres-data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    networks:
+      - forgefit-network
+
+networks:
+  forgefit-network:
+    driver: bridge
+
+volumes:
+  forgefit-postgres-data:

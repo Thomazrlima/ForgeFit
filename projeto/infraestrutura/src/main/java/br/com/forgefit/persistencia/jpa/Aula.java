@@ -422,31 +422,42 @@ class Aula {
 			this.status = status;
 		}
 	}
+}
 
-	interface ReservaJpaRepository extends JpaRepository<Reserva, Integer>, br.com.forgefit.aplicacao.aula.ReservaRepositorioAplicacao {
+interface ReservaJpaRepository extends JpaRepository<Aula.Reserva, Integer> {
 
-		List<Reserva> findByAlunoMatricula(String matricula);
+	List<Aula.Reserva> findByAlunoMatricula(String matricula);
 
-		List<Reserva> findByAlunoMatriculaAndStatus(String matricula, StatusReserva status);
+	List<Aula.Reserva> findByAlunoMatriculaAndStatus(String matricula, StatusReserva status);
 
-		@org.springframework.data.jpa.repository.Query("""
-			SELECT r.id as reservaId,
-				   r.aula.id as aulaId,
-				   r.aula.inicio as inicioAula,
-				   r.aula.fim as fimAula,
-				   r.aula.modalidade as modalidade,
-				   r.aula.espaco as espaco,
-				   r.aula.professor.nome as nomeProfessor,
-				   r.alunoMatricula as alunoMatricula,
-				   r.dataReserva as dataReserva,
-				   r.status as statusReserva
-			FROM Reserva r
-			WHERE r.alunoMatricula = :#{#matricula.valor}
-			  AND r.status = 'CONFIRMADA'
-			  AND r.aula.inicio > CURRENT_TIMESTAMP
-			ORDER BY r.aula.inicio ASC
-			""")
-		List<br.com.forgefit.aplicacao.aula.CancelamentoResumo> buscarReservasConfirmadas(@org.springframework.data.repository.query.Param("matricula") br.com.forgefit.dominio.aluno.Matricula matricula);
+	@org.springframework.data.jpa.repository.Query("""
+		SELECT r.id as reservaId,
+			   r.aula.id as aulaId,
+			   r.aula.inicio as inicioAula,
+			   r.aula.fim as fimAula,
+			   r.aula.modalidade as modalidade,
+			   r.aula.espaco as espaco,
+			   r.aula.professor.nome as nomeProfessor,
+			   r.alunoMatricula as alunoMatricula,
+			   r.dataReserva as dataReserva,
+			   r.status as statusReserva
+		FROM br.com.forgefit.persistencia.jpa.Aula$Reserva r
+		WHERE r.alunoMatricula = :#{#matricula.valor}
+		  AND r.status = 'CONFIRMADA'
+		  AND r.aula.inicio > CURRENT_TIMESTAMP
+		ORDER BY r.aula.inicio ASC
+		""")
+	List<br.com.forgefit.aplicacao.aula.CancelamentoResumo> buscarReservasConfirmadas(@org.springframework.data.repository.query.Param("matricula") br.com.forgefit.dominio.aluno.Matricula matricula);
+}
+
+@org.springframework.stereotype.Repository
+class ReservaRepositorioImpl implements br.com.forgefit.aplicacao.aula.ReservaRepositorioAplicacao {
+	@org.springframework.beans.factory.annotation.Autowired
+	ReservaJpaRepository repositorio;
+
+	@Override
+	public List<br.com.forgefit.aplicacao.aula.CancelamentoResumo> buscarReservasConfirmadas(br.com.forgefit.dominio.aluno.Matricula matricula) {
+		return repositorio.buscarReservasConfirmadas(matricula);
 	}
 }
 

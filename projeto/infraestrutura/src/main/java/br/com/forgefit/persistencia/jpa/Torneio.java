@@ -227,7 +227,7 @@ class Premio {
 	}
 }
 
-interface TorneioJpaRepository extends JpaRepository<Torneio, Integer>, TorneioRepositorioAplicacao {
+interface TorneioJpaRepository extends JpaRepository<Torneio, Integer> {
 
 	List<Torneio> findByStatus(StatusTorneio status);
 
@@ -239,7 +239,6 @@ interface TorneioJpaRepository extends JpaRepository<Torneio, Integer>, TorneioR
 			""")
 	Torneio buscarTorneioAtivo(Date dataAtual);
 
-	@Override
 	@org.springframework.data.jpa.repository.Query("""
 		SELECT t.id as id,
 			   t.nome as nome,
@@ -254,7 +253,6 @@ interface TorneioJpaRepository extends JpaRepository<Torneio, Integer>, TorneioR
 		""")
 	List<TorneioResumo> listarTorneiosAtivos();
 
-	@Override
 	@org.springframework.data.jpa.repository.Query("""
 		SELECT t.id as id,
 			   t.nome as nome,

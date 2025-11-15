@@ -3,6 +3,7 @@ import Main from "../pages/Main";
 import Login from "../pages/Login";
 import Aulas from "../pages/Aulas";
 import DashboardLayout from "../components/layout";
+import Ranking from "../pages/Ranking";
 
 const AppRouter = () => {
     return (
@@ -16,7 +17,7 @@ const AppRouter = () => {
                     <Route path="/treinos" element={<div style={{ padding: "2rem", color: "white" }}>Treinos em construção</div>} />
                     <Route path="/guilda" element={<div style={{ padding: "2rem", color: "white" }}>Guilda em construção</div>} />
                     <Route path="/torneio" element={<div style={{ padding: "2rem", color: "white" }}>Torneio em construção</div>} />
-                    <Route path="/ranking" element={<div style={{ padding: "2rem", color: "white" }}>Ranking em construção</div>} />
+                    <Route path="/ranking" element={<Ranking />} />
                     <Route path="/evolucao" element={<div style={{ padding: "2rem", color: "white" }}>Evolução em construção</div>} />
                 </Route>
             </Routes>

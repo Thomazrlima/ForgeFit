@@ -1,8 +1,8 @@
 import { Outlet } from "react-router-dom";
-import Sidebar from "../Sidebar";
-import { LayoutContainer, MainContent } from "./styles.ts";
+import Sidebar from "./Sidebar/index.tsx";
+import { LayoutContainer, MainContent } from "./Layout/styles.ts";
 
-const DashboardLayout = () => {
+const Layout = () => {
     return (
         <LayoutContainer>
             <Sidebar />
@@ -13,4 +13,4 @@ const DashboardLayout = () => {
     );
 };
 
-export default DashboardLayout;
+export default Layout;

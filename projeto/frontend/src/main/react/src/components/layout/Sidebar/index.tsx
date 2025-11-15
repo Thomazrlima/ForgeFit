@@ -2,17 +2,7 @@ import { Calendar, Dumbbell, Users, Trophy, BarChart3, TrendingUp, LogOut, Menu,
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import logo from "../../../assets/logo.png";
-import {
-    SidebarContainer,
-    SidebarHeader,
-    Logo,
-    MenuToggle,
-    NavList,
-    NavItem,
-    NavLink,
-    LogoutButton,
-    Overlay
-} from "./styles.ts";
+import { SidebarContainer, SidebarHeader, Logo, MenuToggle, NavList, NavItem, NavLink, LogoutButton, Overlay } from "./styles.ts";
 
 interface NavItemType {
     path: string;
@@ -65,11 +55,7 @@ const Sidebar = () => {
                 <NavList>
                     {navItems.map((item) => (
                         <NavItem key={item.path}>
-                            <NavLink
-                                to={item.path}
-                                $isActive={location.pathname === item.path}
-                                onClick={closeSidebar}
-                            >
+                            <NavLink to={item.path} $isActive={location.pathname === item.path} onClick={closeSidebar}>
                                 {item.icon}
                                 <span>{item.label}</span>
                             </NavLink>

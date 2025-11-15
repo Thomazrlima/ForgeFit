@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { Calendar, Users, MapPin, Filter, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { Container, ClassesGrid, ClassCard, ClassImage, ClassInfo, ClassTitle, ClassDetail, ClassFooter, EmptyState, SkeletonCard, SkeletonCardImage, SkeletonCardContent, SkeletonFilterButton, SkeletonSearchSection, EnrolledSection, SectionTitle, EnrolledClassCard, WaitingListClassCard, UnenrollButton, LeaveWaitingListButton, NoEnrolledClasses, SearchSection, ToEvaluateClassCard, EvaluateButton } from "./styles.ts";
-import { fetchClasses, fetchCategories, type Class, type EnrollmentStatus } from "./mockData.ts";
+import { fetchClasses, fetchCategories, type Class, type EnrollmentStatus, type ClassRating } from "./mockData.ts";
 import SearchAndFilterBar from "../../components/common/SearchAndFilterBar";
 import { Button } from "../../components/common/Button";
 import Skeleton from "../../components/common/Skeleton";
 import { animationVariants } from "../../hooks/useScrollAnimation";
 import ClassEnrollmentModal from "../../components/common/ClassEnrollmentModal";
 import UnenrollModal from "../../components/common/UnenrollModal";
-
+import { RatingModal } from "../../components/common/RatingModal";
 
 const Aulas = () => {
     const [selectedCategory, setSelectedCategory] = useState("Todas");
@@ -24,6 +24,9 @@ const Aulas = () => {
     const [selectedClassToUnenroll, setSelectedClassToUnenroll] = useState<Class | null>(null);
     const [isUnenrollModalOpen, setIsUnenrollModalOpen] = useState(false);
     const [unenrollmentLoading, setUnenrollmentLoading] = useState(false);
+    const [selectedClassToRate, setSelectedClassToRate] = useState<Class | null>(null);
+    const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+    const [ratingLoading, setRatingLoading] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
@@ -132,6 +135,44 @@ const Aulas = () => {
         setSelectedClassToUnenroll(null);
     };
 
+    const handleRateClick = (classItem: Class) => {
+        setSelectedClassToRate(classItem);
+        setIsRatingModalOpen(true);
+    };
+
+    const handleCloseRatingModal = () => {
+        setIsRatingModalOpen(false);
+        setSelectedClassToRate(null);
+    };
+
+    const handleConfirmRating = async (classId: number, rating: ClassRating) => {
+        try {
+            setRatingLoading(true);
+
+            // Simula delay de rede
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+
+            // Remove a aula da lista de "Minhas Aulas" após avaliação
+            setClasses((prevClasses) =>
+                prevClasses.map((classItem) =>
+                    classItem.id === classId
+                        ? {
+                              ...classItem,
+                              enrollmentStatus: "not_enrolled" as EnrollmentStatus,
+                              userRating: rating,
+                          }
+                        : classItem,
+                ),
+            );
+
+            handleCloseRatingModal();
+            console.log("Avaliação realizada com sucesso!");
+        } catch (error) {
+            console.error("Erro ao realizar avaliação:", error);
+        } finally {
+            setRatingLoading(false);
+        }
+    };
 
     const enrolledClasses = classes.filter((classItem) => classItem.enrollmentStatus === "enrolled" || classItem.enrollmentStatus === "waiting_list" || classItem.enrollmentStatus === "to_evaluate");
 
@@ -253,7 +294,12 @@ const Aulas = () => {
                                     CardComponent = WaitingListClassCard;
                                     buttonText = "Sair da Fila";
                                     ButtonComponent = LeaveWaitingListButton;
-                                } 
+                                } else if (classItem.enrollmentStatus === "to_evaluate") {
+                                    CardComponent = ToEvaluateClassCard;
+                                    buttonText = "Avaliar";
+                                    ButtonComponent = EvaluateButton;
+                                    onClick = () => handleRateClick(classItem);
+                                }
 
                                 return (
                                     <motion.div key={`enrolled-${classItem.id}`} variants={animationVariants.fadeInUp}>
@@ -280,6 +326,8 @@ const Aulas = () => {
                                                             <>
                                                                 <span style={{ color: "#f97316", fontWeight: "600" }}>{classItem.enrolled + classItem.waitingList}</span>/{classItem.capacity} alunos
                                                             </>
+                                                        ) : classItem.enrollmentStatus === "to_evaluate" ? (
+                                                            "Aguardando avaliação"
                                                         ) : (
                                                             `${classItem.enrolled}/${classItem.capacity} alunos`
                                                         )}
@@ -366,6 +414,10 @@ const Aulas = () => {
             <ClassEnrollmentModal isOpen={isModalOpen} onClose={handleCloseModal} classData={selectedClass} onConfirm={handleConfirmEnrollment} isLoading={enrollmentLoading} />
 
             <UnenrollModal isOpen={isUnenrollModalOpen} onClose={handleCloseUnenrollModal} classData={selectedClassToUnenroll} onConfirm={handleUnenroll} isLoading={unenrollmentLoading} />
+
+            <RatingModal isOpen={isRatingModalOpen} onClose={handleCloseRatingModal} classData={selectedClassToRate} onConfirm={handleConfirmRating} isLoading={ratingLoading} />
+
+            <RatingModal isOpen={isRatingModalOpen} onClose={handleCloseRatingModal} classData={selectedClassToRate} onConfirm={handleConfirmRating} isLoading={ratingLoading} />
         </Container>
     );
 };

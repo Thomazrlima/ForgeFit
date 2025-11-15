@@ -5,6 +5,8 @@ import static org.springframework.boot.SpringApplication.run;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
+import br.com.forgefit.aplicacao.aula.AulaRepositorioAplicacao;
+import br.com.forgefit.aplicacao.aula.AulaServicoAplicacao;
 import br.com.forgefit.aplicacao.aula.ReservaRepositorioAplicacao;
 import br.com.forgefit.aplicacao.aula.ReservaServicoAplicacao;
 import br.com.forgefit.aplicacao.guilda.GuildaRepositorioAplicacao;
@@ -68,6 +70,11 @@ public class BackendAplicacao {
     @Bean
     public ReservaServicoAplicacao reservaServicoAplicacao(ReservaRepositorioAplicacao repositorio) {
         return new ReservaServicoAplicacao(repositorio);
+    }
+
+    @Bean
+    public AulaServicoAplicacao aulaServicoAplicacao(AulaRepositorioAplicacao repositorio) {
+        return new AulaServicoAplicacao(repositorio);
     }
 
     @Bean

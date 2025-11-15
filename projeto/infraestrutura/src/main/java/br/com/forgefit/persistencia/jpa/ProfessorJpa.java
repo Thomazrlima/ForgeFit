@@ -20,6 +20,7 @@ class ProfessorJpa {
     String cpf;
     String nome;
     String dataNascimento;
+    String userId;
 
     @Override
     public String toString() {

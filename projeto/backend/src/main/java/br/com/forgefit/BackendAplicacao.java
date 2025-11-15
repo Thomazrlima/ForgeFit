@@ -45,8 +45,8 @@ public class BackendAplicacao {
     }
 
     @Bean
-    public ReservaService reservaService(AulaRepositorio aulaRepositorio, AlunoService alunoService, 
-                                         ReembolsoService reembolsoService) {
+    public ReservaService reservaService(AulaRepositorio aulaRepositorio, AlunoService alunoService,
+            ReembolsoService reembolsoService) {
         return new ReservaService(aulaRepositorio, alunoService, reembolsoService);
     }
 
@@ -56,9 +56,9 @@ public class BackendAplicacao {
     }
 
     @Bean
-    public CheckinService checkinService(CheckinRepositorio checkinRepositorio, 
-                                         AlunoRepositorio alunoRepositorio,
-                                         GuildaRepositorio guildaRepositorio) {
+    public CheckinService checkinService(CheckinRepositorio checkinRepositorio,
+            AlunoRepositorio alunoRepositorio,
+            GuildaRepositorio guildaRepositorio) {
         return new CheckinService(checkinRepositorio, alunoRepositorio, guildaRepositorio);
     }
 

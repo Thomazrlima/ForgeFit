@@ -54,7 +54,7 @@ public class PontuacaoGuildasFuncionalidade {
     public void o_aluno_com_matricula_com_um_plano_de_treino_ativo_é_membro_da_guilda(String matriculaStr, String nomeGuilda) {
         matriculaAluno = new Matricula(matriculaStr);
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAluno, cpf, "João da Silva", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "João da Silva", LocalDate.of(1990, 1, 1), null);
         
         // Cria plano de treino ativo
         PlanoDeTreinoId planoId = new PlanoDeTreinoId(1);
@@ -148,7 +148,7 @@ public class PontuacaoGuildasFuncionalidade {
     public void o_aluno_com_matricula_já_realizou_o_check_in_do_seu_treino_na_guilda_hoje(String matriculaStr, String letra, String nomeGuilda) {
         matriculaAluno = new Matricula(matriculaStr);
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1), null);
         
         // Cria plano de treino ativo
         PlanoDeTreinoId planoId = new PlanoDeTreinoId(1);
@@ -321,7 +321,7 @@ public class PontuacaoGuildasFuncionalidade {
         String matriculaStr = "100.000.000-00";
         matriculaAluno = new Matricula(matriculaStr);
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1), null);
         
         PlanoDeTreinoId planoId = new PlanoDeTreinoId(1);
         ArrayList<TreinoDiario> treinos = new ArrayList<>();

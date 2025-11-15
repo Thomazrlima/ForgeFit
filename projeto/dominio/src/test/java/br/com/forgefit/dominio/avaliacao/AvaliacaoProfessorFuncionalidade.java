@@ -35,7 +35,7 @@ public class AvaliacaoProfessorFuncionalidade {
         // Configura o aluno atual para o teste
         Matricula matriculaAluno = new Matricula("20231001");
         Cpf cpfAluno = new Cpf("12345678900");
-        contexto.alunoAtual = new Aluno(matriculaAluno, cpfAluno, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        contexto.alunoAtual = new Aluno(matriculaAluno, cpfAluno, "Aluno Teste", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(contexto.alunoAtual);
 
         // Configura o professor para o teste

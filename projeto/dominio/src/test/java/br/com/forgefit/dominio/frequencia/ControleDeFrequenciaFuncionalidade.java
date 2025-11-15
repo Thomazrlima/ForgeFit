@@ -45,7 +45,7 @@ public class ControleDeFrequenciaFuncionalidade {
         
         // Cria CPF baseado na matrícula (apenas para testes)
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", "").substring(0, 11));
-        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
 
         // Parse da data e hora
@@ -125,7 +125,7 @@ public class ControleDeFrequenciaFuncionalidade {
         
         // Cria CPF baseado na matrícula (apenas para testes)
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", "").substring(0, 11));
-        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno com Faltas", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno com Faltas", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
 
         int qtdFaltas = Integer.parseInt(quantidadeFaltas);
@@ -205,7 +205,7 @@ public class ControleDeFrequenciaFuncionalidade {
         
         // Cria CPF baseado na matrícula (apenas para testes)
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", "").substring(0, 11));
-        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Bloqueado", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Bloqueado", LocalDate.of(1990, 1, 1), null);
         aluno.setStatus(StatusAluno.BLOQUEADO);
         
         LocalDate dataBloqueio = LocalDate.parse(dataStr, dateFormatter);

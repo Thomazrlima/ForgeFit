@@ -66,7 +66,7 @@ class AulaControlador {
      * Inscreve um aluno em uma aula.
      * POST /api/aulas/{aulaId}/inscrever
      * 
-     * @param aulaId ID da aula
+     * @param aulaId    ID da aula
      * @param matricula Matrícula do aluno
      * @return Resposta HTTP indicando sucesso ou erro
      */
@@ -75,9 +75,9 @@ class AulaControlador {
         try {
             AulaId id = new AulaId(aulaId);
             Matricula mat = new Matricula(matricula);
-            
+
             String resultado = reservaService.tentarReservarVaga(mat, id);
-            
+
             return ResponseEntity.ok(resultado);
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -90,7 +90,7 @@ class AulaControlador {
      * Cancela a inscrição de um aluno em uma aula.
      * POST /api/aulas/{aulaId}/cancelar
      * 
-     * @param aulaId ID da aula
+     * @param aulaId    ID da aula
      * @param matricula Matrícula do aluno
      * @return Resposta HTTP indicando sucesso ou erro
      */
@@ -99,9 +99,9 @@ class AulaControlador {
         try {
             AulaId id = new AulaId(aulaId);
             Matricula mat = new Matricula(matricula);
-            
+
             String resultado = reservaService.cancelarReserva(mat, id, java.time.LocalDateTime.now());
-            
+
             return ResponseEntity.ok(resultado);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

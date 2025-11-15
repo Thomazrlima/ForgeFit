@@ -35,7 +35,7 @@ public class GestaoGuildasFuncionalidade {
     public void um_aluno_está_cadastrado_com_matricula(String matriculaString) {
         matriculaAluno = new Matricula(matriculaString);
         Cpf cpf = new Cpf(matriculaString.replaceAll("[^0-9]", ""));
-        var aluno = new Aluno(matriculaAluno, cpf, "João da Silva", LocalDate.of(1990, 1, 1));
+        var aluno = new Aluno(matriculaAluno, cpf, "João da Silva", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
     }
 
@@ -74,7 +74,7 @@ public class GestaoGuildasFuncionalidade {
         this.nomeGuilda = nomeGuilda;
         matriculaAluno = new Matricula("123.456.789-00");
         Cpf cpf = new Cpf("12345678900");
-        var aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        var aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         guildaCriada = contexto.guildaService.criarGuilda(nomeGuilda, "Descrição", null, matriculaAluno);
@@ -84,7 +84,7 @@ public class GestaoGuildasFuncionalidade {
     public void um_aluno_tenta_criar_outra_guilda_com_o_mesmo_nome() {
         matriculaAluno2 = new Matricula("987.654.321-00");
         Cpf cpf2 = new Cpf("98765432100");
-        var aluno2 = new Aluno(matriculaAluno2, cpf2, "Aluno 2", LocalDate.of(1990, 1, 1));
+        var aluno2 = new Aluno(matriculaAluno2, cpf2, "Aluno 2", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno2);
 
         try {
@@ -98,7 +98,7 @@ public class GestaoGuildasFuncionalidade {
     public void o_aluno_com_matricula_criou_a_guilda_com_o_código_de_convite(String matriculaString, String nomeGuilda, String codigoString) {
         matriculaAluno = new Matricula(matriculaString);
         Cpf cpf = new Cpf(matriculaString.replaceAll("[^0-9]", ""));
-        var aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        var aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         // Cria a guilda com o código de convite especificado
@@ -110,7 +110,7 @@ public class GestaoGuildasFuncionalidade {
     public void um_aluno_utiliza_o_código_de_convite_para_entrar_na_guilda(String codigoString) {
         matriculaAluno2 = new Matricula("987.654.321-00");
         Cpf cpf2 = new Cpf("98765432100");
-        var aluno2 = new Aluno(matriculaAluno2, cpf2, "Aluno 2", LocalDate.of(1990, 1, 1));
+        var aluno2 = new Aluno(matriculaAluno2, cpf2, "Aluno 2", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno2);
 
         // Usa o código de convite especificado no feature
@@ -146,7 +146,7 @@ public class GestaoGuildasFuncionalidade {
     public void um_aluno_tenta_entrar_na_guilda_com_o_código_de_convite(String codigo) {
         matriculaAluno = new Matricula("123.456.789-00");
         Cpf cpf = new Cpf("12345678900");
-        var aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        var aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
 
         // Usa o código especificado no feature (que deve ser inválido neste cenário)
@@ -162,7 +162,7 @@ public class GestaoGuildasFuncionalidade {
     public void o_aluno_com_matricula_é_o_mestre_da_guilda(String matriculaString, String nomeGuilda) {
         matriculaAluno = new Matricula(matriculaString);
         Cpf cpf = new Cpf(matriculaString.replaceAll("[^0-9]", ""));
-        var aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        var aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         guildaCriada = contexto.guildaService.criarGuilda(nomeGuilda, "Descrição inicial", null, matriculaAluno);
@@ -195,7 +195,7 @@ public class GestaoGuildasFuncionalidade {
         // Cria o mestre
         Matricula matriculaMestre = new Matricula("111.111.111-11");
         Cpf cpfMestre = new Cpf("11111111111");
-        var mestre = new Aluno(matriculaMestre, cpfMestre, "Mestre", LocalDate.of(1990, 1, 1));
+        var mestre = new Aluno(matriculaMestre, cpfMestre, "Mestre", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(mestre);
         
         guildaCriada = contexto.guildaService.criarGuilda(nomeGuilda, "Descrição", null, mestre.getMatricula());
@@ -203,7 +203,7 @@ public class GestaoGuildasFuncionalidade {
         // Adiciona o membro
         matriculaAluno = new Matricula(matriculaString);
         Cpf cpf = new Cpf(matriculaString.replaceAll("[^0-9]", ""));
-        var aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        var aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         contexto.guildaService.entrarEmGuilda(matriculaAluno, guildaCriada.getCodigoConvite());
@@ -224,7 +224,7 @@ public class GestaoGuildasFuncionalidade {
         // Cria o mestre
         Matricula matriculaMestre = new Matricula("111.111.111-11");
         Cpf cpfMestre = new Cpf("11111111111");
-        var mestre = new Aluno(matriculaMestre, cpfMestre, "Mestre", LocalDate.of(1990, 1, 1));
+        var mestre = new Aluno(matriculaMestre, cpfMestre, "Mestre", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(mestre);
         
         guildaCriada = contexto.guildaService.criarGuilda(nomeGuilda, "Descrição", null, mestre.getMatricula());
@@ -232,7 +232,7 @@ public class GestaoGuildasFuncionalidade {
         // Adiciona o membro
         matriculaAluno = new Matricula(matriculaString);
         Cpf cpf = new Cpf(matriculaString.replaceAll("[^0-9]", ""));
-        var aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        var aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         contexto.guildaService.entrarEmGuilda(matriculaAluno, guildaCriada.getCodigoConvite());

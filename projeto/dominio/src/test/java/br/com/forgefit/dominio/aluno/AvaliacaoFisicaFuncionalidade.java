@@ -36,7 +36,7 @@ public class AvaliacaoFisicaFuncionalidade {
         if (aluno.isEmpty()) {
             // Cria CPF baseado na matrícula (apenas para testes)
             Cpf cpf = new Cpf(matricula.replaceAll("[^0-9]", "").substring(0, 11));
-            Aluno novoAluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.now().minusYears(25));
+            Aluno novoAluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.now().minusYears(25), null);
             contexto.repositorio.salvar(novoAluno);
             contexto.alunoAtual = novoAluno;
         } else {
@@ -274,7 +274,7 @@ public class AvaliacaoFisicaFuncionalidade {
         if (aluno.isEmpty()) {
             // Cria CPF baseado na matrícula (apenas para testes)
             Cpf cpf = new Cpf(matricula.replaceAll("[^0-9]", "").substring(0, 11));
-            Aluno novoAluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.now().minusYears(25));
+            Aluno novoAluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.now().minusYears(25), null);
             contexto.repositorio.salvar(novoAluno);
             contexto.alunoAtual = novoAluno;
         } else {

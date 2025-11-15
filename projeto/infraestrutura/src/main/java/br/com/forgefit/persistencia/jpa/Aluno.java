@@ -20,45 +20,48 @@ import jakarta.persistence.TemporalType;
 @Entity
 @Table(name = "ALU_ALUNO")
 class Aluno {
-	
+
 	@Id
 	@Column(name = "ALU_MATRICULA", nullable = false, length = 50)
 	private String matricula;
-	
+
 	@Column(name = "ALU_CPF", nullable = false, unique = true, length = 11)
 	private String cpf;
-	
+
 	@Column(name = "ALU_NOME", nullable = false, length = 255)
 	private String nome;
-	
+
 	@Temporal(TemporalType.DATE)
 	@Column(name = "ALU_DATA_NASCIMENTO")
 	private Date dataNascimento;
-	
+
+	@Column(name = "ALU_USER_ID", length = 255)
+	private String userId;
+
 	@Column(name = "ALU_PONTUACAO_TOTAL")
 	private Integer pontuacaoTotal = 0;
-	
+
 	@Column(name = "ALU_CREDITOS")
 	private Double creditos = 0.0;
-	
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "ALU_STATUS", nullable = false)
 	private StatusAluno status = StatusAluno.ATIVO;
-	
+
 	@Column(name = "ALU_GUILDA_ID")
 	private Integer guildaId;
-	
+
 	@Column(name = "ALU_PLANO_ATIVO_ID")
 	private Integer planoAtivoId;
-	
+
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "ALU_BLOQUEIO_ATE")
 	private Date bloqueioAte;
-	
+
 	@OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderColumn(name = "AVF_POSICAO")
 	private List<AvaliacaoFisica> historicoDeAvaliacoes = new ArrayList<>();
-	
+
 	@OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderColumn(name = "FRQ_POSICAO")
 	private List<Frequencia> historicoDeFrequencia = new ArrayList<>();
@@ -93,6 +96,14 @@ class Aluno {
 
 	public void setDataNascimento(Date dataNascimento) {
 		this.dataNascimento = dataNascimento;
+	}
+
+	public String getUserId() {
+		return userId;
+	}
+
+	public void setUserId(String userId) {
+		this.userId = userId;
 	}
 
 	public Integer getPontuacaoTotal() {
@@ -168,7 +179,7 @@ interface AlunoJpaRepository extends org.springframework.data.jpa.repository.Jpa
 class AlunoRepositorioImpl implements br.com.forgefit.dominio.aluno.AlunoRepositorio {
 	@org.springframework.beans.factory.annotation.Autowired
 	AlunoJpaRepository repositorio;
-	
+
 	@org.springframework.beans.factory.annotation.Autowired
 	JpaMapeador mapeador;
 
@@ -179,15 +190,17 @@ class AlunoRepositorioImpl implements br.com.forgefit.dominio.aluno.AlunoReposit
 	}
 
 	@Override
-	public java.util.Optional<br.com.forgefit.dominio.aluno.Aluno> obterPorMatricula(br.com.forgefit.dominio.aluno.Matricula matricula) {
+	public java.util.Optional<br.com.forgefit.dominio.aluno.Aluno> obterPorMatricula(
+			br.com.forgefit.dominio.aluno.Matricula matricula) {
 		return repositorio.findById(matricula.getValor())
-			.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aluno.Aluno.class));
+				.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aluno.Aluno.class));
 	}
 
 	@Override
-	public java.util.Optional<br.com.forgefit.dominio.aluno.Aluno> obterAlunoPorCpf(br.com.forgefit.dominio.aluno.Cpf cpf) {
+	public java.util.Optional<br.com.forgefit.dominio.aluno.Aluno> obterAlunoPorCpf(
+			br.com.forgefit.dominio.aluno.Cpf cpf) {
 		Aluno alunoJpa = repositorio.findByCpf(cpf.getNumero());
 		return java.util.Optional.ofNullable(alunoJpa)
-			.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aluno.Aluno.class));
+				.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aluno.Aluno.class));
 	}
 }

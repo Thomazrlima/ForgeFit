@@ -16,11 +16,12 @@ import br.com.forgefit.dominio.guilda.GuildaId;
 
 public class Aluno {
     private static final AtomicLong matriculaCounter = new AtomicLong(1);
-    
+
     private final Matricula matricula;
     private final Cpf cpf;
     private String nome;
     private LocalDate dataNascimento;
+    private String userId;
     private int pontuacaoTotal;
     private double creditos;
     private StatusAluno status;
@@ -32,7 +33,7 @@ public class Aluno {
     private final List<PlanoDeTreinoId> historicoDeplanosIds = new ArrayList<>();
     private final List<Frequencia> historicoDeFrequencia = new ArrayList<>();
 
-    public Aluno(Matricula matricula, Cpf cpf, String nome, LocalDate dataNascimento) {
+    public Aluno(Matricula matricula, Cpf cpf, String nome, LocalDate dataNascimento, String userId) {
         notNull(matricula, "A matrícula não pode ser nula");
         notNull(cpf, "O CPF não pode ser nulo");
         notNull(nome, "O nome não pode ser nulo");
@@ -42,16 +43,17 @@ public class Aluno {
         this.cpf = cpf;
         this.nome = nome;
         this.dataNascimento = dataNascimento;
+        this.userId = userId;
         this.status = StatusAluno.ATIVO;
         this.pontuacaoTotal = 0;
         this.creditos = 0.0;
     }
-    
+
     // Construtor simplificado que gera matrícula automaticamente
-    public Aluno(Cpf cpf, String nome, LocalDate dataNascimento) {
-        this(new Matricula(String.valueOf(matriculaCounter.getAndIncrement())), cpf, nome, dataNascimento);
+    public Aluno(Cpf cpf, String nome, LocalDate dataNascimento, String userId) {
+        this(new Matricula(String.valueOf(matriculaCounter.getAndIncrement())), cpf, nome, dataNascimento, userId);
     }
-    
+
     public Matricula getMatricula() {
         return matricula;
     }
@@ -74,6 +76,14 @@ public class Aluno {
 
     public void setDataNascimento(LocalDate dataNascimento) {
         this.dataNascimento = dataNascimento;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public int getPontuacaoTotal() {
@@ -160,11 +170,13 @@ public class Aluno {
         notNull(frequencia, "A frequência não pode ser nula");
         historicoDeFrequencia.add(frequencia);
     }
-    
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Aluno aluno = (Aluno) o;
         return matricula.equals(aluno.matricula);
     }

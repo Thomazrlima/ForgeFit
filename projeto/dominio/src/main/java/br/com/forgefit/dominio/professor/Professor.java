@@ -13,8 +13,9 @@ public class Professor {
     private final Cpf cpf;
     private String nome;
     private LocalDate dataNascimento;
+    private String userId;
 
-    public Professor(ProfessorId id, Cpf cpf, String nome, LocalDate dataNascimento) {
+    public Professor(ProfessorId id, Cpf cpf, String nome, LocalDate dataNascimento, String userId) {
         notNull(id, "O id do professor não pode ser nulo");
         notNull(cpf, "O CPF do professor não pode ser nulo");
         notBlank(nome, "O nome do professor não pode ser em branco");
@@ -24,8 +25,9 @@ public class Professor {
         this.cpf = cpf;
         this.nome = nome;
         this.dataNascimento = dataNascimento;
+        this.userId = userId;
     }
-    
+
     public ProfessorId getId() {
         return id;
     }
@@ -42,10 +44,20 @@ public class Professor {
         return dataNascimento;
     }
 
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Professor professor = (Professor) o;
         return id.equals(professor.id);
     }

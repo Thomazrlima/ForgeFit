@@ -40,7 +40,7 @@ public class RankingAlunosFuncionalidade {
         
         // Cria o aluno
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         // Adiciona os pontos iniciais
@@ -101,7 +101,7 @@ public class RankingAlunosFuncionalidade {
         
         // Cria a aluna
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluna = new Aluno(matriculaAluno, cpf, "Aluna Teste", LocalDate.of(1990, 1, 1));
+        Aluno aluna = new Aluno(matriculaAluno, cpf, "Aluna Teste", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluna);
         
         // Adiciona os pontos iniciais
@@ -174,7 +174,7 @@ public class RankingAlunosFuncionalidade {
         
         // Cria o aluno A
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAlunoA, cpf, "Aluno A", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAlunoA, cpf, "Aluno A", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         // Registra frequência para cada aula
@@ -192,7 +192,7 @@ public class RankingAlunosFuncionalidade {
         
         // Cria o aluno B
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAlunoB, cpf, "Aluno B", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAlunoB, cpf, "Aluno B", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         // Registra frequência para cada aula
@@ -288,7 +288,7 @@ public class RankingAlunosFuncionalidade {
         
         // Cria o aluno
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAlunoA, cpf, "Aluno C", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAlunoA, cpf, "Aluno C", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         int pontosTotal = Integer.parseInt(pontosStr);
@@ -311,7 +311,7 @@ public class RankingAlunosFuncionalidade {
         
         // Cria o aluno
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAlunoB, cpf, "Aluno D", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAlunoB, cpf, "Aluno D", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         int pontosTotal = Integer.parseInt(pontosStr);
@@ -356,7 +356,7 @@ public class RankingAlunosFuncionalidade {
         
         // Cria o aluno
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Destaque", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Destaque", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         // Adiciona pontos de engajamento (frequência + guilda)
@@ -492,7 +492,7 @@ public class RankingAlunosFuncionalidade {
         
         // Cria o aluno
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Outubro", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Outubro", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         // Adiciona pontos no ranking mensal
@@ -562,7 +562,7 @@ public class RankingAlunosFuncionalidade {
         
         // Cria o aluno
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Histórico", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Histórico", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         // Adiciona pontos no ranking mensal

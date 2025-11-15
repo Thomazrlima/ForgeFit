@@ -26,54 +26,53 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-
 @Entity
 @Table(name = "AUL_AULA")
 class Aula {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "AUL_ID")
 	private Integer id;
-	
+
 	@ManyToOne
 	@JoinColumn(name = "AUL_PROFESSOR_ID", nullable = false)
 	private ProfessorJpa professor;
-	
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "AUL_MODALIDADE", nullable = false)
 	private Modalidade modalidade;
-	
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "AUL_ESPACO", nullable = false)
 	private Espaco espaco;
-	
+
 	@Column(name = "AUL_CAPACIDADE", nullable = false)
 	private Integer capacidade;
-	
+
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "AUL_INICIO", nullable = false)
 	private Date inicio;
-	
+
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "AUL_FIM", nullable = false)
 	private Date fim;
-	
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "AUL_STATUS", nullable = false)
 	private StatusAula status = StatusAula.ATIVA;
-	
+
 	@Embedded
 	private Recorrencia recorrencia;
-	
+
 	@OneToMany(mappedBy = "aula", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderColumn(name = "OEX_POSICAO")
 	private List<OcorrenciaExcecao> excecoes = new ArrayList<>();
-	
+
 	@OneToMany(mappedBy = "aula", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderColumn(name = "RES_POSICAO")
 	private List<Reserva> reservas = new ArrayList<>();
-	
+
 	@OneToMany(mappedBy = "aula", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderColumn(name = "LES_POSICAO")
 	private List<PosicaoListaDeEspera> listaDeEspera = new ArrayList<>();
@@ -93,7 +92,7 @@ class Aula {
 	public void setProfessor(ProfessorJpa professor) {
 		this.professor = professor;
 	}
-	
+
 	public Integer getProfessorId() {
 		return professor != null ? professor.id : null;
 	}
@@ -431,23 +430,24 @@ interface ReservaJpaRepository extends JpaRepository<Aula.Reserva, Integer> {
 	List<Aula.Reserva> findByAlunoMatriculaAndStatus(String matricula, StatusReserva status);
 
 	@org.springframework.data.jpa.repository.Query("""
-		SELECT r.id as reservaId,
-			   r.aula.id as aulaId,
-			   r.aula.inicio as inicioAula,
-			   r.aula.fim as fimAula,
-			   r.aula.modalidade as modalidade,
-			   r.aula.espaco as espaco,
-			   r.aula.professor.nome as nomeProfessor,
-			   r.alunoMatricula as alunoMatricula,
-			   r.dataReserva as dataReserva,
-			   r.status as statusReserva
-		FROM br.com.forgefit.persistencia.jpa.Aula$Reserva r
-		WHERE r.alunoMatricula = :#{#matricula.valor}
-		  AND r.status = 'CONFIRMADA'
-		  AND r.aula.inicio > CURRENT_TIMESTAMP
-		ORDER BY r.aula.inicio ASC
-		""")
-	List<br.com.forgefit.aplicacao.aula.CancelamentoResumo> buscarReservasConfirmadas(@org.springframework.data.repository.query.Param("matricula") br.com.forgefit.dominio.aluno.Matricula matricula);
+			SELECT r.id as reservaId,
+				   r.aula.id as aulaId,
+				   r.aula.inicio as inicioAula,
+				   r.aula.fim as fimAula,
+				   r.aula.modalidade as modalidade,
+				   r.aula.espaco as espaco,
+				   r.aula.professor.nome as nomeProfessor,
+				   r.alunoMatricula as alunoMatricula,
+				   r.dataReserva as dataReserva,
+				   r.status as statusReserva
+			FROM br.com.forgefit.persistencia.jpa.Aula$Reserva r
+			WHERE r.alunoMatricula = :#{#matricula.valor}
+			  AND r.status = 'CONFIRMADA'
+			  AND r.aula.inicio > CURRENT_TIMESTAMP
+			ORDER BY r.aula.inicio ASC
+			""")
+	List<br.com.forgefit.aplicacao.aula.CancelamentoResumo> buscarReservasConfirmadas(
+			@org.springframework.data.repository.query.Param("matricula") br.com.forgefit.dominio.aluno.Matricula matricula);
 }
 
 @org.springframework.stereotype.Repository
@@ -456,7 +456,8 @@ class ReservaRepositorioImpl implements br.com.forgefit.aplicacao.aula.ReservaRe
 	ReservaJpaRepository repositorio;
 
 	@Override
-	public List<br.com.forgefit.aplicacao.aula.CancelamentoResumo> buscarReservasConfirmadas(br.com.forgefit.dominio.aluno.Matricula matricula) {
+	public List<br.com.forgefit.aplicacao.aula.CancelamentoResumo> buscarReservasConfirmadas(
+			br.com.forgefit.dominio.aluno.Matricula matricula) {
 		return repositorio.buscarReservasConfirmadas(matricula);
 	}
 }
@@ -482,7 +483,8 @@ class AulaRepositorioAplicacaoImpl implements br.com.forgefit.aplicacao.aula.Aul
 	}
 
 	@Override
-	public List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorPeriodo(java.time.LocalDateTime inicio, java.time.LocalDateTime fim) {
+	public List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorPeriodo(java.time.LocalDateTime inicio,
+			java.time.LocalDateTime fim) {
 		java.util.Date inicioDate = DateTimeConverter.toDate(inicio);
 		java.util.Date fimDate = DateTimeConverter.toDate(fim);
 		return repositorio.pesquisarPorPeriodo(inicioDate, fimDate);
@@ -494,7 +496,8 @@ class AulaRepositorioAplicacaoImpl implements br.com.forgefit.aplicacao.aula.Aul
 	}
 
 	@Override
-	public java.util.Optional<br.com.forgefit.aplicacao.aula.AulaResumoExpandido> buscarResumoExpandido(Integer aulaId) {
+	public java.util.Optional<br.com.forgefit.aplicacao.aula.AulaResumoExpandido> buscarResumoExpandido(
+			Integer aulaId) {
 		return repositorio.buscarResumoExpandido(aulaId);
 	}
 
@@ -504,14 +507,16 @@ class AulaRepositorioAplicacaoImpl implements br.com.forgefit.aplicacao.aula.Aul
 	}
 
 	@Override
-	public List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarComFiltros(String modalidade, String espaco, java.time.LocalDateTime inicio, java.time.LocalDateTime fim, Boolean apenasComVagas) {
+	public List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarComFiltros(String modalidade, String espaco,
+			java.time.LocalDateTime inicio, java.time.LocalDateTime fim, Boolean apenasComVagas) {
 		java.util.Date inicioDate = inicio != null ? DateTimeConverter.toDate(inicio) : null;
 		java.util.Date fimDate = fim != null ? DateTimeConverter.toDate(fim) : null;
 		return repositorio.pesquisarComFiltros(modalidade, espaco, inicioDate, fimDate, apenasComVagas);
 	}
 }
 
-// Interfaces e classes que estavam em AlunoRepositorioJpa.java - movidas para cá
+// Interfaces e classes que estavam em AlunoRepositorioJpa.java - movidas para
+// cá
 interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 
 	List<Aula> findByStatus(StatusAula status);
@@ -578,7 +583,8 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 			  AND UPPER(CAST(a.modalidade AS string)) = UPPER(:modalidade)
 			ORDER BY a.inicio ASC
 			""")
-	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorModalidade(@org.springframework.data.repository.query.Param("modalidade") String modalidade);
+	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorModalidade(
+			@org.springframework.data.repository.query.Param("modalidade") String modalidade);
 
 	@org.springframework.data.jpa.repository.Query("""
 			SELECT a.id as id,
@@ -598,7 +604,8 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 			  AND UPPER(CAST(a.espaco AS string)) = UPPER(:espaco)
 			ORDER BY a.inicio ASC
 			""")
-	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorEspaco(@org.springframework.data.repository.query.Param("espaco") String espaco);
+	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorEspaco(
+			@org.springframework.data.repository.query.Param("espaco") String espaco);
 
 	@org.springframework.data.jpa.repository.Query("""
 			SELECT a.id as id,
@@ -620,8 +627,8 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 			ORDER BY a.inicio ASC
 			""")
 	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorPeriodo(
-		@org.springframework.data.repository.query.Param("inicio") java.util.Date inicio,
-		@org.springframework.data.repository.query.Param("fim") java.util.Date fim);
+			@org.springframework.data.repository.query.Param("inicio") java.util.Date inicio,
+			@org.springframework.data.repository.query.Param("fim") java.util.Date fim);
 
 	@org.springframework.data.jpa.repository.Query("""
 			SELECT a.id as id,
@@ -659,7 +666,8 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 			FROM Aula a
 			WHERE a.id = :id
 			""")
-	java.util.Optional<br.com.forgefit.aplicacao.aula.AulaResumoExpandido> buscarResumoExpandido(@org.springframework.data.repository.query.Param("id") Integer id);
+	java.util.Optional<br.com.forgefit.aplicacao.aula.AulaResumoExpandido> buscarResumoExpandido(
+			@org.springframework.data.repository.query.Param("id") Integer id);
 
 	@org.springframework.data.jpa.repository.Query("""
 			SELECT a.id as id,
@@ -678,7 +686,8 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 			WHERE a.professor.id = :professorId
 			ORDER BY a.inicio ASC
 			""")
-	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorProfessor(@org.springframework.data.repository.query.Param("professorId") Integer professorId);
+	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorProfessor(
+			@org.springframework.data.repository.query.Param("professorId") Integer professorId);
 
 	@org.springframework.data.jpa.repository.Query("""
 			SELECT a.id as id,
@@ -703,18 +712,18 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 			ORDER BY a.inicio ASC
 			""")
 	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarComFiltros(
-		@org.springframework.data.repository.query.Param("modalidade") String modalidade,
-		@org.springframework.data.repository.query.Param("espaco") String espaco,
-		@org.springframework.data.repository.query.Param("inicio") java.util.Date inicio,
-		@org.springframework.data.repository.query.Param("fim") java.util.Date fim,
-		@org.springframework.data.repository.query.Param("apenasComVagas") Boolean apenasComVagas);
+			@org.springframework.data.repository.query.Param("modalidade") String modalidade,
+			@org.springframework.data.repository.query.Param("espaco") String espaco,
+			@org.springframework.data.repository.query.Param("inicio") java.util.Date inicio,
+			@org.springframework.data.repository.query.Param("fim") java.util.Date fim,
+			@org.springframework.data.repository.query.Param("apenasComVagas") Boolean apenasComVagas);
 }
 
 @org.springframework.stereotype.Repository("aulaRepositorio")
 class AulaRepositorioImpl implements br.com.forgefit.dominio.aula.AulaRepositorio {
 	@org.springframework.beans.factory.annotation.Autowired
 	AulaJpaRepository repositorio;
-	
+
 	@org.springframework.beans.factory.annotation.Autowired
 	JpaMapeador mapeador;
 
@@ -725,34 +734,39 @@ class AulaRepositorioImpl implements br.com.forgefit.dominio.aula.AulaRepositori
 	}
 
 	@Override
-	public java.util.Optional<br.com.forgefit.dominio.aula.Aula> obterPorId(br.com.forgefit.dominio.aula.AulaId aulaId) {
+	public java.util.Optional<br.com.forgefit.dominio.aula.Aula> obterPorId(
+			br.com.forgefit.dominio.aula.AulaId aulaId) {
 		return repositorio.findById(aulaId.getId())
-			.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aula.Aula.class));
+				.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aula.Aula.class));
 	}
 
 	@Override
 	public List<br.com.forgefit.dominio.aula.Aula> listarTodas() {
 		return repositorio.findAll().stream()
-			.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aula.Aula.class))
-			.toList();
+				.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aula.Aula.class))
+				.toList();
 	}
 
 	@Override
-	public List<br.com.forgefit.dominio.aula.Aula> buscarPorEspacoEPeriodo(br.com.forgefit.dominio.aula.enums.Espaco espaco, java.time.LocalDateTime inicio, java.time.LocalDateTime fim) {
+	public List<br.com.forgefit.dominio.aula.Aula> buscarPorEspacoEPeriodo(
+			br.com.forgefit.dominio.aula.enums.Espaco espaco, java.time.LocalDateTime inicio,
+			java.time.LocalDateTime fim) {
 		java.util.Date inicioDate = DateTimeConverter.toDate(inicio);
 		java.util.Date fimDate = DateTimeConverter.toDate(fim);
 		Espaco espacoJpa = Espaco.valueOf(espaco.name());
 		return repositorio.buscarPorEspacoEPeriodo(espacoJpa, inicioDate, fimDate).stream()
-			.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aula.Aula.class))
-			.toList();
+				.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aula.Aula.class))
+				.toList();
 	}
 
 	@Override
-	public List<br.com.forgefit.dominio.aula.Aula> buscarPorProfessorEPeriodo(br.com.forgefit.dominio.professor.ProfessorId professorId, java.time.LocalDateTime inicio, java.time.LocalDateTime fim) {
+	public List<br.com.forgefit.dominio.aula.Aula> buscarPorProfessorEPeriodo(
+			br.com.forgefit.dominio.professor.ProfessorId professorId, java.time.LocalDateTime inicio,
+			java.time.LocalDateTime fim) {
 		java.util.Date inicioDate = DateTimeConverter.toDate(inicio);
 		java.util.Date fimDate = DateTimeConverter.toDate(fim);
 		return repositorio.buscarPorProfessorEPeriodo(professorId.getId(), inicioDate, fimDate).stream()
-			.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aula.Aula.class))
-			.toList();
+				.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aula.Aula.class))
+				.toList();
 	}
 }

@@ -26,7 +26,7 @@ class JpaMapeador extends ModelMapper {
                 var id = map(source.id, ProfessorId.class);
                 var cpf = map(source.cpf, Cpf.class);
                 var dataNascimento = map(source.dataNascimento, LocalDate.class);
-                return new Professor(id, cpf, source.nome, dataNascimento);
+                return new Professor(id, cpf, source.nome, dataNascimento, source.userId);
             }
         });
 

@@ -45,7 +45,7 @@ public class PersonalizarTreinosFuncionalidade {
         
         // Cria ou obtém o aluno
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
     }
 
@@ -139,7 +139,7 @@ public class PersonalizarTreinosFuncionalidade {
         
         // Cria o aluno sem plano ativo
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         // Define um professorId padrão para o teste
@@ -229,7 +229,7 @@ public class PersonalizarTreinosFuncionalidade {
         
         // Cria o aluno
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Completo", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Completo", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         professorId = new ProfessorId(1);
@@ -322,7 +322,7 @@ public class PersonalizarTreinosFuncionalidade {
         
         // Cria o aluno
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Teste", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
     }
 
@@ -374,7 +374,7 @@ public class PersonalizarTreinosFuncionalidade {
         
         // Cria o aluno
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Ciclo", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Ciclo", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         professorId = new ProfessorId(1);
@@ -467,7 +467,7 @@ public class PersonalizarTreinosFuncionalidade {
         
         // Cria o aluno
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Permanente", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Permanente", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         professorId = new ProfessorId(1);

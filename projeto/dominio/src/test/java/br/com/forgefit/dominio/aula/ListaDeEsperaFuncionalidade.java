@@ -58,7 +58,7 @@ public class ListaDeEsperaFuncionalidade {
             String matriculaStr = String.format("%03d.%03d.%03d-%02d", i, i, i, i % 100);
             Matricula matricula = new Matricula(matriculaStr);
             Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-            Aluno aluno = new Aluno(matricula, cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
+            Aluno aluno = new Aluno(matricula, cpf, "Aluno " + i, LocalDate.of(1990, 1, 1), null);
             contexto.repositorio.salvar(aluno);
             contexto.reservaService.reservarVaga(matricula, aulaCriada.getId());
         }
@@ -166,7 +166,7 @@ public class ListaDeEsperaFuncionalidade {
             String matriculaStr = String.format("%03d.%03d.%03d-%02d", i, i, i, i % 100);
             Matricula matricula = new Matricula(matriculaStr);
             Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-            Aluno aluno = new Aluno(matricula, cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
+            Aluno aluno = new Aluno(matricula, cpf, "Aluno " + i, LocalDate.of(1990, 1, 1), null);
             contexto.repositorio.salvar(aluno);
             contexto.reservaService.reservarVaga(matricula, aulaCriada.getId());
         }
@@ -213,7 +213,7 @@ public class ListaDeEsperaFuncionalidade {
         
         matriculaAlunoAtual = new Matricula(matriculaStr);
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAlunoAtual, cpf, "João", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAlunoAtual, cpf, "João", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         reservaCriada = contexto.reservaService.reservarVaga(matriculaAlunoAtual, aulaCriada.getId());
@@ -266,7 +266,7 @@ public class ListaDeEsperaFuncionalidade {
             String matriculaStr = String.format("%03d.%03d.%03d-%02d", i, i, i, i % 100);
             Matricula matricula = new Matricula(matriculaStr);
             Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-            Aluno aluno = new Aluno(matricula, cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
+            Aluno aluno = new Aluno(matricula, cpf, "Aluno " + i, LocalDate.of(1990, 1, 1), null);
             contexto.repositorio.salvar(aluno);
             contexto.reservaService.reservarVaga(matricula, aulaCriada.getId());
         }
@@ -318,7 +318,7 @@ public class ListaDeEsperaFuncionalidade {
         
         matriculaAlunoAtual = new Matricula(matriculaStr);
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAlunoAtual, cpf, "Maria", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAlunoAtual, cpf, "Maria", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         reservaCriada = contexto.reservaService.reservarVaga(matriculaAlunoAtual, aulaCriada.getId());
@@ -365,7 +365,7 @@ public class ListaDeEsperaFuncionalidade {
             String matriculaStr = String.format("100.%03d.%03d-%02d", i, i, i % 100);
             Matricula matricula = new Matricula(matriculaStr);
             Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-            Aluno aluno = new Aluno(matricula, cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
+            Aluno aluno = new Aluno(matricula, cpf, "Aluno " + i, LocalDate.of(1990, 1, 1), null);
             contexto.repositorio.salvar(aluno);
             contexto.reservaService.reservarVaga(matricula, aulaCriada.getId());
         }
@@ -375,7 +375,7 @@ public class ListaDeEsperaFuncionalidade {
             String matriculaStr = String.format("200.%03d.%03d-%02d", i, i, i % 100);
             Matricula matricula = new Matricula(matriculaStr);
             Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-            Aluno aluno = new Aluno(matricula, cpf, "Espera " + i, LocalDate.of(1990, 1, 1));
+            Aluno aluno = new Aluno(matricula, cpf, "Espera " + i, LocalDate.of(1990, 1, 1), null);
             contexto.repositorio.salvar(aluno);
             contexto.reservaService.reservarVaga(matricula, aulaCriada.getId());
         }
@@ -431,7 +431,7 @@ public class ListaDeEsperaFuncionalidade {
             String matriculaStr = String.format("300.%03d.%03d-%02d", i, i, i % 100);
             Matricula matricula = new Matricula(matriculaStr);
             Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-            Aluno aluno = new Aluno(matricula, cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
+            Aluno aluno = new Aluno(matricula, cpf, "Aluno " + i, LocalDate.of(1990, 1, 1), null);
             contexto.repositorio.salvar(aluno);
             contexto.reservaService.reservarVaga(matricula, aulaCriada.getId());
         }
@@ -441,7 +441,7 @@ public class ListaDeEsperaFuncionalidade {
             String matriculaStr = String.format("400.%03d.%03d-%02d", i, i, i % 100);
             Matricula matricula = new Matricula(matriculaStr);
             Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-            Aluno aluno = new Aluno(matricula, cpf, "Espera " + i, LocalDate.of(1990, 1, 1));
+            Aluno aluno = new Aluno(matricula, cpf, "Espera " + i, LocalDate.of(1990, 1, 1), null);
             contexto.repositorio.salvar(aluno);
             contexto.reservaService.reservarVaga(matricula, aulaCriada.getId());
         }
@@ -496,7 +496,7 @@ public class ListaDeEsperaFuncionalidade {
             String matriculaStr = String.format("500.%03d.%03d-%02d", i, i, i % 100);
             Matricula matricula = new Matricula(matriculaStr);
             Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-            Aluno aluno = new Aluno(matricula, cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
+            Aluno aluno = new Aluno(matricula, cpf, "Aluno " + i, LocalDate.of(1990, 1, 1), null);
             contexto.repositorio.salvar(aluno);
             contexto.reservaService.reservarVaga(matricula, aulaCriada.getId());
             
@@ -511,7 +511,7 @@ public class ListaDeEsperaFuncionalidade {
             String matriculaStr = String.format("600.%03d.%03d-%02d", i, i, i % 100);
             Matricula matricula = new Matricula(matriculaStr);
             Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-            Aluno aluno = new Aluno(matricula, cpf, "Espera " + i, LocalDate.of(1990, 1, 1));
+            Aluno aluno = new Aluno(matricula, cpf, "Espera " + i, LocalDate.of(1990, 1, 1), null);
             contexto.repositorio.salvar(aluno);
             contexto.reservaService.reservarVaga(matricula, aulaCriada.getId());
         }
@@ -569,7 +569,7 @@ public class ListaDeEsperaFuncionalidade {
             String matriculaStr = String.format("700.%03d.%03d-%02d", i, i, i % 100);
             Matricula matricula = new Matricula(matriculaStr);
             Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-            Aluno aluno = new Aluno(matricula, cpf, "Aluno " + i, LocalDate.of(1990, 1, 1));
+            Aluno aluno = new Aluno(matricula, cpf, "Aluno " + i, LocalDate.of(1990, 1, 1), null);
             contexto.repositorio.salvar(aluno);
             contexto.reservaService.reservarVaga(matricula, aulaCriada.getId());
             
@@ -605,7 +605,7 @@ public class ListaDeEsperaFuncionalidade {
             (int)(timestamp % 1000), (int)(timestamp % 1000), (int)(timestamp % 100));
         matriculaAlunoAtual = new Matricula(matriculaStr);
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", ""));
-        Aluno aluno = new Aluno(matriculaAlunoAtual, cpf, "Novo Aluno", LocalDate.of(1990, 1, 1));
+        Aluno aluno = new Aluno(matriculaAlunoAtual, cpf, "Novo Aluno", LocalDate.of(1990, 1, 1), null);
         contexto.repositorio.salvar(aluno);
         
         try {

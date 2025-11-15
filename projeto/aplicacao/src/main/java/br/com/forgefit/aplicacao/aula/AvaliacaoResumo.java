@@ -1,18 +1,18 @@
-package br.com.forgefit.apresentacao.aula;
+package br.com.forgefit.aplicacao.aula;
 
 /**
- * DTO para receber avaliação de aula do frontend.
+ * DTO para receber avaliação de aula.
  * Baseado na interface ClassRating do mockData.ts
  */
-public class AvaliacaoRequest {
-    
+public class AvaliacaoResumo {
+
     private Integer didatica;
     private Integer atencao;
     private Integer pontualidade;
     private String comentarios;
 
     // Construtor vazio
-    public AvaliacaoRequest() {
+    public AvaliacaoResumo() {
     }
 
     // Getters e Setters
@@ -53,8 +53,8 @@ public class AvaliacaoRequest {
      */
     public boolean isValid() {
         return didatica != null && didatica >= 1 && didatica <= 5
-            && atencao != null && atencao >= 1 && atencao <= 5
-            && pontualidade != null && pontualidade >= 1 && pontualidade <= 5;
+                && atencao != null && atencao >= 1 && atencao <= 5
+                && pontualidade != null && pontualidade >= 1 && pontualidade <= 5;
     }
 
     /**

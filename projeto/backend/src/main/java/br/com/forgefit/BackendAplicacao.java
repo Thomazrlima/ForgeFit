@@ -11,6 +11,8 @@ import br.com.forgefit.aplicacao.aula.ReservaRepositorioAplicacao;
 import br.com.forgefit.aplicacao.aula.ReservaServicoAplicacao;
 import br.com.forgefit.aplicacao.guilda.GuildaRepositorioAplicacao;
 import br.com.forgefit.aplicacao.guilda.GuildaServicoAplicacao;
+import br.com.forgefit.aplicacao.ranking.RankingRepositorioAplicacao;
+import br.com.forgefit.aplicacao.ranking.RankingServicoAplicacao;
 import br.com.forgefit.aplicacao.torneio.TorneioRepositorioAplicacao;
 import br.com.forgefit.aplicacao.torneio.TorneioServicoAplicacao;
 import br.com.forgefit.dominio.aula.AulaRepositorio;
@@ -85,6 +87,11 @@ public class BackendAplicacao {
     @Bean
     public TorneioServicoAplicacao torneioServicoAplicacao(TorneioRepositorioAplicacao repositorio) {
         return new TorneioServicoAplicacao(repositorio);
+    }
+
+    @Bean
+    public RankingServicoAplicacao rankingServicoAplicacao(RankingRepositorioAplicacao repositorio) {
+        return new RankingServicoAplicacao(repositorio);
     }
 
     public static void main(String[] args) {

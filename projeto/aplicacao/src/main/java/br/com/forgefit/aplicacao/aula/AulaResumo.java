@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 /**
  * DTO de leitura para listagem de aulas.
  * Implementado como interface para usar Spring Data Projections.
+ * Contém todos os campos necessários para o frontend.
  */
 public interface AulaResumo {
     Integer getId();
@@ -21,17 +22,22 @@ public interface AulaResumo {
     
     String getStatus();
     
-    ProfessorResumo getProfessor();
+    Integer getProfessorId();
+    
+    String getProfessorNome();
     
     Integer getVagasOcupadas();
     
     Integer getVagasDisponiveis();
     
-    /**
-     * DTO aninhado para dados do professor
-     */
-    interface ProfessorResumo {
-        Integer getId();
-        String getNome();
+    Integer getTamanhoListaEspera();
+    
+    // Campos adicionais que podem ser calculados ou preenchidos pela implementação
+    default String getEnrollmentStatus() {
+        return "not_enrolled"; // Será calculado baseado no aluno logado
+    }
+    
+    default Boolean getIsClassFinished() {
+        return getFim() != null && getFim().isBefore(LocalDateTime.now());
     }
 }

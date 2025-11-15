@@ -6,7 +6,6 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="forgefit-infraestrutura (1)" />
         <module name="forgefit-dominio" />
         <module name="forgefit-aplicacao" />
         <module name="forgefit-frontend" />
@@ -15,6 +14,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="forgefit-infraestrutura (1)" target="17" />
       <module name="forgefit-persistencia" target="17" />
     </bytecodeTargetLevel>
   </component>

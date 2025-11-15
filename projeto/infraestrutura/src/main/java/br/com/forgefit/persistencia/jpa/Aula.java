@@ -461,6 +461,56 @@ class ReservaRepositorioImpl implements br.com.forgefit.aplicacao.aula.ReservaRe
 	}
 }
 
+@org.springframework.stereotype.Repository
+class AulaRepositorioAplicacaoImpl implements br.com.forgefit.aplicacao.aula.AulaRepositorioAplicacao {
+	@org.springframework.beans.factory.annotation.Autowired
+	AulaJpaRepository repositorio;
+
+	@Override
+	public List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarResumosAtivas() {
+		return repositorio.pesquisarResumosAtivas();
+	}
+
+	@Override
+	public List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorModalidade(String modalidade) {
+		return repositorio.pesquisarPorModalidade(modalidade);
+	}
+
+	@Override
+	public List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorEspaco(String espaco) {
+		return repositorio.pesquisarPorEspaco(espaco);
+	}
+
+	@Override
+	public List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorPeriodo(java.time.LocalDateTime inicio, java.time.LocalDateTime fim) {
+		java.util.Date inicioDate = DateTimeConverter.toDate(inicio);
+		java.util.Date fimDate = DateTimeConverter.toDate(fim);
+		return repositorio.pesquisarPorPeriodo(inicioDate, fimDate);
+	}
+
+	@Override
+	public List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarComVagasDisponiveis() {
+		return repositorio.pesquisarComVagasDisponiveis();
+	}
+
+	@Override
+	public java.util.Optional<br.com.forgefit.aplicacao.aula.AulaResumoExpandido> buscarResumoExpandido(Integer aulaId) {
+		return repositorio.buscarResumoExpandido(aulaId);
+	}
+
+	@Override
+	public List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorProfessor(Integer professorId) {
+		return repositorio.pesquisarPorProfessor(professorId);
+	}
+
+	@Override
+	public List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarComFiltros(String modalidade, String espaco, java.time.LocalDateTime inicio, java.time.LocalDateTime fim, Boolean apenasComVagas) {
+		java.util.Date inicioDate = inicio != null ? DateTimeConverter.toDate(inicio) : null;
+		java.util.Date fimDate = fim != null ? DateTimeConverter.toDate(fim) : null;
+		return repositorio.pesquisarComFiltros(modalidade, espaco, inicioDate, fimDate, apenasComVagas);
+	}
+}
+
 // Interfaces e classes que estavam em AlunoRepositorioJpa.java - movidas para cá
 interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 
@@ -490,6 +540,174 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 				and a.fim <= :fim
 			""")
 	List<Aula> buscarPorProfessorEPeriodo(Integer professorId, java.util.Date inicio, java.util.Date fim);
+
+	@org.springframework.data.jpa.repository.Query("""
+			SELECT a.id as id,
+			       a.modalidade as modalidade,
+			       a.espaco as espaco,
+			       a.inicio as inicio,
+			       a.fim as fim,
+			       a.capacidade as capacidade,
+			       a.status as status,
+			       a.professor.id as professorId,
+			       a.professor.nome as professorNome,
+			       SIZE(a.reservas) as vagasOcupadas,
+			       (a.capacidade - SIZE(a.reservas)) as vagasDisponiveis,
+			       SIZE(a.listaDeEspera) as tamanhoListaEspera
+			FROM Aula a
+			WHERE a.status = 'ATIVA'
+			ORDER BY a.inicio ASC
+			""")
+	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarResumosAtivas();
+
+	@org.springframework.data.jpa.repository.Query("""
+			SELECT a.id as id,
+			       a.modalidade as modalidade,
+			       a.espaco as espaco,
+			       a.inicio as inicio,
+			       a.fim as fim,
+			       a.capacidade as capacidade,
+			       a.status as status,
+			       a.professor.id as professorId,
+			       a.professor.nome as professorNome,
+			       SIZE(a.reservas) as vagasOcupadas,
+			       (a.capacidade - SIZE(a.reservas)) as vagasDisponiveis,
+			       SIZE(a.listaDeEspera) as tamanhoListaEspera
+			FROM Aula a
+			WHERE a.status = 'ATIVA'
+			  AND UPPER(CAST(a.modalidade AS string)) = UPPER(:modalidade)
+			ORDER BY a.inicio ASC
+			""")
+	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorModalidade(@org.springframework.data.repository.query.Param("modalidade") String modalidade);
+
+	@org.springframework.data.jpa.repository.Query("""
+			SELECT a.id as id,
+			       a.modalidade as modalidade,
+			       a.espaco as espaco,
+			       a.inicio as inicio,
+			       a.fim as fim,
+			       a.capacidade as capacidade,
+			       a.status as status,
+			       a.professor.id as professorId,
+			       a.professor.nome as professorNome,
+			       SIZE(a.reservas) as vagasOcupadas,
+			       (a.capacidade - SIZE(a.reservas)) as vagasDisponiveis,
+			       SIZE(a.listaDeEspera) as tamanhoListaEspera
+			FROM Aula a
+			WHERE a.status = 'ATIVA'
+			  AND UPPER(CAST(a.espaco AS string)) = UPPER(:espaco)
+			ORDER BY a.inicio ASC
+			""")
+	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorEspaco(@org.springframework.data.repository.query.Param("espaco") String espaco);
+
+	@org.springframework.data.jpa.repository.Query("""
+			SELECT a.id as id,
+			       a.modalidade as modalidade,
+			       a.espaco as espaco,
+			       a.inicio as inicio,
+			       a.fim as fim,
+			       a.capacidade as capacidade,
+			       a.status as status,
+			       a.professor.id as professorId,
+			       a.professor.nome as professorNome,
+			       SIZE(a.reservas) as vagasOcupadas,
+			       (a.capacidade - SIZE(a.reservas)) as vagasDisponiveis,
+			       SIZE(a.listaDeEspera) as tamanhoListaEspera
+			FROM Aula a
+			WHERE a.status = 'ATIVA'
+			  AND a.inicio >= :inicio
+			  AND a.fim <= :fim
+			ORDER BY a.inicio ASC
+			""")
+	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorPeriodo(
+		@org.springframework.data.repository.query.Param("inicio") java.util.Date inicio,
+		@org.springframework.data.repository.query.Param("fim") java.util.Date fim);
+
+	@org.springframework.data.jpa.repository.Query("""
+			SELECT a.id as id,
+			       a.modalidade as modalidade,
+			       a.espaco as espaco,
+			       a.inicio as inicio,
+			       a.fim as fim,
+			       a.capacidade as capacidade,
+			       a.status as status,
+			       a.professor.id as professorId,
+			       a.professor.nome as professorNome,
+			       SIZE(a.reservas) as vagasOcupadas,
+			       (a.capacidade - SIZE(a.reservas)) as vagasDisponiveis,
+			       SIZE(a.listaDeEspera) as tamanhoListaEspera
+			FROM Aula a
+			WHERE a.status = 'ATIVA'
+			  AND SIZE(a.reservas) < a.capacidade
+			ORDER BY a.inicio ASC
+			""")
+	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarComVagasDisponiveis();
+
+	@org.springframework.data.jpa.repository.Query("""
+			SELECT a.id as id,
+			       a.modalidade as modalidade,
+			       a.espaco as espaco,
+			       a.inicio as inicio,
+			       a.fim as fim,
+			       a.capacidade as capacidade,
+			       a.status as status,
+			       a.professor.id as professorId,
+			       a.professor.nome as professorNome,
+			       SIZE(a.reservas) as vagasOcupadas,
+			       (a.capacidade - SIZE(a.reservas)) as vagasDisponiveis,
+			       SIZE(a.listaDeEspera) as tamanhoListaEspera
+			FROM Aula a
+			WHERE a.id = :id
+			""")
+	java.util.Optional<br.com.forgefit.aplicacao.aula.AulaResumoExpandido> buscarResumoExpandido(@org.springframework.data.repository.query.Param("id") Integer id);
+
+	@org.springframework.data.jpa.repository.Query("""
+			SELECT a.id as id,
+			       a.modalidade as modalidade,
+			       a.espaco as espaco,
+			       a.inicio as inicio,
+			       a.fim as fim,
+			       a.capacidade as capacidade,
+			       a.status as status,
+			       a.professor.id as professorId,
+			       a.professor.nome as professorNome,
+			       SIZE(a.reservas) as vagasOcupadas,
+			       (a.capacidade - SIZE(a.reservas)) as vagasDisponiveis,
+			       SIZE(a.listaDeEspera) as tamanhoListaEspera
+			FROM Aula a
+			WHERE a.professor.id = :professorId
+			ORDER BY a.inicio ASC
+			""")
+	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorProfessor(@org.springframework.data.repository.query.Param("professorId") Integer professorId);
+
+	@org.springframework.data.jpa.repository.Query("""
+			SELECT a.id as id,
+			       a.modalidade as modalidade,
+			       a.espaco as espaco,
+			       a.inicio as inicio,
+			       a.fim as fim,
+			       a.capacidade as capacidade,
+			       a.status as status,
+			       a.professor.id as professorId,
+			       a.professor.nome as professorNome,
+			       SIZE(a.reservas) as vagasOcupadas,
+			       (a.capacidade - SIZE(a.reservas)) as vagasDisponiveis,
+			       SIZE(a.listaDeEspera) as tamanhoListaEspera
+			FROM Aula a
+			WHERE a.status = 'ATIVA'
+			  AND (:modalidade IS NULL OR UPPER(CAST(a.modalidade AS string)) = UPPER(:modalidade))
+			  AND (:espaco IS NULL OR UPPER(CAST(a.espaco AS string)) = UPPER(:espaco))
+			  AND (:inicio IS NULL OR a.inicio >= :inicio)
+			  AND (:fim IS NULL OR a.fim <= :fim)
+			  AND (:apenasComVagas = false OR SIZE(a.reservas) < a.capacidade)
+			ORDER BY a.inicio ASC
+			""")
+	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarComFiltros(
+		@org.springframework.data.repository.query.Param("modalidade") String modalidade,
+		@org.springframework.data.repository.query.Param("espaco") String espaco,
+		@org.springframework.data.repository.query.Param("inicio") java.util.Date inicio,
+		@org.springframework.data.repository.query.Param("fim") java.util.Date fim,
+		@org.springframework.data.repository.query.Param("apenasComVagas") Boolean apenasComVagas);
 }
 
 @org.springframework.stereotype.Repository("aulaRepositorio")

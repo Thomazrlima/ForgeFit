@@ -7,13 +7,14 @@ interface InputFieldProps {
     id: string;
     value?: string;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    required?: boolean;
 }
 
-const InputField = ({ label, type, placeholder, id, value, onChange }: InputFieldProps) => {
+const InputField = ({ label, type, placeholder, id, value, onChange, required }: InputFieldProps) => {
     return (
         <Container>
             <Label htmlFor={id}>{label}</Label>
-            <Input id={id} type={type} placeholder={placeholder} value={value} onChange={onChange} />
+            <Input id={id} type={type} placeholder={placeholder} value={value} onChange={onChange} required={required} />
         </Container>
     );
 };

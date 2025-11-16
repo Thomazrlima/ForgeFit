@@ -2,6 +2,7 @@ import { Calendar, Dumbbell, Users, Trophy, BarChart3, TrendingUp, LogOut, Menu,
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import logo from "../../../assets/logo.png";
+import { useUser } from "../../../contexts/UserContext";
 import { SidebarContainer, SidebarHeader, Logo, MenuToggle, NavList, NavItem, NavLink, LogoutButton, Overlay } from "./styles.ts";
 
 interface NavItemType {
@@ -23,8 +24,10 @@ const Sidebar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
+    const { logout } = useUser();
 
     const handleLogout = () => {
+        logout();
         navigate("/");
     };
 
@@ -53,14 +56,17 @@ const Sidebar = () => {
                 </SidebarHeader>
 
                 <NavList>
-                    {navItems.map((item) => (
-                        <NavItem key={item.path}>
-                            <NavLink to={item.path} $isActive={location.pathname === item.path} onClick={closeSidebar}>
-                                {item.icon}
-                                <span>{item.label}</span>
-                            </NavLink>
-                        </NavItem>
-                    ))}
+                    {navItems.map((item) => {
+                        const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + "/");
+                        return (
+                            <NavItem key={item.path}>
+                                <NavLink to={item.path} $isActive={isActive} onClick={closeSidebar}>
+                                    {item.icon}
+                                    <span>{item.label}</span>
+                                </NavLink>
+                            </NavItem>
+                        );
+                    })}
                 </NavList>
 
                 <LogoutButton onClick={handleLogout}>

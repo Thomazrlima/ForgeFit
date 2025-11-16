@@ -14,12 +14,20 @@ export const Label = styled.label`
 
 export const Input = styled.input`
     padding: 0.75rem;
-    border: 0.0625rem solid #ddd;
+    border: 2px solid;
+    border-image: linear-gradient(135deg, ${({ theme }) => theme.colors.primary}, ${({ theme }) => theme.colors.secondary}) 1;
     border-radius: 0.25rem;
     font-size: 1rem;
+    background-color: ${({ theme }) => theme.colors.background};
+    color: ${({ theme }) => theme.colors.text};
+    outline: none;
+    transition: all 0.3s ease;
+
+    &::placeholder {
+        color: ${({ theme }) => theme.colors.text}80;
+    }
 
     &:focus {
-        border-color: ${({ theme }) => theme.colors.primary};
-        outline: none;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
     }
 `;

@@ -90,6 +90,11 @@ export const StyledButton = styled.button<ButtonStyleProps>`
     cursor: pointer;
     transition: all 0.3s ease;
     min-width: ${({ size = "md" }) => getButtonMinWidth(size)};
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: none;
 
     ${({ variant = "primary", theme }) => getButtonStyles(variant, theme)}
 

@@ -24,6 +24,7 @@ export const Container = styled.div`
 
     @media (max-width: 48rem) {
         padding: 1.5rem 1rem;
+        padding-top: 6rem;
     }
 `;
 
@@ -42,13 +43,14 @@ export const Header = styled.header`
     max-width: 100%;
     box-sizing: border-box;
 
-    @media (max-width: 64rem) {
-        flex-direction: column;
-        gap: 1.5rem;
+    @media (max-width: 48rem) {
+        flex-direction: row;
+        gap: 1rem;
+        align-items: center;
     }
 
     @media (max-width: 48rem) {
-        padding: 1.5rem 1rem;
+        padding: 1rem 0.75rem;
     }
 `;
 
@@ -58,9 +60,11 @@ export const HeaderLeft = styled.div`
     gap: 1.5rem;
 
     @media (max-width: 48rem) {
-        flex-direction: column;
-        text-align: center;
-        width: 100%;
+        flex-direction: row;
+        text-align: left;
+        width: auto;
+        gap: 0.75rem;
+        flex: 1;
     }
 `;
 
@@ -73,8 +77,8 @@ export const GuildAvatar = styled.img`
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 
     @media (max-width: 48rem) {
-        width: 100px;
-        height: 100px;
+        width: 60px;
+        height: 60px;
     }
 `;
 
@@ -100,7 +104,7 @@ export const GuildName = styled.h1`
     gap: 0.75rem;
 
     @media (max-width: 48rem) {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
     }
 `;
 
@@ -179,14 +183,23 @@ export const HeaderActions = styled.div`
     display: flex;
     gap: 1rem;
     align-items: center;
+    
+    button {
+        width: 10rem;
+        height: 3.5rem;
+    };
 
     @media (max-width: 48rem) {
-        width: 100%;
+        width: auto;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 0.4rem;
+        align-items: flex-end;
 
         button {
-            width: 100%;
+            width: 7.5rem;
+            height: 2.5rem;
+            font-size: 0.75rem;
+            padding: 0.4rem 0.6rem;
         }
     }
 `;
@@ -206,10 +219,12 @@ export const TabsMenu = styled.div`
     box-sizing: border-box;
 
     @media (max-width: 48rem) {
+        margin-bottom: 0.5rem;
         overflow-x: auto;
         gap: 0;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
+        margin-top: -1.5rem;
 
         &::-webkit-scrollbar {
             display: none;
@@ -251,12 +266,12 @@ export const TabButton = styled.button<{ $active?: boolean }>`
     }
 
     @media (max-width: 48rem) {
-        padding: 0.75rem 1.25rem;
-        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
 
         svg {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
         }
     }
 `;

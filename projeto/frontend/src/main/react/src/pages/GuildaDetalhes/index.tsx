@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { Edit, MessageSquare, Trophy, Copy, Check, Plus } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useUser } from "../../contexts/UserContext.tsx";
@@ -20,6 +20,7 @@ const GuildaDetalhes = () => {
     const { user } = useUser();
     const [activeSection, setActiveSection] = useState<SectionType>("messages");
 
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
     const messagesButtonRef = useRef<HTMLButtonElement>(null);
     const rankingButtonRef = useRef<HTMLButtonElement>(null);
     const [indicatorStyle, setIndicatorStyle] = useState({ x: 0, width: 0 });
@@ -105,6 +106,12 @@ const GuildaDetalhes = () => {
             loadCheckins();
         }
     }, [activeSection]);
+
+    useLayoutEffect(() => {
+        if (messagesContainerRef.current && !isLoadingCheckins) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
+    }, [checkins, activeSection, isLoadingCheckins]);
 
     const handleCopyCode = async () => {
         if (!guildData) return;
@@ -219,11 +226,11 @@ const GuildaDetalhes = () => {
                         <HeaderActions>
                             <Button variant="secondary" size="md" onClick={handleEdit}>
                                 <Edit size={20} />
-                                Editar Guilda
+                                Editar
                             </Button>
                             <Button variant="primary" size="md" onClick={handleCheckin}>
                                 <Plus size={20} />
-                                Fazer Check-in
+                                Check-in
                             </Button>
                         </HeaderActions>
                     </>
@@ -257,7 +264,7 @@ const GuildaDetalhes = () => {
             <ContentSection>
                 <AnimatePresence mode="wait">
                     {activeSection === "messages" && (
-                        <MessagesContainer key="messages" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
+                        <MessagesContainer key="messages" initial={{ opacity: 0, x: -20 }} ref={messagesContainerRef} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
                             {isLoadingCheckins ? (
                                 <Spinner />
                             ) : (

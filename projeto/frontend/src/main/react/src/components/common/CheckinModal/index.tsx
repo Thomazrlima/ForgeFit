@@ -114,13 +114,7 @@ const CheckinModal = ({ isOpen, onClose, onSubmit, workouts }: CheckinModalProps
     );
 
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={handleClose}
-            title="Fazer Check-in de Treino"
-            footer={footer}
-            closeOnOverlayClick={!isSubmitting}
-        >
+        <Modal isOpen={isOpen} onClose={handleClose} title="Fazer Check-in de Treino" footer={footer} closeOnOverlayClick={!isSubmitting}>
             <form id="checkin-form" onSubmit={handleSubmit}>
                 <FormGroup>
                     <Label>

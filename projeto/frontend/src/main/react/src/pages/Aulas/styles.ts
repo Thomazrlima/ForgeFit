@@ -18,6 +18,7 @@ export const Container = styled.div`
 
     @media (max-width: 48rem) {
         padding: 1.5rem 1rem;
+        margin-top: 5rem;
     }
 `;
 
@@ -332,8 +333,8 @@ export const EnrolledSection = styled.section`
     }
 `;
 
-export const SectionTitle = styled.h2`
-    font-size: 1.8rem;
+export const SectionTitle = styled.h1`
+    font-size: 3rem;
     color: ${({ theme }) => theme.colors.text};
     margin-bottom: 1.5rem;
     background: linear-gradient(135deg, ${({ theme }) => theme.colors.primary}, ${({ theme }) => theme.colors.secondary});

@@ -140,13 +140,7 @@ const EditGuildModal = ({ isOpen, onClose, onSubmit, onDelete, guildData }: Edit
     );
 
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={handleClose}
-            title={showDeleteConfirm ? "Confirmar Exclusão" : "Editar Guilda"}
-            footer={footer}
-            closeOnOverlayClick={!isSubmitting && !showDeleteConfirm}
-        >
+        <Modal isOpen={isOpen} onClose={handleClose} title={showDeleteConfirm ? "Confirmar Exclusão" : "Editar Guilda"} footer={footer} closeOnOverlayClick={!isSubmitting && !showDeleteConfirm}>
             {showDeleteConfirm ? (
                 <DeleteWarning>
                     <AlertTriangle size={48} />
@@ -162,17 +156,8 @@ const EditGuildModal = ({ isOpen, onClose, onSubmit, onDelete, guildData }: Edit
                             </IconWrapper>
                             Nome da Guilda *
                         </Label>
-                        <Input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="Digite o nome da guilda"
-                            maxLength={50}
-                            required
-                        />
-                        <span style={{ fontSize: "0.75rem", opacity: 0.6, marginTop: "0.25rem", display: "block" }}>
-                            {name.length}/50 caracteres
-                        </span>
+                        <Input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Digite o nome da guilda" maxLength={50} required />
+                        <span style={{ fontSize: "0.75rem", opacity: 0.6, marginTop: "0.25rem", display: "block" }}>{name.length}/50 caracteres</span>
                     </FormGroup>
 
                     <FormGroup>
@@ -182,16 +167,8 @@ const EditGuildModal = ({ isOpen, onClose, onSubmit, onDelete, guildData }: Edit
                             </IconWrapper>
                             Descrição (opcional)
                         </Label>
-                        <TextArea
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Descreva sua guilda, seus objetivos e valores..."
-                            rows={4}
-                            maxLength={300}
-                        />
-                        <span style={{ fontSize: "0.75rem", opacity: 0.6, marginTop: "0.25rem", display: "block" }}>
-                            {description.length}/300 caracteres
-                        </span>
+                        <TextArea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descreva sua guilda, seus objetivos e valores..." rows={4} maxLength={300} />
+                        <span style={{ fontSize: "0.75rem", opacity: 0.6, marginTop: "0.25rem", display: "block" }}>{description.length}/300 caracteres</span>
                     </FormGroup>
 
                     <FormGroup>
@@ -201,12 +178,7 @@ const EditGuildModal = ({ isOpen, onClose, onSubmit, onDelete, guildData }: Edit
                             </IconWrapper>
                             Imagem da Guilda (opcional)
                         </Label>
-                        <Input
-                            type="url"
-                            value={imageUrl}
-                            onChange={(e) => setImageUrl(e.target.value)}
-                            placeholder="Cole a URL da imagem (jpg, png, gif, webp)"
-                        />
+                        <Input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Cole a URL da imagem (jpg, png, gif, webp)" />
                     </FormGroup>
 
                     {imagePreview && (

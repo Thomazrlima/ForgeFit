@@ -51,8 +51,8 @@ const Login = () => {
                     <Logo src="/src/assets/logo.png" alt="ForgeFit Logo" />
                 </LogoLink>
                 <Form onSubmit={handleSubmit}>
-                    <InputField label="Email:" type="email" placeholder="Digite seu email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                    <InputField label="Senha:" type="password" placeholder="Digite sua senha" id="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                    <InputField label="Email:" type="email" placeholder="Digite seu email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} variant="classic" required />
+                    <InputField label="Senha:" type="password" placeholder="Digite sua senha" id="password" value={password} onChange={(e) => setPassword(e.target.value)} variant="classic" required />
                     {error && <Span style={{ color: "#EF752B", marginTop: "-0.5rem" }}>{error}</Span>}
                     <Button type="submit" disabled={isLoading}>
                         {isLoading ? "ENTRANDO..." : "ENTRAR"}

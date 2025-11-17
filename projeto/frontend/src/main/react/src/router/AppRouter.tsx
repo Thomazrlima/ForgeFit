@@ -8,6 +8,7 @@ import Ranking from "../pages/Ranking";
 import Evolucao from "../pages/Evolucao";
 import Guilda from "../pages/Guilda";
 import GuildaDetalhes from "../pages/GuildaDetalhes";
+import TorneiosDetalhes from "../pages/Torneio";
 import FullWidthLayout from "../components/layout/FullWidthLayout";
 
 interface ProtectedRouteProps {
@@ -57,7 +58,7 @@ const AppRouter = () => {
                 >
                     <Route path="/aulas" element={<Aulas />} />
                     <Route path="/treinos" element={<div style={{ padding: "2rem", color: "white" }}>Treinos em construção</div>} />
-                    <Route path="/torneio" element={<div style={{ padding: "2rem", color: "white" }}>Torneio em construção</div>} />
+                    <Route path="/torneio/" element={<TorneiosDetalhes />} />
                     <Route path="/ranking" element={<Ranking />} />
                     <Route path="/evolucao" element={<Evolucao />} />
                     <Route path="/guilda" element={<Guilda />} />

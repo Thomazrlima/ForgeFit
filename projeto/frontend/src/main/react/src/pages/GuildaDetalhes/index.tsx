@@ -10,7 +10,7 @@ import RankingPodiumSkeleton from "../../components/ranking/RankingPodium/skelet
 import RankingListSkeleton from "../../components/ranking/RankingList/skeleton";
 import CheckinModal, { type CheckinData } from "../../components/common/CheckinModal";
 import EditGuildModal, { type GuildEditData } from "../../components/common/EditGuildModal";
-import { fetchGuildData, fetchGuildMembers, fetchGuildCheckins, type GuildData, type GuildMember, type CheckinMessage } from "./mockData.ts";
+import { fetchGuildData, fetchGuildMembers, fetchGuildCheckins, fetchAvailableWorkouts, type GuildData, type GuildMember, type CheckinMessage } from "./mockData.ts";
 import { Container, Header, HeaderLeft, GuildAvatar, GuildInfo, GuildName, GuildCode, CodeWrapper, CopyButton, Tooltip, HeaderActions, TabsMenu, TabButton, ActiveIndicator, ContentSection, MessagesContainer, MessageWrapper, CheckinCard, CheckinHeader, CheckinUserInfo, CheckinUserName, CheckinTime, CheckinContent, CheckinWorkout, CheckinDescription, CheckinImage, RankingContainer, SkeletonAvatar, SkeletonText } from "./styles.ts";
 import Spinner from "../../components/common/Spinner";
 
@@ -28,6 +28,7 @@ const GuildaDetalhes = () => {
     const [guildData, setGuildData] = useState<GuildData | null>(null);
     const [members, setMembers] = useState<GuildMember[]>([]);
     const [checkins, setCheckins] = useState<CheckinMessage[]>([]);
+    const [availableWorkouts, setAvailableWorkouts] = useState<{ id: string; name: string }[]>([]);
 
     const [isLoadingGuild, setIsLoadingGuild] = useState(true);
     const [isLoadingMembers, setIsLoadingMembers] = useState(true);
@@ -69,6 +70,19 @@ const GuildaDetalhes = () => {
         };
 
         loadGuildData();
+    }, []);
+
+    useEffect(() => {
+        const loadAvailableWorkouts = async () => {
+            try {
+                const data = await fetchAvailableWorkouts();
+                setAvailableWorkouts(data);
+            } catch (error) {
+                console.error("Erro ao carregar treinos disponíveis:", error);
+            }
+        };
+
+        loadAvailableWorkouts();
     }, []);
 
     useEffect(() => {
@@ -153,16 +167,6 @@ const GuildaDetalhes = () => {
         const updatedCheckins = await fetchGuildCheckins();
         setCheckins(updatedCheckins);
     };
-
-    // Mock de lista de treinos disponíveis
-    const availableWorkouts = [
-        { id: "1", name: "Peito e Tríceps" },
-        { id: "2", name: "Costas e Bíceps" },
-        { id: "3", name: "Pernas" },
-        { id: "4", name: "Ombros e Abdômen" },
-        { id: "5", name: "Cardio Matinal" },
-        { id: "6", name: "Treino Funcional" },
-    ];
 
     const formatTimestamp = (date: Date) => {
         const now = new Date();

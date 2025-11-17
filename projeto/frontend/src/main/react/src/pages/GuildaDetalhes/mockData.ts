@@ -82,3 +82,15 @@ export const fetchGuildCheckins = async (): Promise<CheckinMessage[]> => {
         },
     ];
 };
+
+export const fetchAvailableWorkouts = async (): Promise<{ id: string; name: string }[]> => {
+    await delay(300);
+    return [
+        { id: "1", name: "Peito e Tríceps" },
+        { id: "2", name: "Costas e Bíceps" },
+        { id: "3", name: "Pernas" },
+        { id: "4", name: "Ombros e Abdômen" },
+        { id: "5", name: "Cardio Matinal" },
+        { id: "6", name: "Treino Funcional" },
+    ];
+};

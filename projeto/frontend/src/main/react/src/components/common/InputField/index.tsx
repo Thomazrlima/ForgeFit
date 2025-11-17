@@ -14,7 +14,9 @@ interface InputFieldProps {
 const InputField = ({ label, type, placeholder, id, value, onChange, required, variant = "gradient" }: InputFieldProps) => {
     return (
         <Container>
-            <Label htmlFor={id} variant={variant}>{label}</Label>
+            <Label htmlFor={id} variant={variant}>
+                {label}
+            </Label>
             <Input id={id} type={type} placeholder={placeholder} value={value} onChange={onChange} required={required} variant={variant} />
         </Container>
     );

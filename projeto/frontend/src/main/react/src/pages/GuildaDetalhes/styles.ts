@@ -183,11 +183,11 @@ export const HeaderActions = styled.div`
     display: flex;
     gap: 1rem;
     align-items: center;
-    
+
     button {
         width: 10rem;
         height: 3.5rem;
-    };
+    }
 
     @media (max-width: 48rem) {
         width: auto;

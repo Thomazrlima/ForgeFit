@@ -18,19 +18,17 @@ export const Input = styled.input<{ variant?: "gradient" | "classic" }>`
     outline: none;
     transition: all 0.3s ease;
 
-        background-color: ${({ theme, variant }) => (variant === "classic" ? "#fff" : theme.colors.background)};
+    background-color: ${({ theme, variant }) => (variant === "classic" ? "#fff" : theme.colors.background)};
     color: ${({ theme, variant }) => (variant === "classic" ? "#0f172a" : theme.colors.text)};
     border-radius: ${({ variant }) => (variant === "classic" ? "0.5rem" : "0.25rem")};
     border: ${({ variant, theme }) => (variant === "classic" ? `1px solid ${theme.colors.primary}33` : "2px solid")};
-    ${({ variant, theme }) =>
-        variant === "gradient" ? `border-image: linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary}) 1;` : ""}
+    ${({ variant, theme }) => (variant === "gradient" ? `border-image: linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary}) 1;` : "")}
 
     &::placeholder {
         color: ${({ theme, variant }) => (variant === "classic" ? "#0f172a80" : `${theme.colors.text}80`)};
     }
 
     &:focus {
-        box-shadow: ${({ variant, theme }) =>
-            variant === "classic" ? `0 6px 18px rgba(15, 23, 42, 0.08)` : `0 0 0 3px ${theme.colors.primary}22`};
+        box-shadow: ${({ variant, theme }) => (variant === "classic" ? `0 6px 18px rgba(15, 23, 42, 0.08)` : `0 0 0 3px ${theme.colors.primary}22`)};
     }
 `;

@@ -17,27 +17,27 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
 @Entity
-@Table(name = "FRQ_FREQUENCIA")
+@Table(name = "FREQUENCIA")
 class Frequencia {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "FRQ_ID")
+	@Column(name = "ID")
 	private Integer id;
 	
 	@ManyToOne
 	@JoinColumn(name = "ALU_MATRICULA", nullable = false)
 	private Aluno aluno;
 	
-	@Column(name = "FRQ_AULA_ID", nullable = false)
+	@Column(name = "AULA_ID", nullable = false)
 	private Integer aulaId;
 	
 	@Temporal(TemporalType.DATE)
-	@Column(name = "FRQ_DATA_OCORRENCIA", nullable = false)
+	@Column(name = "DATA_OCORRENCIA", nullable = false)
 	private Date dataOcorrencia;
 	
 	@Enumerated(EnumType.STRING)
-	@Column(name = "FRQ_STATUS", nullable = false)
+	@Column(name = "STATUS", nullable = false)
 	private StatusFrequencia status;
 
 	public Integer getId() {

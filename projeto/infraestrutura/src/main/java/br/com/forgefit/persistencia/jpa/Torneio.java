@@ -11,52 +11,52 @@ import java.util.Date;
 import java.util.List;
 
 @Entity
-@Table(name = "TOR_TORNEIO")
+@Table(name = "TORNEIO")
 class Torneio {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "TOR_ID")
+	@Column(name = "ID")
 	private Integer id;
 
-	@Column(name = "TOR_NOME", nullable = false, length = 255)
+	@Column(name = "NOME", nullable = false, length = 255)
 	private String nome;
 
 	@Embedded
 	@AttributeOverrides({
-		@AttributeOverride(name = "nome", column = @Column(name = "TOR_PREMIO_1_NOME", length = 255)),
-		@AttributeOverride(name = "urlImagem", column = @Column(name = "TOR_PREMIO_1_URL_IMAGEM", length = 500))
+		@AttributeOverride(name = "nome", column = @Column(name = "PREMIO_1_NOME", length = 255)),
+		@AttributeOverride(name = "urlImagem", column = @Column(name = "PREMIO_1_URL_IMAGEM", length = 500))
 	})
 	private Premio premioPrimeiroLugar;
 
 	@Embedded
 	@AttributeOverrides({
-		@AttributeOverride(name = "nome", column = @Column(name = "TOR_PREMIO_2_NOME", length = 255)),
-		@AttributeOverride(name = "urlImagem", column = @Column(name = "TOR_PREMIO_2_URL_IMAGEM", length = 500))
+		@AttributeOverride(name = "nome", column = @Column(name = "PREMIO_2_NOME", length = 255)),
+		@AttributeOverride(name = "urlImagem", column = @Column(name = "PREMIO_2_URL_IMAGEM", length = 500))
 	})
 	private Premio premioSegundoLugar;
 
 	@Embedded
 	@AttributeOverrides({
-		@AttributeOverride(name = "nome", column = @Column(name = "TOR_PREMIO_3_NOME", length = 255)),
-		@AttributeOverride(name = "urlImagem", column = @Column(name = "TOR_PREMIO_3_URL_IMAGEM", length = 500))
+		@AttributeOverride(name = "nome", column = @Column(name = "PREMIO_3_NOME", length = 255)),
+		@AttributeOverride(name = "urlImagem", column = @Column(name = "PREMIO_3_URL_IMAGEM", length = 500))
 	})
 	private Premio premioTerceiroLugar;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "TOR_STATUS", nullable = false)
+	@Column(name = "STATUS", nullable = false)
 	private StatusTorneio status = StatusTorneio.PLANEJADO;
 
 	@Temporal(TemporalType.DATE)
-	@Column(name = "TOR_DATA_INICIO", nullable = false)
+	@Column(name = "DATA_INICIO", nullable = false)
 	private Date dataInicio;
 
 	@Temporal(TemporalType.DATE)
-	@Column(name = "TOR_DATA_FIM", nullable = false)
+	@Column(name = "DATA_FIM", nullable = false)
 	private Date dataFim;
 
 	@OneToMany(mappedBy = "torneio", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OrderColumn(name = "PRK_POSICAO")
+	@OrderColumn(name = "POSICAO")
 	private List<PosicaoRanking> rankingFinal = new ArrayList<>();
 
 	public Integer getId() {
@@ -138,20 +138,20 @@ class PosicaoRanking {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "PRK_ID")
+	@Column(name = "ID")
 	private Integer id;
 
 	@ManyToOne
 	@JoinColumn(name = "TOR_ID", nullable = false)
 	private Torneio torneio;
 
-	@Column(name = "PRK_POSICAO", nullable = false)
+	@Column(name = "POSICAO", nullable = false)
 	private Integer posicao;
 
-	@Column(name = "PRK_GUILDA_ID", nullable = false)
+	@Column(name = "GUILDA_ID", nullable = false)
 	private Integer guildaId;
 
-	@Column(name = "PRK_PONTUACAO", nullable = false)
+	@Column(name = "PONTUACAO", nullable = false)
 	private Integer pontuacaoNoTorneio = 0;
 
 	public Integer getId() {

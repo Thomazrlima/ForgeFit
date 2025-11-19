@@ -18,52 +18,52 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
 @Entity
-@Table(name = "ALU_ALUNO")
+@Table(name = "ALUNO")
 class Aluno {
 
 	@Id
-	@Column(name = "ALU_MATRICULA", nullable = false, length = 50)
+	@Column(name = "MATRICULA", nullable = false, length = 50)
 	private String matricula;
 
-	@Column(name = "ALU_CPF", nullable = false, unique = true, length = 11)
+	@Column(name = "CPF", nullable = false, unique = true, length = 11)
 	private String cpf;
 
-	@Column(name = "ALU_NOME", nullable = false, length = 255)
+	@Column(name = "NOME", nullable = false, length = 255)
 	private String nome;
 
 	@Temporal(TemporalType.DATE)
-	@Column(name = "ALU_DATA_NASCIMENTO")
+	@Column(name = "DATA_NASCIMENTO")
 	private Date dataNascimento;
 
-	@Column(name = "ALU_USER_ID", length = 255)
+	@Column(name = "USER_ID", length = 255)
 	private String userId;
 
-	@Column(name = "ALU_PONTUACAO_TOTAL")
+	@Column(name = "PONTUACAO_TOTAL")
 	private Integer pontuacaoTotal = 0;
 
-	@Column(name = "ALU_CREDITOS")
+	@Column(name = "CREDITOS")
 	private Double creditos = 0.0;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "ALU_STATUS", nullable = false)
+	@Column(name = "STATUS", nullable = false)
 	private StatusAluno status = StatusAluno.ATIVO;
 
-	@Column(name = "ALU_GUILDA_ID")
+	@Column(name = "GUILDA_ID")
 	private Integer guildaId;
 
-	@Column(name = "ALU_PLANO_ATIVO_ID")
+	@Column(name = "PLANO_ATIVO_ID")
 	private Integer planoAtivoId;
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "ALU_BLOQUEIO_ATE")
+	@Column(name = "BLOQUEIO_ATE")
 	private Date bloqueioAte;
 
 	@OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OrderColumn(name = "AVF_POSICAO")
+	@OrderColumn(name = "POSICAO")
 	private List<AvaliacaoFisica> historicoDeAvaliacoes = new ArrayList<>();
 
 	@OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OrderColumn(name = "FRQ_POSICAO")
+	@OrderColumn(name = "POSICAO")
 	private List<Frequencia> historicoDeFrequencia = new ArrayList<>();
 
 	public String getMatricula() {

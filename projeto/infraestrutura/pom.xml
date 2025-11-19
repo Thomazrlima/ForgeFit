@@ -88,6 +88,9 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <mainClass>br.com.forgefit.persistencia.jpa.AplicacaoH2</mainClass>
+        </configuration>
       </plugin>
     </plugins>
   </build>

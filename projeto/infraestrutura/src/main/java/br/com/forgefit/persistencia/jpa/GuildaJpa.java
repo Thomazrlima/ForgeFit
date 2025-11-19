@@ -24,39 +24,39 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "GUI_GUILDA")
+@Table(name = "GUILDA")
 class GuildaJpa {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "GUI_ID")
+	@Column(name = "ID")
 	int id;
 
-	@Column(name = "GUI_NOME", nullable = false, unique = true, length = 255)
+	@Column(name = "NOME", nullable = false, unique = true, length = 255)
 	String nome;
 
-	@Column(name = "GUI_DESCRICAO", length = 1000)
+	@Column(name = "DESCRICAO", length = 1000)
 	String descricao;
 
-	@Column(name = "GUI_IMAGEM_URL", length = 500)
+	@Column(name = "IMAGEM_URL", length = 500)
 	String imagemURL;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "GUI_STATUS", nullable = false)
+	@Column(name = "STATUS", nullable = false)
 	StatusGuilda status = StatusGuilda.ATIVA;
 
-	@Column(name = "GUI_CODIGO_CONVITE", nullable = false, unique = true, length = 50)
+	@Column(name = "CODIGO_CONVITE", nullable = false, unique = true, length = 50)
 	String codigoConvite;
 
-	@Column(name = "GUI_MESTRE_MATRICULA", nullable = false, length = 50)
+	@Column(name = "MESTRE_MATRICULA", nullable = false, length = 50)
 	String mestreMatricula;
 
 	@ElementCollection
 	@CollectionTable(name = "GME_GUILDA_MEMBROS", joinColumns = @JoinColumn(name = "GUI_ID"))
-	@Column(name = "GME_ALUNO_MATRICULA", length = 50)
-	@OrderColumn(name = "GME_POSICAO")
+	@Column(name = "ALUNO_MATRICULA", length = 50)
+	@OrderColumn(name = "POSICAO")
 	List<String> membrosMatriculas = new ArrayList<>();
 
-	@Column(name = "GUI_PONTUACAO_TOTAL")
+	@Column(name = "PONTUACAO_TOTAL")
 	Integer pontuacaoTotal = 0;
 
 	@Override

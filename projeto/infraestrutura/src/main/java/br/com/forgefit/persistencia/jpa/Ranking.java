@@ -11,20 +11,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "RNK_RANKING")
+@Table(name = "RANKING")
 class Ranking {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "RNK_ID")
+	@Column(name = "ID")
 	private Integer id;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "RNK_PERIODO", nullable = false, unique = true)
+	@Column(name = "PERIODO", nullable = false, unique = true)
 	private PeriodoRanking periodo;
 
 	@OneToMany(mappedBy = "ranking", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OrderColumn(name = "IRK_POSICAO")
+	@OrderColumn(name = "POSICAO")
 	private List<ItemRanking> itens = new ArrayList<>();
 
 	public Integer getId() {
@@ -53,43 +53,43 @@ class Ranking {
 }
 
 @Entity
-@Table(name = "IRK_ITEM_RANKING")
+@Table(name = "ITEM_RANKING")
 class ItemRanking {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "IRK_ID")
+	@Column(name = "ID")
 	private Integer id;
 
 	@ManyToOne
 	@JoinColumn(name = "RNK_ID", nullable = false)
 	private Ranking ranking;
 
-	@Column(name = "IRK_ALUNO_MATRICULA", nullable = false, length = 50)
+	@Column(name = "ALUNO_MATRICULA", nullable = false, length = 50)
 	private String alunoMatricula;
 
-	@Column(name = "IRK_PONTOS_FREQUENCIA")
+	@Column(name = "PONTOS_FREQUENCIA")
 	private Integer pontosFrequencia = 0;
 
-	@Column(name = "IRK_PONTOS_GUILDA")
+	@Column(name = "PONTOS_GUILDA")
 	private Integer pontosGuilda = 0;
 
-	@Column(name = "IRK_PONTOS_PERFORMANCE")
+	@Column(name = "PONTOS_PERFORMANCE")
 	private Integer pontosPerformance = 0;
 
-	@Column(name = "IRK_PONTUACAO_TOTAL")
+	@Column(name = "PONTUACAO_TOTAL")
 	private Integer pontuacaoTotal = 0;
 
-	@Column(name = "IRK_POSICAO_RANK")
+	@Column(name = "POSICAO_RANK")
 	private Integer posicao;
 
-	@Column(name = "IRK_NUM_AULAS_PARTICIPADAS")
+	@Column(name = "NUM_AULAS_PARTICIPADAS")
 	private Integer numeroAulasParticipadas = 0;
 
-	@Column(name = "IRK_MEDIA_PERFORMANCE")
+	@Column(name = "MEDIA_PERFORMANCE")
 	private Double mediaPerformance = 0.0;
 
-	@Column(name = "IRK_NUM_AVALIACOES")
+	@Column(name = "NUM_AVALIACOES")
 	private Integer numeroAvaliacoes = 0;
 
 	public Integer getId() {

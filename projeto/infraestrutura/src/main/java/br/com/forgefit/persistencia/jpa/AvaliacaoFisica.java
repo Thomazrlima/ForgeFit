@@ -5,12 +5,12 @@ import java.util.Date;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "AVF_AVALIACAO_FISICA")
+@Table(name = "AVALIACAO_FISICA")
 class AvaliacaoFisica {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "AVF_ID")
+	@Column(name = "ID")
 	private Integer id;
 	
 	@ManyToOne
@@ -18,65 +18,65 @@ class AvaliacaoFisica {
 	private Aluno aluno;
 	
 	@Temporal(TemporalType.DATE)
-	@Column(name = "AVF_DATA_AVALIACAO", nullable = false)
+	@Column(name = "DATA_AVALIACAO", nullable = false)
 	private Date dataAvaliacao;
 	
 	@ManyToOne
 	@JoinColumn(name = "AVF_PROFESSOR_ID", nullable = false)
 	private ProfessorJpa professorResponsavel;
 	
-	@Column(name = "AVF_MASSA_GORDA_PERC")
+	@Column(name = "MASSA_GORDA_PERC")
 	private Double massaGordaPercentual;
 	
-	@Column(name = "AVF_MASSA_GORDA_KG")
+	@Column(name = "MASSA_GORDA_KG")
 	private Double massaGordaKg;
 	
-	@Column(name = "AVF_MASSA_MAGRA_KG")
+	@Column(name = "MASSA_MAGRA_KG")
 	private Double massaMagraKg;
 	
-	@Column(name = "AVF_MASSA_MUSCULAR_KG")
+	@Column(name = "MASSA_MUSCULAR_KG")
 	private Double massaMuscularEsqueleticaKg;
 	
-	@Column(name = "AVF_AGUA_CORPORAL_PERC")
+	@Column(name = "AGUA_CORPORAL_PERC")
 	private Double aguaCorporalTotalPercentual;
 	
-	@Column(name = "AVF_GORDURA_VISCERAL_NIV")
+	@Column(name = "GORDURA_VISCERAL_NIV")
 	private Integer gorduraVisceralNivel;
 	
-	@Column(name = "AVF_TAXA_METABOLICA_KCAL")
+	@Column(name = "TAXA_METABOLICA_KCAL")
 	private Integer taxaMetabolicaBasalKcal;
 	
-	@Column(name = "AVF_MASSA_OSSEA_KG")
+	@Column(name = "MASSA_OSSEA_KG")
 	private Double massaOsseaKg;
 	
-	@Column(name = "AVF_IMC")
+	@Column(name = "IMC")
 	private Double indiceDeMassaCorporal;
 	
-	@Column(name = "AVF_BRACO_RELAXADO_CM")
+	@Column(name = "BRACO_RELAXADO_CM")
 	private Double bracoRelaxadoCm;
 	
-	@Column(name = "AVF_BRACO_CONTRAIDO_CM")
+	@Column(name = "BRACO_CONTRAIDO_CM")
 	private Double bracoContraidoCm;
 	
-	@Column(name = "AVF_ANTEBRACO_CM")
+	@Column(name = "ANTEBRACO_CM")
 	private Double antebracoCm;
 	
-	@Column(name = "AVF_TORAX_PEITORAL_CM")
+	@Column(name = "TORAX_PEITORAL_CM")
 	private Double toraxPeitoralCm;
 	
-	@Column(name = "AVF_CINTURA_CM")
+	@Column(name = "CINTURA_CM")
 	private Double cinturaCm;
 	
-	@Column(name = "AVF_ABDOMEN_CM")
+	@Column(name = "ABDOMEN_CM")
 	private Double abdomenCm;
 	
-	@Column(name = "AVF_QUADRIL_CM")
+	@Column(name = "QUADRIL_CM")
 	private Double quadrilCm;
 	
-	@Column(name = "AVF_COXA_CM")
+	@Column(name = "COXA_CM")
 	private Double coxaCm;
 	
-	@Column(name = "AVF_PANTURRILHA_CM")
+	@Column(name = "PANTURRILHA_CM")
 	private Double panturrilhaCm;
 
 	public Integer getId() {

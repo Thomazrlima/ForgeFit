@@ -8,12 +8,12 @@ import java.util.Date;
 import java.util.List;
 
 @Entity
-@Table(name = "PLT_PLANO_TREINO")
+@Table(name = "PLANO_TREINO")
 class PlanoDeTreino {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "PLT_ID")
+	@Column(name = "ID")
 	private Integer id;
 
 	@ManyToOne
@@ -21,15 +21,15 @@ class PlanoDeTreino {
 	private ProfessorJpa professorResponsavel;
 
 	@Temporal(TemporalType.DATE)
-	@Column(name = "PLT_DATA_CRIACAO", nullable = false)
+	@Column(name = "DATA_CRIACAO", nullable = false)
 	private Date dataCriacao;
 
 	@Temporal(TemporalType.DATE)
-	@Column(name = "PLT_DATA_VALIDADE_SUGERIDA")
+	@Column(name = "DATA_VALIDADE_SUGERIDA")
 	private Date dataValidadeSugerida;
 
 	@OneToMany(mappedBy = "planoDeTreino", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OrderColumn(name = "TRD_POSICAO")
+	@OrderColumn(name = "POSICAO")
 	private List<TreinoDiario> treinosDaSemana = new ArrayList<>();
 
 	public Integer getId() {
@@ -85,26 +85,26 @@ class PlanoDeTreino {
 }
 
 @Entity
-@Table(name = "TRD_TREINO_DIARIO")
+@Table(name = "TREINO_DIARIO")
 class TreinoDiario {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "TRD_ID")
+	@Column(name = "ID")
 	private Integer id;
 
 	@ManyToOne
 	@JoinColumn(name = "PLT_ID", nullable = false)
 	private PlanoDeTreino planoDeTreino;
 
-	@Column(name = "TRD_LETRA", nullable = false, length = 20)
+	@Column(name = "LETRA", nullable = false, length = 20)
 	private String letra;
 
-	@Column(name = "TRD_TIPO", nullable = false, length = 50)
+	@Column(name = "TIPO", nullable = false, length = 50)
 	private String tipo;
 
 	@OneToMany(mappedBy = "treinoDiario", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OrderColumn(name = "IEX_POSICAO")
+	@OrderColumn(name = "POSICAO")
 	private List<ItemDeExercicio> exercicios = new ArrayList<>();
 
 	public Integer getId() {
@@ -149,31 +149,31 @@ class TreinoDiario {
 }
 
 @Entity
-@Table(name = "IEX_ITEM_EXERCICIO")
+@Table(name = "ITEM_EXERCICIO")
 class ItemDeExercicio {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "IEX_ID")
+	@Column(name = "ID")
 	private Integer id;
 
 	@ManyToOne
 	@JoinColumn(name = "TRD_ID", nullable = false)
 	private TreinoDiario treinoDiario;
 
-	@Column(name = "IEX_EXERCICIO", nullable = false, length = 255)
+	@Column(name = "EXERCICIO", nullable = false, length = 255)
 	private String exercicio;
 
-	@Column(name = "IEX_SERIES")
+	@Column(name = "SERIES")
 	private Integer series;
 
-	@Column(name = "IEX_REPETICOES", length = 50)
+	@Column(name = "REPETICOES", length = 50)
 	private String repeticoes;
 
-	@Column(name = "IEX_CARGA", length = 50)
+	@Column(name = "CARGA", length = 50)
 	private String carga;
 
-	@Column(name = "IEX_OBSERVACOES", length = 500)
+	@Column(name = "OBSERVACOES", length = 500)
 	private String observacoes;
 
 	public Integer getId() {

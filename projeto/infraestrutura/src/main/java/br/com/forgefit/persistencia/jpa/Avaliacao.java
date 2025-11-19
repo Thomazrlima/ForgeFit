@@ -7,36 +7,36 @@ import jakarta.persistence.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 @Entity
-@Table(name = "AVA_AVALIACAO")
+@Table(name = "AVALIACAO")
 class Avaliacao {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "AVA_ID")
+	@Column(name = "ID")
 	private Integer id;
 
-	@Column(name = "AVA_ALUNO_MATRICULA", nullable = false, length = 50)
+	@Column(name = "ALUNO_MATRICULA", nullable = false, length = 50)
 	private String alunoMatricula;
 
 	@ManyToOne
 	@JoinColumn(name = "AVA_PROFESSOR_ID", nullable = false)
 	private ProfessorJpa professor;
 
-	@Column(name = "AVA_AULA_ID", nullable = false)
+	@Column(name = "AULA_ID", nullable = false)
 	private Integer aulaId;
 
 	@Temporal(TemporalType.DATE)
-	@Column(name = "AVA_DATA_OCORRENCIA_AULA", nullable = false)
+	@Column(name = "DATA_OCORRENCIA_AULA", nullable = false)
 	private Date dataOcorrenciaAula;
 
 	@Embedded
 	private Notas notas;
 
-	@Column(name = "AVA_COMENTARIO", length = 1000)
+	@Column(name = "COMENTARIO", length = 1000)
 	private String comentario;
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "AVA_DATA_AVALIACAO", nullable = false)
+	@Column(name = "DATA_AVALIACAO", nullable = false)
 	private Date dataAvaliacao;
 
 	public Integer getId() {
@@ -117,13 +117,13 @@ class Avaliacao {
 	@Embeddable
 	static class Notas {
 
-		@Column(name = "AVA_NOTA_PONTUALIDADE")
+		@Column(name = "NOTA_PONTUALIDADE")
 		private Integer pontualidade;
 
-		@Column(name = "AVA_NOTA_DIDATICA")
+		@Column(name = "NOTA_DIDATICA")
 		private Integer didatica;
 
-		@Column(name = "AVA_NOTA_ATENCAO")
+		@Column(name = "NOTA_ATENCAO")
 		private Integer atencao;
 
 		public Notas() {

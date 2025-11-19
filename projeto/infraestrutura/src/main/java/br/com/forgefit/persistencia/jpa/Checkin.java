@@ -8,44 +8,44 @@ import java.util.Date;
 import java.util.List;
 
 @Entity
-@Table(name = "CHK_CHECKIN")
+@Table(name = "CHECKIN")
 class Checkin {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "CHK_ID")
+	@Column(name = "ID")
 	private Integer id;
 
-	@Column(name = "CHK_ALUNO_MATRICULA", nullable = false, length = 50)
+	@Column(name = "ALUNO_MATRICULA", nullable = false, length = 50)
 	private String alunoMatricula;
 
-	@Column(name = "CHK_GUILDA_ID")
+	@Column(name = "GUILDA_ID")
 	private Integer guildaId;
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "CHK_DATA_CHECKIN", nullable = false)
+	@Column(name = "DATA_CHECKIN", nullable = false)
 	private Date dataCheckin;
 
-	@Column(name = "CHK_PONTUACAO_TOTAL")
+	@Column(name = "PONTUACAO_TOTAL")
 	private Integer pontuacaoTotal = 0;
 
-	@Column(name = "CHK_MENSAGEM", length = 1000)
+	@Column(name = "MENSAGEM", length = 1000)
 	private String mensagem;
 
-	@Column(name = "CHK_URL_IMAGEM", length = 500)
+	@Column(name = "URL_IMAGEM", length = 500)
 	private String urlImagem;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "CHK_TIPO", nullable = false)
+	@Column(name = "TIPO", nullable = false)
 	private TipoDeCheckin tipo;
 
-	@Column(name = "CHK_AULA_ID")
+	@Column(name = "AULA_ID")
 	private Integer aulaId;
 
-	@Column(name = "CHK_PLANO_TREINO_ID")
+	@Column(name = "PLANO_TREINO_ID")
 	private Integer planoDeTreinoId;
 
-	@Column(name = "CHK_LETRA_TREINO", length = 20)
+	@Column(name = "LETRA_TREINO", length = 20)
 	private String letraTreino;
 
 	public Integer getId() {

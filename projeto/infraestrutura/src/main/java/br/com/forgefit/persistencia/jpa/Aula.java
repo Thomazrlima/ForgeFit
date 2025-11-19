@@ -27,12 +27,12 @@ import jakarta.persistence.TemporalType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 @Entity
-@Table(name = "AUL_AULA")
+@Table(name = "AULA")
 class Aula {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "AUL_ID")
+	@Column(name = "ID")
 	private Integer id;
 
 	@ManyToOne
@@ -40,41 +40,41 @@ class Aula {
 	private ProfessorJpa professor;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "AUL_MODALIDADE", nullable = false)
+	@Column(name = "MODALIDADE", nullable = false)
 	private Modalidade modalidade;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "AUL_ESPACO", nullable = false)
+	@Column(name = "ESPACO", nullable = false)
 	private Espaco espaco;
 
-	@Column(name = "AUL_CAPACIDADE", nullable = false)
+	@Column(name = "CAPACIDADE", nullable = false)
 	private Integer capacidade;
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "AUL_INICIO", nullable = false)
+	@Column(name = "INICIO", nullable = false)
 	private Date inicio;
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "AUL_FIM", nullable = false)
+	@Column(name = "FIM", nullable = false)
 	private Date fim;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "AUL_STATUS", nullable = false)
+	@Column(name = "STATUS", nullable = false)
 	private StatusAula status = StatusAula.ATIVA;
 
 	@Embedded
 	private Recorrencia recorrencia;
 
 	@OneToMany(mappedBy = "aula", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OrderColumn(name = "OEX_POSICAO")
+	@OrderColumn(name = "POSICAO")
 	private List<OcorrenciaExcecao> excecoes = new ArrayList<>();
 
 	@OneToMany(mappedBy = "aula", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OrderColumn(name = "RES_POSICAO")
+	@OrderColumn(name = "POSICAO")
 	private List<Reserva> reservas = new ArrayList<>();
 
 	@OneToMany(mappedBy = "aula", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OrderColumn(name = "LES_POSICAO")
+	@OrderColumn(name = "POSICAO")
 	private List<PosicaoListaDeEspera> listaDeEspera = new ArrayList<>();
 
 	public Integer getId() {
@@ -189,17 +189,17 @@ class Aula {
 	static class Recorrencia {
 
 		@Enumerated(EnumType.STRING)
-		@Column(name = "AUL_RECOR_TIPO")
+		@Column(name = "RECOR_TIPO")
 		private TipoRecorrencia tipo;
 
 		@ElementCollection
 		@CollectionTable(name = "RCD_RECORRENCIA_DIAS", joinColumns = @JoinColumn(name = "AUL_ID"))
-		@Column(name = "RCD_DIA_SEMANA")
+		@Column(name = "DIA_SEMANA")
 		@Enumerated(EnumType.STRING)
 		private List<DiaDaSemana> diasDaSemana;
 
 		@Temporal(TemporalType.DATE)
-		@Column(name = "AUL_RECOR_DATA_FIM")
+		@Column(name = "RECOR_DATA_FIM")
 		private Date dataFimRecorrencia;
 
 		public TipoRecorrencia getTipo() {
@@ -233,7 +233,7 @@ class Aula {
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
-		@Column(name = "OEX_ID")
+		@Column(name = "ID")
 		private Integer id;
 
 		@ManyToOne
@@ -241,18 +241,18 @@ class Aula {
 		private Aula aula;
 
 		@Temporal(TemporalType.DATE)
-		@Column(name = "OEX_DATA_ORIGINAL", nullable = false)
+		@Column(name = "DATA_ORIGINAL", nullable = false)
 		private Date dataOriginalOcorrencia;
 
-		@Column(name = "OEX_CANCELADA", nullable = false)
+		@Column(name = "CANCELADA", nullable = false)
 		private Boolean cancelada = false;
 
 		@Temporal(TemporalType.TIMESTAMP)
-		@Column(name = "OEX_NOVO_INICIO")
+		@Column(name = "NOVO_INICIO")
 		private Date novoInicio;
 
 		@Temporal(TemporalType.TIMESTAMP)
-		@Column(name = "OEX_NOVO_FIM")
+		@Column(name = "NOVO_FIM")
 		private Date novoFim;
 
 		public Integer getId() {
@@ -310,18 +310,18 @@ class Aula {
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
-		@Column(name = "LES_ID")
+		@Column(name = "ID")
 		private Integer id;
 
 		@ManyToOne
 		@JoinColumn(name = "AUL_ID", nullable = false)
 		private Aula aula;
 
-		@Column(name = "LES_ALUNO_MATRICULA", nullable = false, length = 50)
+		@Column(name = "ALUNO_MATRICULA", nullable = false, length = 50)
 		private String alunoMatricula;
 
 		@Temporal(TemporalType.TIMESTAMP)
-		@Column(name = "LES_TIMESTAMP_ENTRADA", nullable = false)
+		@Column(name = "TIMESTAMP_ENTRADA", nullable = false)
 		private Date timestampEntrada;
 
 		public Integer getId() {
@@ -358,27 +358,27 @@ class Aula {
 	}
 
 	@Entity
-	@Table(name = "RES_RESERVA")
+	@Table(name = "RESERVA")
 	static class Reserva {
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
-		@Column(name = "RES_ID")
+		@Column(name = "ID")
 		private Integer id;
 
 		@ManyToOne
 		@JoinColumn(name = "AUL_ID", nullable = false)
 		private Aula aula;
 
-		@Column(name = "RES_ALUNO_MATRICULA", nullable = false, length = 50)
+		@Column(name = "ALUNO_MATRICULA", nullable = false, length = 50)
 		private String alunoMatricula;
 
 		@Temporal(TemporalType.TIMESTAMP)
-		@Column(name = "RES_DATA_RESERVA", nullable = false)
+		@Column(name = "DATA_RESERVA", nullable = false)
 		private Date dataReserva;
 
 		@Enumerated(EnumType.STRING)
-		@Column(name = "RES_STATUS", nullable = false)
+		@Column(name = "STATUS", nullable = false)
 		private StatusReserva status = StatusReserva.CONFIRMADA;
 
 		public Integer getId() {

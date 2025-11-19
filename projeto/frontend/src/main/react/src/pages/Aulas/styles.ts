@@ -4,20 +4,21 @@ import { Button } from "../../components/common/Button";
 export const Container = styled.div`
     min-height: 100vh;
     background-color: ${({ theme }) => theme.colors.background};
-    padding: 2rem;
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
     overflow-y: auto;
     box-sizing: border-box;
     position: relative;
+    padding: 2rem 3rem;
 
     @media (max-width: 64rem) {
-        padding: 1.5rem;
+        padding: 2rem 1.5rem;
     }
 
     @media (max-width: 48rem) {
-        padding: 5rem 1rem 2rem;
+        padding: 1.5rem 1rem;
+        margin-top: 5rem;
     }
 `;
 
@@ -92,7 +93,6 @@ export const ClassesGrid = styled.div`
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
     gap: 2rem;
-    max-width: 1400px;
     margin: 0 auto;
     margin-top: 2rem;
     width: 100%;
@@ -317,7 +317,6 @@ export const SkeletonSectionTitle = styled.div`
 
 export const SkeletonSearchSection = styled.div`
     margin-bottom: 2rem;
-    max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
 
@@ -334,15 +333,14 @@ export const EnrolledSection = styled.section`
     }
 `;
 
-export const SectionTitle = styled.h2`
-    font-size: 1.8rem;
+export const SectionTitle = styled.h1`
+    font-size: 3rem;
     color: ${({ theme }) => theme.colors.text};
     margin-bottom: 1.5rem;
     background: linear-gradient(135deg, ${({ theme }) => theme.colors.primary}, ${({ theme }) => theme.colors.secondary});
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    max-width: 1400px;
     margin: 0 auto 1.5rem auto;
     width: 100%;
     box-sizing: border-box;

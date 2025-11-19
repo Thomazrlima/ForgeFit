@@ -6,8 +6,6 @@ export const GlobalStyle = createGlobalStyle`
         margin: 0;
         padding: 0;
         box-sizing: border-box;
-
-        transition: color 0.1s, background-color 0.1s;
     }
 
     body {
@@ -15,6 +13,23 @@ export const GlobalStyle = createGlobalStyle`
         background-color: ${({ theme }) => theme.colors.background};
         color: ${({ theme }) => theme.colors.text};
         line-height: 1.6;
+        overflow-x: hidden;
+        max-width: 100vw;
+        width: 100%;
+        position: relative;
+    }
+
+    #root {
+        overflow-x: hidden;
+        max-width: 100vw;
+        width: 100%;
+        position: relative;
+    }
+    
+    html {
+        overflow-x: hidden;
+        max-width: 100vw;
+        width: 100%;
     }
 
     a {
@@ -50,14 +65,9 @@ export const GlobalStyle = createGlobalStyle`
     }
 
     ::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(to bottom, ${({ theme }) => theme.colors.secondary}, ${({ theme }) => theme.colors.primary});
         box-shadow: 0 0 10px ${({ theme }) => theme.colors.primary};
     }
 
-    /* Firefox */
-    * {
-        scrollbar-width: thin;
-        scrollbar-color: ${({ theme }) => theme.colors.primary} ${({ theme }) => theme.colors.background};
-    }
+
 
 `;

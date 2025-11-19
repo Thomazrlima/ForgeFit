@@ -48,8 +48,8 @@ export const ModalContent = styled.div`
     overflow-y: auto;
     animation: ${slideIn} 0.3s ease-out;
     box-shadow:
-        0 25px 80px rgba(171, 37, 34, 0.4),
-        0 0 40px rgba(239, 117, 43, 0.3);
+        0 25px 80px rgba(171, 37, 34, 0.15),
+        0 0 20px rgba(239, 117, 43, 0.1);
     margin: auto;
 
     @media (max-width: 64rem) {
@@ -127,7 +127,7 @@ export const ModalBody = styled.div`
 export const ModalFooter = styled.div`
     display: flex;
     gap: 1rem;
-    justify-content: center;
+    justify-content: flex-end;
     padding: 1rem 2rem 1.5rem;
     border-top: 1px solid ${({ theme }) => theme.colors.primary}33;
 

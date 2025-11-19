@@ -55,10 +55,7 @@ const Main = () => {
             <Section id="sobre">
                 <motion.div ref={aboutSection.ref} initial="hidden" animate={aboutSection.isInView ? "visible" : "hidden"} variants={animationVariants.fadeInUp}>
                     <h2>Bem-vindo à ForgeFit</h2>
-                    <p>
-                        Bem-vindo à ForgeFit, a plataforma desenhada para forjar resultados. Unificamos a gestão completa das suas aulas, planos de treino inteligentes, acompanhamento de progresso em tempo real e um sistema de gamificação envolvente. Dê aos seus alunos as ferramentas para conquistar
-                        sua melhor versão e leve sua academia a um patamar lendário.
-                    </p>
+                    <p>Bem-vindo à ForgeFit, a plataforma desenhada para forjar resultados. Unificamos a gestão completa das suas aulas, planos de treino inteligentes, acompanhamento de progresso em tempo real e um sistema de gamificação envolvente. Dê aos seus alunos as ferramentas para conquistar sua melhor versão e leve sua academia a um patamar lendário.</p>
                 </motion.div>
                 <motion.div ref={aboutImage.ref} initial="hidden" animate={aboutImage.isInView ? "visible" : "hidden"} variants={animationVariants.fadeInUp}>
                     <AboutImage src={gym} alt="Academia ForgeFit" />
@@ -77,10 +74,7 @@ const Main = () => {
                             </ServiceImage>
                             <ServiceContent>
                                 <h3>Planos de Treino: A Jornada do Herói</h3>
-                                <p>
-                                    Dê aos seus instrutores o poder de mestres-ferreiros. Nossa plataforma permite criar e atribuir planos de treino 100% personalizados, adaptados aos objetivos de cada aluno. De iniciantes a guerreiros veteranos, cada um terá sua jornada perfeitamente traçada para a
-                                    vitória.
-                                </p>
+                                <p>Dê aos seus instrutores o poder de mestres-ferreiros. Nossa plataforma permite criar e atribuir planos de treino 100% personalizados, adaptados aos objetivos de cada aluno. De iniciantes a guerreiros veteranos, cada um terá sua jornada perfeitamente traçada para a vitória.</p>
                             </ServiceContent>
                         </ServiceCard>
                     </motion.div>

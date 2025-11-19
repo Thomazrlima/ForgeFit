@@ -20,16 +20,12 @@ export const MainContent = styled.main`
     overflow-x: hidden;
     box-sizing: border-box;
     position: relative;
-    padding: 2rem 3rem;
+    padding: 0;
 
     @media (max-width: 48rem) {
         margin-left: 0;
         width: 100%;
         max-width: 100vw;
-        padding: 1.5rem 1rem;
-    }
-
-    @media (max-width: 80rem) {
-        padding: 2rem 1.5rem;
+        padding: 0;
     }
 `;

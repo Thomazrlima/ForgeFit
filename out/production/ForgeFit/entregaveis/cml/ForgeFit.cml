@@ -1,0 +1,477 @@
+Domain Academia {
+    Subdomain CoreAcademia {
+        type = CORE_DOMAIN
+    }
+}
+
+BoundedContext AcademiaContext implements CoreAcademia {
+
+    Aggregate Aula {
+        Entity Aula {
+            aggregateRoot
+            
+            -AulaId aulaId
+            -ProfessorId professorId
+            
+            -Modalidade modalidade
+            -Espaco espaco
+            int capacidade
+
+            Date inicio
+            Date fim
+
+            -StatusAula status
+            
+            -Recorrencia recorrencia
+            -List<OcorrenciaExcecao> excecoes
+            -List<Reserva> reservas
+            -List<PosicaoListaDeEspera> listaDeEspera
+
+            Repository AulaRepository {
+                void salvar(@Aula aula);
+                @Aula obterPorId(@AulaId aulaId);
+                List<@Aula> listarTodas();
+                List<@Aula> buscarPorEspacoEPeriodo(@Espaco espaco, Date inicio, Date fim);
+                List<@Aula> buscarPorProfessorEPeriodo(@ProfessorId professorId, Date inicio, Date fim);
+            }
+        }
+
+        Service AulaService {
+            @Aula criarAulaUnica(@ProfessorId professorId, @Modalidade modalidade, @Espaco espaco, int capacidade, Date inicio, Date fim);
+            @Aula criarAulaRecorrente(@ProfessorId professorId, @Modalidade modalidade, @Espaco espaco, int capacidade, Date inicio, @Recorrencia recorrencia);
+            @Aula obterAula(@AulaId aulaId);
+            void alterarHorarioPrincipal(@AulaId aulaId, Date novoInicio, Date novoFim);
+            void reagendarOcorrenciaUnica(@AulaId aulaId, Date dataOriginal, Date novoInicio, Date novoFim);
+            void cancelarOcorrenciaUnica(@AulaId aulaId, Date dataDaOcorrencia);
+            void cancelarAulaDefinitivamente(@AulaId aulaId);
+            void validarConflitoHorario(@Espaco espaco, @ProfessorId professorId, Date inicio, Date fim, @AulaId aulaId);
+            String criarAulaUnicaComMensagem(@ProfessorId professorId, @Modalidade modalidade, @Espaco espaco, int capacidade, Date inicio, Date fim);
+            String criarAulaRecorrenteComMensagem(@ProfessorId professorId, @Modalidade modalidade, @Espaco espaco, int capacidade, Date inicio, Date fim, @TipoRecorrencia tipoRecorrencia, List<@DiaDaSemana> diasDaSemana, Date dataFimRecorrencia);
+            String alterarHorarioPrincipalComMensagem(@AulaId aulaId, Date novoInicio, Date novoFim);
+            String reagendarOcorrenciaUnicaComMensagem(@AulaId aulaId, Date dataOriginal, Date novoInicio, Date novoFim);
+            String cancelarOcorrenciaUnicaComMensagem(@AulaId aulaId, Date dataDaOcorrencia);
+            String cancelarAulaDefinitivamenteComMensagem(@AulaId aulaId);
+        }
+
+        Service ReservaService {
+            @Reserva reservarVaga(@Matricula alunoMatricula, @AulaId aulaId);
+            String tentarReservarVaga(@Matricula alunoMatricula, @AulaId aulaId);
+            void entrarNaListaDeEspera(@Matricula alunoMatricula, @AulaId aulaId);
+            void promoverPrimeiroDaListaSeHouver(@AulaId aulaId);
+            String cancelarReserva(@Matricula alunoMatricula, @AulaId aulaId, Date momentoCancelamento);
+        }
+
+        ValueObject AulaId { int id }
+        
+        ValueObject Reserva {
+            -Matricula alunoMatricula
+            Date dataDaReserva
+            -StatusReserva status
+        }
+
+        enum StatusAula { ATIVA, CANCELADA }
+
+        enum StatusReserva { CONFIRMADA, CANCELADA_PELO_ALUNO, CANCELADA_PELA_ACADEMIA }
+
+        ValueObject PosicaoListaDeEspera {
+            -Matricula alunoMatricula
+            Date timestampDeEntrada
+        }
+        
+        enum Modalidade {
+            MUSCULACAO, SPINNING, YOGA, BOXE, CROSSFIT, PILATES, ZUMBA,
+            FUNCIONAL, JIUJITSU, MUAYTHAI, DANCA
+        }
+        
+        enum Espaco {
+            SALA01_MULTIUSO, SALA02_MULTIUSO, SALA03_SPINNING, ESTUDIO_PILATES,
+            AREA_DE_LUTAS, AREA_DE_PESO_LIVRE
+        }
+
+        ValueObject Recorrencia {
+            -TipoRecorrencia tipo
+            -List<DiaDaSemana> diasDaSemana
+            Date dataFimRecorrencia
+        }
+        
+        Entity OcorrenciaExcecao {
+            -OcorrenciaExcecaoId id
+            Date dataOriginalDaOcorrencia
+            boolean cancelada
+            Date novoInicio
+            Date novoFim
+        }
+
+        ValueObject OcorrenciaExcecaoId { int id }
+
+        enum TipoRecorrencia { SEMANAL, MENSAL, SEMESTRAL, ANUAL }
+        enum DiaDaSemana { DOMINGO, SEGUNDA, TERCA, QUARTA, QUINTA, SEXTA, SABADO }
+    }
+
+    Aggregate Aluno {
+        Entity Aluno {
+            aggregateRoot
+            
+            -Matricula matricula
+            -Cpf cpf
+            String nome
+            Date dataNascimento
+            int pontuacaoTotal
+            double creditos
+            -StatusAluno status
+            -GuildaId guildaId
+            -PlanoDeTreinoId planoAtivoId
+            Date bloqueioAte
+            -List<AvaliacaoFisica> historicoDeAvaliacoes
+            -List<PlanoDeTreinoId> historicoDeplanosIds
+            -List<Frequencia> historicoDeFrequencia
+
+            Repository AlunoRepository {
+                void salvar(@Aluno aluno);
+                @Aluno obterPorMatricula(@Matricula matricula);
+                @Aluno obterPorCpf(@Cpf cpf);
+            }
+        }
+
+        Service AlunoService {
+            void adicionarCreditos(@Matricula alunoMatricula, double creditos);
+            void atribuirPlanoDetreino(@Matricula alunoMatricula, @PlanoDeTreinoId planoId);
+        }
+
+        Service AvaliacaoFisicaService {
+            String registrarAvaliacaoFisica(@Matricula alunoMatricula, @ProfessorId professorId, @AvaliacaoFisica novaAvaliacao);
+            String verificarHistoricoAvaliacoes(@Matricula alunoMatricula);
+            String formatarHistoricoAvaliacoes(List<@AvaliacaoFisica> historicoAvaliacoes);
+            String analisarEvolucaoFisica(List<@ComparacaoCampo> comparacoes);
+        }
+
+        Service ReembolsoService {
+            double calcularCreditoDeReembolso(@AulaId aulaId);
+            String obterMensagemDeReembolso(double credito);
+        }
+
+        Service FrequenciaService {
+            @Frequencia registrarFrequencia(@Matricula alunoMatricula, @AulaId aulaId, Date data);
+            @Frequencia registrarPresenca(@Matricula alunoMatricula, @AulaId aulaId, Date data);
+            @Frequencia registrarFalta(@Matricula alunoMatricula, @AulaId aulaId, Date data);
+            boolean alunoEstaBloqueado(@Matricula alunoMatricula, Date dataAtual);
+            String verificarBloqueioComMensagem(@Matricula alunoMatricula, Date dataAtual);
+            void desbloquearAluno(@Matricula alunoMatricula);
+            int contarFaltasRecentes(@Matricula alunoMatricula, Date dataReferencia, int dias);
+        }
+        
+        ValueObject Frequencia {
+            -AulaId aulaId
+            Date dataDaOcorrencia
+            -StatusFrequencia status
+        }
+        
+        enum StatusFrequencia { PRESENTE, FALTA }
+
+        enum StatusAluno { ATIVO, BLOQUEADO }
+
+        ValueObject Cpf { String valor }
+        ValueObject Matricula { String valor }
+        
+        ValueObject AvaliacaoFisica {
+            Date dataDaAvaliacao
+            -ProfessorId professorResponsavel
+            double massaGordaPercentual
+            double massaGordaKg
+            double massaMagraKg
+            double massaMuscularEsqueleticaKg
+            double aguaCorporalTotalPercentual
+            int gorduraVisceralNivel
+            int taxaMetabolicaBasalKcal
+            double massaOsseaKg
+            double indiceDeMassaCorporal
+            double bracoRelaxadoCm
+            double bracoContraidoCm
+            double antebracoCm
+            double toraxPeitoralCm
+            double cinturaCm
+            double abdomenCm
+            double quadrilCm
+            double coxaCm
+            double panturrilhaCm
+        }
+        
+        ValueObject ComparacaoCampo {
+            String nomeCampo
+            double valorAntigo
+            double valorNovo
+            boolean menorEMelhor
+        }
+    }
+
+    Aggregate PlanoDeTreino {
+        Entity PlanoDeTreino {
+            aggregateRoot
+            -PlanoDeTreinoId id
+            -ProfessorId professorResponsavel
+            Date dataCriacao
+            Date dataValidadeSugerida
+            -List<TreinoDiario> treinosDaSemana
+
+            Repository PlanoDeTreinoRepository {
+                void salvar(@PlanoDeTreino plano);
+                @PlanoDeTreino obterPorId(@PlanoDeTreinoId id);
+            }
+        }
+
+        Service TreinoService {
+            @PlanoDeTreino criarPlanoDeTreino(@ProfessorId professorId, Date validadeSugerida, List<@TreinoDiario> treinos);
+            void atualizarTreinoDiario(@PlanoDeTreinoId planoId, @TreinoDiario treinoAtualizado);
+            void adicionarTreinoDiario(@PlanoDeTreinoId planoId, @TreinoDiario novoTreino);
+            void excluirTreinoDiario(@PlanoDeTreinoId planoId, @LetraDoTreino letraParaExcluir);
+        }
+        
+        ValueObject TreinoDiario {
+            -LetraDoTreino letra
+            -TipoDoTreino tipo
+            -List<ItemDeExercicio> exercicios
+        }
+        
+        enum LetraDoTreino { TREINO_A, TREINO_B, TREINO_C, TREINO_D, TREINO_E, TREINO_F, TREINO_G }
+        
+        ValueObject ItemDeExercicio {
+            -Exercicio exercicio
+            -Repeticao repeticao
+        }
+        
+        ValueObject Repeticao {
+            int series
+            String contagem
+        }
+        
+        enum TipoDoTreino {
+            SUPERIORES, INFERIORES, CORPO_INTEIRO, PUSH, PULL, PERNAS,
+            PEITO_E_TRICEPS, COSTAS_E_BICEPS, OMBROS_E_TRAPEZIO, BRACOS_COMPLETOS,
+            PEITO_E_BICEPS, COSTAS_E_TRICEPS, FOCO_PEITO, FOCO_COSTAS, FOCO_OMBROS,
+            FOCO_GLUTEOS, ABDOMEN_E_CORE, PANTURRILHAS, CARDIO
+        }
+        
+        enum Exercicio {
+            SUPINO_RETO, SUPINO_INCLINADO, SUPINO_DECLINADO, CRUCIFIXO_COM_HALTERES,
+            VOADOR_PECK_DECK, CROSSOVER_NA_POLIA, FLEXAO_DE_BRACO, BARRA_FIXA,
+            PUXADA_ALTA_PULLEY_FRENTE, REMADA_CURVADA_COM_BARRA, REMADA_CAVALINHO,
+            REMADA_UNILATERAL_SERROTE, REMADA_SENTADA_NA_POLIA, PULLDOWN_NA_POLIA,
+            AGACHAMENTO_LIVRE_COM_BARRA, LEG_PRESS_45, CADEIRA_EXTENSORA, AGACHAMENTO_HACK,
+            AFUNDO_AVANCO, LEVANTAMENTO_TERRA, STIFF_COM_BARRA, MESA_FLEXORA, CADEIRA_FLEXORA,
+            ELEVACAO_PELVICA, CADEIRA_ABDUTORA, GLUTEO_NA_POLIA_COICE, PANTURRILHA_EM_PE_GEMEOS,
+            PANTURRILHA_SENTADO_SOLEO, DESENVOLVIMENTO_MILITAR_COM_BARRA, DESENVOLVIMENTO_COM_HALTERES,
+            ELEVACAO_LATERAL_COM_HALTERES, ELEVACAO_FRONTAL, CRUCIFIXO_INVERTIDO, REMADA_ALTA,
+            ROSCA_DIRETA_COM_BARRA, ROSCA_ALTERNADA_COM_HALTERES, ROSCA_MARTELO, ROSCA_SCOTT,
+            ROSCA_CONCENTRADA, TRICEPS_PULLEY_COM_BARRA, TRICEPS_PULLEY_COM_CORDA, TRICEPS_TESTA,
+            TRICEPS_FRANCES, MERGULHO_NO_BANCO, PARALELAS, PRANCHA_ISOMETRICA, ABDOMINAL_SUPRA_CRUNCH,
+            ABDOMINAL_INFRA_NA_PARALELA, ELEVACAO_DE_PERNAS_DEITADO, RODA_ABDOMINAL_AB_WHEEL
+        }
+
+        ValueObject PlanoDeTreinoId { int id }
+    }
+
+    Aggregate Professor {
+        Entity Professor {
+            aggregateRoot
+            -ProfessorId id
+            -Cpf cpf
+            String nome
+            Date dataNascimento
+        }
+        
+        ValueObject ProfessorId { int id }
+    }
+
+    Aggregate Guilda {
+        Entity Guilda {
+            aggregateRoot
+            -GuildaId id
+            String nome
+            String descricao
+            String imagemURL
+            -StatusGuilda status
+            -CodigoConvite codigoConvite
+            -Matricula mestreDaGuilda
+            - List<Matricula> membros
+            int pontuacaoTotal
+            
+            Repository GuildaRepository {
+                void salvar(@Guilda guilda);
+                @Guilda obterPorId(@GuildaId id);
+                List<@Guilda> listarGuildas();
+                @Guilda buscarPorCodigoConvite(@CodigoConvite codigo);
+                @Guilda buscarPorNome(String nome);
+            }
+        }
+
+        Service GuildaService {
+            @Guilda criarGuilda(@Matricula mestreMatricula, String nome, String descricao, String imagemURL);
+            void alterarDadosGuilda(@Matricula mestreMatricula, @GuildaId guildaId, String novoNome, String novaDescricao, String novaImagemURL);
+            void excluirGuilda(@Matricula mestreMatricula, @GuildaId guildaId);
+            void entrarEmGuilda(@Matricula alunoMatricula, @CodigoConvite codigo);
+            void sairDaGuilda(@Matricula alunoMatricula, @GuildaId guildaId);
+            void adicionarMembro(@GuildaId guildaId, @Matricula novoMembroMatricula);
+            void removerMembro(@GuildaId guildaId, @Matricula membroParaRemoverMatricula);
+            @Guilda obter(@GuildaId guildaId);
+
+        }
+
+        enum StatusGuilda { ATIVA, INATIVA }
+        ValueObject GuildaId { int id }
+        ValueObject CodigoConvite { String valor }
+    }
+
+    Aggregate Torneio {
+        ValueObject TorneioId { int id }
+        ValueObject Premio {
+            String nome
+            String urlImagem
+        }
+        ValueObject PosicaoRanking {
+            int posicao
+            -GuildaId guildaId
+            int pontuacaoNoTorneio
+        }
+        enum PosicaoDoPodio {
+            PRIMEIRO_LUGAR,
+            SEGUNDO_LUGAR,
+            TERCEIRO_LUGAR
+        }
+        enum StatusTorneio {
+            PLANEJADO,
+            ATIVO,
+            FINALIZADO,
+            CANCELADO
+        }
+
+        Entity Torneio {
+            aggregateRoot
+            -TorneioId id
+            String nome
+            -Premio premioPrimeiroLugar
+            -Premio premioSegundoLugar
+            -Premio premioTerceiroLugar
+            -StatusTorneio status
+            Date dataInicio
+            Date dataFim
+            -List<PosicaoRanking> rankingFinal
+
+            Repository TorneioRepository {
+                void salvar(@Torneio torneio);
+                @Torneio obterPorId(@TorneioId id);
+                @Torneio buscarTorneioAtivo(Date dataAtual);
+                List<@Torneio> listarTorneios();
+            }
+        }
+
+        Service TorneioService {
+            @Torneio criarTorneio(String nome, Date dataInicio, Date dataFim, @Premio p1, @Premio p2, @Premio p3);
+            void editarTorneio(@TorneioId torneioId, String novoNome, Date novaDataInicio, Date novaDataFim, @Premio novoP1, @Premio novoP2, @Premio novoP3);
+            void cancelarTorneio(@TorneioId torneioId);
+            @Premio definirPremioDoPodio(@TorneioId torneioId, @PosicaoDoPodio posicao, @Premio premio);
+        }
+    }
+
+    Aggregate Avaliacao {
+        Entity Avaliacao {
+            aggregateRoot
+            -AvaliacaoId id
+            -Matricula alunoMatricula
+            -ProfessorId professorId
+            -AulaId aulaId
+            Date dataDaOcorrenciaDaAula
+            - Notas notas
+            String comentario
+            Date dataDaAvaliacao
+
+            Repository AvaliacaoRepository {
+                void salvar(@Avaliacao avaliacao);
+                @Avaliacao obterPorId(@AvaliacaoId id);
+                List<@Avaliacao> buscarPorProfessor(@ProfessorId professorId);
+                boolean existeAvaliacao(@Matricula alunoMatricula, @AulaId aulaId, Date dataDaOcorrencia);
+            }
+        }
+
+        Service AvaliacaoService {
+            void criarAvaliacao(@Matricula alunoMatricula, @ProfessorId professorId, @AulaId aulaId, Date dataDaOcorrencia, @Notas notas, String comentario);
+            String criarAvaliacaoComMensagem(@Matricula alunoMatricula, @ProfessorId professorId, @AulaId aulaId, Date dataDaOcorrencia, @Notas notas, String comentario);
+        }
+
+        ValueObject AvaliacaoId { int id }
+        ValueObject Notas {
+            int pontualidade
+            int didatica
+            int atencao
+        }
+    }
+
+    Aggregate Checkin {
+        Entity Checkin {
+            aggregateRoot
+            -CheckinId id
+            -Matricula alunoMatricula
+            -GuildaId guildaId
+            Date dataDoCheckin
+            int pontuacaoTotal
+            String mensagem
+            String urlImagem
+            - ContextoDoCheckin contexto
+
+            Repository CheckinRepository {
+                salvar(@Checkin checkin);
+                List<@Checkin> buscarPorAluno(@Matricula alunoMatricula);
+            }
+        }
+
+        Service CheckinService {
+            @Checkin realizarCheckinDeTreino(@Matricula alunoMatricula, @GuildaId guildaId, @PlanoDeTreinoId planoDeTreinoId, @LetraDoTreino letraDoTreino, String mensagem, String urlImagem);
+        }
+
+        ValueObject CheckinId { int id }
+
+        ValueObject ContextoDoCheckin {
+            -TipoDeCheckin tipo
+            -AulaId aulaId
+            -PlanoDeTreinoId planoDeTreinoId 
+            -LetraDoTreino letraDoTreino
+        }
+
+        enum TipoDeCheckin { AULA, TREINO }
+    }
+
+    Aggregate Ranking {
+        Entity Ranking {
+            aggregateRoot
+            -PeriodoRanking periodo
+            -List<ItemRanking> itens
+
+            Repository RankingRepository {
+                void salvar(@Ranking ranking);
+                @Ranking obterPorPeriodo(@PeriodoRanking periodo);
+            }
+        }
+
+        Service RankingService {
+            @Ranking obterRanking(@PeriodoRanking periodo);
+            void registrarPontosFrequencia(@Matricula alunoMatricula, int pontos, @PeriodoRanking periodo);
+            void registrarPontosGuilda(@Matricula alunoMatricula, int pontos, @PeriodoRanking periodo);
+            void registrarPontosPerformance(@Matricula alunoMatricula, int pontos, double nota, @PeriodoRanking periodo);
+            void removerPontos(@Matricula alunoMatricula, int pontos, @PeriodoRanking periodo);
+            void ajustarPontos(@Matricula alunoMatricula, int ajuste, @PeriodoRanking periodo);
+        }
+
+        ValueObject ItemRanking {
+            -Matricula alunoMatricula
+            int pontosFrequencia
+            int pontosGuilda
+            int pontosPerformance
+            int pontuacaoTotal
+            int posicao
+            int numeroDeAulasParticipadas
+            double mediaPerformance
+            int numeroDeAvaliacoes
+        }
+
+        enum PeriodoRanking { SEMANAL, MENSAL, GERAL }
+    }
+}

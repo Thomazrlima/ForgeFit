@@ -1,0 +1,11 @@
+# Arquivos Docker a serem ignorados
+docker-compose.override.yml
+.env
+
+# Dados do PostgreSQL local (se não estiver usando Docker)
+forgefit/
+*.db
+*.db-journal
+
+# Schema gerado
+schema.sql

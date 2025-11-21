@@ -2,6 +2,7 @@ package br.com.forgefit.apresentacao.login;
 
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
+import br.com.forgefit.aplicacao.login.LoginResumo;
 import br.com.forgefit.aplicacao.login.LoginService;
 import br.com.forgefit.aplicacao.login.UserData;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ class LoginControlador {
     private LoginService loginService;
 
     @RequestMapping(method = POST)
-    ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    ResponseEntity<LoginResponse> login(@RequestBody LoginRequestImpl request) {
         try {
             // Validações
             System.out.println("=== LOGIN REQUEST ===");
@@ -59,6 +60,17 @@ class LoginControlador {
     }
 }
 
-record LoginRequest(String email, String senha) {}
+// Implementação concreta do LoginResumo como record para facilitar a deserialização JSON
+record LoginRequestImpl(String email, String senha) implements LoginResumo {
+    @Override
+    public String getEmail() {
+        return email;
+    }
+    
+    @Override
+    public String getSenha() {
+        return senha;
+    }
+}
 
 record LoginResponse(boolean sucesso, String mensagem, UserData user) {}

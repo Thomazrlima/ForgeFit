@@ -8,6 +8,11 @@ import java.util.Objects;
 public class Cpf {
     private final String numero;
 
+    // Construtor vazio protegido para frameworks (JPA, ModelMapper)
+    protected Cpf() {
+        this.numero = null;
+    }
+
     public Cpf(String numero) {
         notNull(numero, "O CPF não pode ser nulo.");
         notBlank(numero, "O CPF não pode estar em branco.");

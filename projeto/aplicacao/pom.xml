@@ -25,6 +25,13 @@
       <version>${project.version}</version>
     </dependency>
     
+    <!-- Spring Context (para @Service e @Autowired) -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+      <version>6.2.0</version>
+    </dependency>
+    
     <!-- Apache Commons Lang (para validações) -->
     <dependency>
       <groupId>org.apache.commons</groupId>

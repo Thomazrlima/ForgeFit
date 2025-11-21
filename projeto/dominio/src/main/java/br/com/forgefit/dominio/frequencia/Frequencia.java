@@ -17,6 +17,14 @@ public class Frequencia {
     private final LocalDate dataDaOcorrencia;
     private final StatusFrequencia status;
 
+    // Construtor vazio protegido para frameworks (JPA, ModelMapper)
+    protected Frequencia() {
+        this.alunoMatricula = null;
+        this.aulaId = null;
+        this.dataDaOcorrencia = null;
+        this.status = null;
+    }
+
     public Frequencia(Matricula alunoMatricula, AulaId aulaId, LocalDate dataDaOcorrencia, StatusFrequencia status) {
         notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         this.alunoMatricula = alunoMatricula;

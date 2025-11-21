@@ -12,7 +12,6 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -59,11 +58,9 @@ class Aluno {
 	private Date bloqueioAte;
 
 	@OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OrderColumn(name = "POSICAO")
 	private List<AvaliacaoFisica> historicoDeAvaliacoes = new ArrayList<>();
 
 	@OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OrderColumn(name = "POSICAO")
 	private List<Frequencia> historicoDeFrequencia = new ArrayList<>();
 
 	public String getMatricula() {
@@ -211,7 +208,44 @@ class AlunoRepositorioImpl implements br.com.forgefit.dominio.aluno.AlunoReposit
 			return java.util.Optional.empty();
 		}
 		Aluno alunoJpa = repositorio.findByUserId(userId);
-		return java.util.Optional.ofNullable(alunoJpa)
-				.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aluno.Aluno.class));
+		if (alunoJpa == null) {
+			return java.util.Optional.empty();
+		}
+		
+		// Mapeamento manual para evitar problemas com campos final do ModelMapper
+		try {
+			br.com.forgefit.dominio.aluno.Matricula matricula = 
+				new br.com.forgefit.dominio.aluno.Matricula(alunoJpa.getMatricula());
+			br.com.forgefit.dominio.aluno.Cpf cpf = 
+				new br.com.forgefit.dominio.aluno.Cpf(alunoJpa.getCpf());
+			
+			// Converter java.sql.Date para LocalDate
+			java.time.LocalDate dataNascimento = new java.sql.Date(
+				alunoJpa.getDataNascimento().getTime()
+			).toLocalDate();
+			
+			br.com.forgefit.dominio.aluno.Aluno alunoDominio = 
+				new br.com.forgefit.dominio.aluno.Aluno(
+					matricula, 
+					cpf, 
+					alunoJpa.getNome(), 
+					dataNascimento,
+					alunoJpa.getUserId()
+				);
+			
+			// Adicionar pontuação e créditos
+			if (alunoJpa.getPontuacaoTotal() != null && alunoJpa.getPontuacaoTotal() > 0) {
+				alunoDominio.adicionarPontos(alunoJpa.getPontuacaoTotal());
+			}
+			if (alunoJpa.getCreditos() != null && alunoJpa.getCreditos() > 0) {
+				alunoDominio.adicionarCreditos(alunoJpa.getCreditos());
+			}
+			
+			return java.util.Optional.of(alunoDominio);
+		} catch (Exception e) {
+			System.err.println("Erro ao mapear Aluno: " + e.getMessage());
+			e.printStackTrace();
+			return java.util.Optional.empty();
+		}
 	}
 }

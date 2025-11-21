@@ -33,6 +33,12 @@ public class Aluno {
     private final List<PlanoDeTreinoId> historicoDeplanosIds = new ArrayList<>();
     private final List<Frequencia> historicoDeFrequencia = new ArrayList<>();
 
+    // Construtor vazio protegido para frameworks (JPA, ModelMapper)
+    protected Aluno() {
+        this.matricula = null;
+        this.cpf = null;
+    }
+
     public Aluno(Matricula matricula, Cpf cpf, String nome, LocalDate dataNascimento, String userId) {
         notNull(matricula, "A matrícula não pode ser nula");
         notNull(cpf, "O CPF não pode ser nulo");

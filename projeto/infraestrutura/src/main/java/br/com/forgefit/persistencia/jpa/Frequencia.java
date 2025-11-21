@@ -26,7 +26,7 @@ class Frequencia {
 	private Integer id;
 	
 	@ManyToOne
-	@JoinColumn(name = "ALU_MATRICULA", nullable = false)
+	@JoinColumn(name = "ALUNO_MATRICULA", nullable = false)
 	private Aluno aluno;
 	
 	@Column(name = "AULA_ID", nullable = false)

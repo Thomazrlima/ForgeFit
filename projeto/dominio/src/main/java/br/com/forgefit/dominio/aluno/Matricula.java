@@ -8,6 +8,11 @@ import java.util.Objects;
 public class Matricula {
     private final String valor;
 
+    // Construtor vazio protegido para frameworks (JPA, ModelMapper)
+    protected Matricula() {
+        this.valor = null;
+    }
+
     public Matricula(String valor) {
         notNull(valor, "A matrícula não pode ser nula");
         notBlank(valor, "A matrícula não pode estar em branco");

@@ -27,6 +27,12 @@ public class AvaliacaoFisica {
     private double coxaCm;
     private double panturrilhaCm;
 
+    // Construtor vazio protegido para frameworks (JPA, ModelMapper)
+    protected AvaliacaoFisica() {
+        this.professorResponsavel = null;
+        this.dataDaAvaliacao = null;
+    }
+
     public AvaliacaoFisica(ProfessorId professorResponsavel, LocalDate dataDaAvaliacao) {
         notNull(professorResponsavel, "O ID do professor responsável não pode ser nulo");
         notNull(dataDaAvaliacao, "A data da avaliação não pode ser nula");

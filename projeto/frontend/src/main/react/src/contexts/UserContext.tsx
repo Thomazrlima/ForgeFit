@@ -1,11 +1,15 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { ReactNode } from "react";
+import { authService } from "../services/authService";
 
 export interface User {
     id: number;
     name: string;
     avatar?: string;
     role: "student" | "professor" | "admin";
+    matricula?: string;
+    pontuacaoTotal?: number;
+    creditos?: number;
 }
 
 interface UserContextType {
@@ -30,10 +34,9 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const saveUserToStorage = (userData: User, token: string) => {
+    const saveUserToStorage = (userData: User) => {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
-            localStorage.setItem(TOKEN_KEY, token);
         } catch (error) {
             console.error("Erro ao salvar dados do usuário:", error);
         }
@@ -65,21 +68,28 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     const login = useCallback(async (email: string, password: string) => {
         setLoading(true);
         try {
-            // Simulação de API call - substituir por chamada real à API
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            const response = await authService.login(email, password);
+            
+            if (!response.sucesso || !response.user) {
+                throw new Error(response.mensagem || "Erro ao fazer login");
+            }
 
-            // Mock de resposta da API
-            const mockToken = "mock-jwt-token-" + Date.now();
+            // Gerar token simulado (no futuro, virá do backend)
+            const mockToken = "jwt-token-" + Date.now();
+            localStorage.setItem(TOKEN_KEY, mockToken);
+
+            // Converter AuthUserData para User
             const userData: User = {
-                id: 1,
-                name: "Paulo Rosado",
-                avatar: "https://github.com/paulorosadodev.png",
-                role: "student",
+                id: response.user.id,
+                name: response.user.name,
+                avatar: response.user.avatar,
+                role: response.user.role,
+                matricula: response.user.matricula,
+                pontuacaoTotal: response.user.pontuacaoTotal,
+                creditos: response.user.creditos,
             };
 
-            console.log(email, password);
-
-            saveUserToStorage(userData, mockToken);
+            saveUserToStorage(userData);
             setUser(userData);
         } catch (error) {
             console.error("Erro ao fazer login:", error);
@@ -90,6 +100,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     }, []);
 
     const logout = useCallback(() => {
+        authService.logout();
         clearUserFromStorage();
         setUser(null);
     }, []);

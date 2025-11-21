@@ -15,6 +15,12 @@ public class Professor {
     private LocalDate dataNascimento;
     private String userId;
 
+    // Construtor vazio protegido para frameworks (JPA, ModelMapper)
+    protected Professor() {
+        this.id = null;
+        this.cpf = null;
+    }
+
     public Professor(ProfessorId id, Cpf cpf, String nome, LocalDate dataNascimento, String userId) {
         notNull(id, "O id do professor não pode ser nulo");
         notNull(cpf, "O CPF do professor não pode ser nulo");

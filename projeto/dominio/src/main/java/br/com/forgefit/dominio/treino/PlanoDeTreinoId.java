@@ -7,6 +7,11 @@ import java.util.Objects;
 public class PlanoDeTreinoId {
     private final int id;
 
+    // Construtor vazio protegido para frameworks (JPA, ModelMapper)
+    protected PlanoDeTreinoId() {
+        this.id = 0;
+    }
+
     public PlanoDeTreinoId(int id) {
         isTrue(id > 0, "O id deve ser positivo");
         this.id = id;

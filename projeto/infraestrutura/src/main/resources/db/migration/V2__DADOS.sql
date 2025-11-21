@@ -8,20 +8,20 @@
 -- ============================================
 
 INSERT INTO PROFESSOR(CPF, NOME, DATA_NASCIMENTO, USER_ID) VALUES 
-    ('12345678901', 'João Silva', '1985-06-15', 'prof_joao_001'),
-    ('23456789012', 'Maria Santos', '1990-03-20', 'prof_maria_002'),
-    ('34567890123', 'Carlos Mendes', '1988-11-12', 'prof_carlos_003');
+    ('12345678901', 'João Silva', '1985-06-15', '4'),
+    ('23456789012', 'Maria Santos', '1990-03-20', '5'),
+    ('34567890123', 'Carlos Mendes', '1988-11-12', '6');
 
 -- ============================================
 -- ALUNOS
 -- ============================================
 
 INSERT INTO ALUNO(MATRICULA, CPF, NOME, DATA_NASCIMENTO, USER_ID, CREDITOS, PONTUACAO_TOTAL, STATUS) VALUES 
-    ('ALU001', '11122233344', 'Pedro Oliveira', '1995-09-10', 'aluno_pedro_001', 100.00, 50, 'ATIVO'),
-    ('ALU002', '22233344455', 'Ana Costa', '1998-12-05', 'aluno_ana_002', 150.00, 120, 'ATIVO'),
-    ('ALU003', '33344455566', 'Lucas Ferreira', '1997-07-22', 'aluno_lucas_003', 80.00, 95, 'ATIVO'),
-    ('ALU004', '44455566677', 'Juliana Souza', '1999-02-14', 'aluno_juliana_004', 200.00, 180, 'ATIVO'),
-    ('ALU005', '55566677788', 'Roberto Lima', '1996-05-30', 'aluno_roberto_005', 50.00, 30, 'ATIVO');
+    ('ALU001', '11122233344', 'Pedro Oliveira', '1995-09-10', '14', 100.00, 50, 'ATIVO'),
+    ('ALU002', '22233344455', 'Ana Costa', '1998-12-05', '15', 150.00, 120, 'ATIVO'),
+    ('ALU003', '33344455566', 'Lucas Ferreira', '1997-07-22', '16', 80.00, 95, 'ATIVO'),
+    ('ALU004', '44455566677', 'Juliana Souza', '1999-02-14', '17', 200.00, 180, 'ATIVO'),
+    ('ALU005', '55566677788', 'Roberto Lima', '1996-05-30', '18', 50.00, 30, 'ATIVO');
 
 -- ============================================
 -- GUILDAS

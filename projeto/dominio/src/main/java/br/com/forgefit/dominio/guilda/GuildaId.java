@@ -7,6 +7,11 @@ import java.util.Objects;
 public class GuildaId {
     private final int id;
 
+    // Construtor vazio protegido para frameworks (JPA, ModelMapper)
+    protected GuildaId() {
+        this.id = 0;
+    }
+
     public GuildaId(int id) {
         isTrue(id > 0, "O id deve ser positivo");
         this.id = id;

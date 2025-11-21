@@ -14,7 +14,7 @@ class AvaliacaoFisica {
 	private Integer id;
 	
 	@ManyToOne
-	@JoinColumn(name = "ALU_MATRICULA", nullable = false)
+	@JoinColumn(name = "ALUNO_MATRICULA", nullable = false)
 	private Aluno aluno;
 	
 	@Temporal(TemporalType.DATE)
@@ -22,10 +22,10 @@ class AvaliacaoFisica {
 	private Date dataAvaliacao;
 	
 	@ManyToOne
-	@JoinColumn(name = "AVF_PROFESSOR_ID", nullable = false)
+	@JoinColumn(name = "PROFESSOR_RESPONSAVEL_ID", nullable = false)
 	private ProfessorJpa professorResponsavel;
 	
-	@Column(name = "MASSA_GORDA_PERC")
+	@Column(name = "MASSA_GORDA_PERCENTUAL")
 	private Double massaGordaPercentual;
 	
 	@Column(name = "MASSA_GORDA_KG")
@@ -34,22 +34,22 @@ class AvaliacaoFisica {
 	@Column(name = "MASSA_MAGRA_KG")
 	private Double massaMagraKg;
 	
-	@Column(name = "MASSA_MUSCULAR_KG")
+	@Column(name = "MASSA_MUSCULAR_ESQUELETICA_KG")
 	private Double massaMuscularEsqueleticaKg;
 	
-	@Column(name = "AGUA_CORPORAL_PERC")
+	@Column(name = "AGUA_CORPORAL_TOTAL_PERCENTUAL")
 	private Double aguaCorporalTotalPercentual;
 	
-	@Column(name = "GORDURA_VISCERAL_NIV")
+	@Column(name = "GORDURA_VISCERAL_NIVEL")
 	private Integer gorduraVisceralNivel;
 	
-	@Column(name = "TAXA_METABOLICA_KCAL")
+	@Column(name = "TAXA_METABOLICA_BASAL_KCAL")
 	private Integer taxaMetabolicaBasalKcal;
 	
 	@Column(name = "MASSA_OSSEA_KG")
 	private Double massaOsseaKg;
 	
-	@Column(name = "IMC")
+	@Column(name = "INDICE_DE_MASSA_CORPORAL")
 	private Double indiceDeMassaCorporal;
 	
 	@Column(name = "BRACO_RELAXADO_CM")

@@ -1,16 +1,30 @@
 import { ThemeProvider } from "styled-components";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { theme, GlobalStyle } from "./styles";
 import AppRouter from "./router/AppRouter";
 import { UserProvider } from "./contexts/UserContext";
 
+// Criar instância do QueryClient
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            refetchOnWindowFocus: false,
+            retry: 1,
+            staleTime: 5 * 60 * 1000, // 5 minutos
+        },
+    },
+});
+
 function App() {
     return (
-        <ThemeProvider theme={theme}>
-            <GlobalStyle />
-            <UserProvider>
-                <AppRouter />
-            </UserProvider>
-        </ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+            <ThemeProvider theme={theme}>
+                <GlobalStyle />
+                <UserProvider>
+                    <AppRouter />
+                </UserProvider>
+            </ThemeProvider>
+        </QueryClientProvider>
     );
 }
 

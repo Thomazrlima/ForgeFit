@@ -112,6 +112,7 @@ BoundedContext AcademiaContext implements CoreAcademia {
         Entity Aluno {
             aggregateRoot
             
+            String userId
             -Matricula matricula
             -Cpf cpf
             String nome
@@ -273,6 +274,7 @@ BoundedContext AcademiaContext implements CoreAcademia {
     Aggregate Professor {
         Entity Professor {
             aggregateRoot
+            String userId
             -ProfessorId id
             -Cpf cpf
             String nome

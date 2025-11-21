@@ -173,6 +173,7 @@ class Aluno {
 
 interface AlunoJpaRepository extends org.springframework.data.jpa.repository.JpaRepository<Aluno, String> {
 	Aluno findByCpf(String cpf);
+	Aluno findByUserId(String userId);
 }
 
 @org.springframework.stereotype.Repository("alunoRepositorio")
@@ -200,6 +201,16 @@ class AlunoRepositorioImpl implements br.com.forgefit.dominio.aluno.AlunoReposit
 	public java.util.Optional<br.com.forgefit.dominio.aluno.Aluno> obterAlunoPorCpf(
 			br.com.forgefit.dominio.aluno.Cpf cpf) {
 		Aluno alunoJpa = repositorio.findByCpf(cpf.getNumero());
+		return java.util.Optional.ofNullable(alunoJpa)
+				.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aluno.Aluno.class));
+	}
+
+	@Override
+	public java.util.Optional<br.com.forgefit.dominio.aluno.Aluno> obterAlunoPorUserId(String userId) {
+		if (userId == null) {
+			return java.util.Optional.empty();
+		}
+		Aluno alunoJpa = repositorio.findByUserId(userId);
 		return java.util.Optional.ofNullable(alunoJpa)
 				.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aluno.Aluno.class));
 	}

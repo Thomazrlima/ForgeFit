@@ -77,6 +77,16 @@ public class Repositorio implements AlunoRepositorio,
         notNull(cpf, "O CPF não pode ser nulo");
         return Optional.ofNullable(alunosPorCpf.get(cpf));
     }
+
+    @Override
+    public Optional<Aluno> obterAlunoPorUserId(String userId) {
+        if (userId == null) {
+            return Optional.empty();
+        }
+        return alunos.values().stream()
+            .filter(aluno -> userId.equals(aluno.getUserId()))
+            .findFirst();
+    }
     /*-----------------------------------------------------------------------*/
 
     /*-----------------------------------------------------------------------*/
@@ -96,6 +106,16 @@ public class Repositorio implements AlunoRepositorio,
             throw new IllegalArgumentException("Professor não encontrado com id: " + id);
         }
         return professor;
+    }
+
+    @Override
+    public Optional<Professor> obterProfessorPorUserId(String userId) {
+        if (userId == null) {
+            return Optional.empty();
+        }
+        return professores.values().stream()
+            .filter(professor -> userId.equals(professor.getUserId()))
+            .findFirst();
     }
     /*-----------------------------------------------------------------------*/
 

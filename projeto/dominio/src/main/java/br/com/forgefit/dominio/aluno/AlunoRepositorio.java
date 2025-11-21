@@ -6,4 +6,5 @@ public interface AlunoRepositorio {
     void salvar(Aluno aluno);
     Optional<Aluno> obterPorMatricula(Matricula matricula);
     Optional<Aluno> obterAlunoPorCpf(Cpf cpf);
+    Optional<Aluno> obterAlunoPorUserId(String userId);
 }

@@ -29,6 +29,7 @@ class ProfessorJpa {
 }
 
 interface ProfessorJpaRepository extends JpaRepository<ProfessorJpa, Integer> {
+    ProfessorJpa findByUserId(String userId);
 }
 
 @Repository
@@ -49,5 +50,15 @@ class ProfessorRepositorioImpl implements ProfessorRepository {
     public Professor obter(ProfessorId id) {
         var professorJpa = repositorio.findById(id.getId()).get();
         return mapeador.map(professorJpa, Professor.class);
+    }
+
+    @Override
+    public java.util.Optional<Professor> obterProfessorPorUserId(String userId) {
+        if (userId == null) {
+            return java.util.Optional.empty();
+        }
+        ProfessorJpa professorJpa = repositorio.findByUserId(userId);
+        return java.util.Optional.ofNullable(professorJpa)
+                .map(jpa -> mapeador.map(jpa, Professor.class));
     }
 }

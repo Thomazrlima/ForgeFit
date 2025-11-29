@@ -9,8 +9,6 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -20,6 +18,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
@@ -36,7 +35,7 @@ class Aula {
 	private Integer id;
 
 	@ManyToOne
-	@JoinColumn(name = "AUL_PROFESSOR_ID", nullable = false)
+	@JoinColumn(name = "PROFESSOR_ID", nullable = false)
 	private ProfessorJpa professor;
 
 	@Enumerated(EnumType.STRING)
@@ -62,7 +61,7 @@ class Aula {
 	@Column(name = "STATUS", nullable = false)
 	private StatusAula status = StatusAula.ATIVA;
 
-	@Embedded
+	@OneToOne(mappedBy = "aula", cascade = CascadeType.ALL, orphanRemoval = true)
 	private Recorrencia recorrencia;
 
 	@OneToMany(mappedBy = "aula", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -91,17 +90,6 @@ class Aula {
 
 	public void setProfessor(ProfessorJpa professor) {
 		this.professor = professor;
-	}
-
-	public Integer getProfessorId() {
-		return professor != null ? professor.id : null;
-	}
-
-	public void setProfessorId(Integer professorId) {
-		if (this.professor == null) {
-			this.professor = new ProfessorJpa();
-		}
-		this.professor.id = professorId;
 	}
 
 	public Modalidade getModalidade() {
@@ -185,22 +173,48 @@ class Aula {
 	}
 
 	// Classes nested movidas de AlunoRepositorioJpa.java
-	@Embeddable
+	@Entity
+	@Table(name = "RECORRENCIA")
 	static class Recorrencia {
 
+		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@Column(name = "ID")
+		private Integer id;
+
+		@OneToOne
+		@JoinColumn(name = "AULA_ID", nullable = false, unique = true)
+		private Aula aula;
+
 		@Enumerated(EnumType.STRING)
-		@Column(name = "RECOR_TIPO")
+		@Column(name = "TIPO")
 		private TipoRecorrencia tipo;
 
 		@ElementCollection
-		@CollectionTable(name = "RCD_RECORRENCIA_DIAS", joinColumns = @JoinColumn(name = "AUL_ID"))
-		@Column(name = "DIA_SEMANA")
+		@CollectionTable(name = "RECORRENCIA_DIAS", joinColumns = @JoinColumn(name = "RECORRENCIA_ID"))
+		@Column(name = "DIA_DA_SEMANA")
 		@Enumerated(EnumType.STRING)
 		private List<DiaDaSemana> diasDaSemana;
 
 		@Temporal(TemporalType.DATE)
-		@Column(name = "RECOR_DATA_FIM")
+		@Column(name = "DATA_FIM_RECORRENCIA")
 		private Date dataFimRecorrencia;
+
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public Aula getAula() {
+			return aula;
+		}
+
+		public void setAula(Aula aula) {
+			this.aula = aula;
+		}
 
 		public TipoRecorrencia getTipo() {
 			return tipo;
@@ -228,7 +242,7 @@ class Aula {
 	}
 
 	@Entity
-	@Table(name = "OEX_OCORRENCIA_EXCECAO")
+	@Table(name = "OCORRENCIA_EXCECAO")
 	static class OcorrenciaExcecao {
 
 		@Id
@@ -237,11 +251,11 @@ class Aula {
 		private Integer id;
 
 		@ManyToOne
-		@JoinColumn(name = "AUL_ID", nullable = false)
+		@JoinColumn(name = "AULA_ID", nullable = false)
 		private Aula aula;
 
 		@Temporal(TemporalType.DATE)
-		@Column(name = "DATA_ORIGINAL", nullable = false)
+		@Column(name = "DATA_ORIGINAL_OCORRENCIA", nullable = false)
 		private Date dataOriginalOcorrencia;
 
 		@Column(name = "CANCELADA", nullable = false)

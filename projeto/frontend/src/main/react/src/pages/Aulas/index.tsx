@@ -12,6 +12,7 @@ import UnenrollModal from "../../components/common/UnenrollModal";
 import { RatingModal } from "../../components/common/RatingModal";
 import { useUser } from "../../contexts/UserContext";
 import { submitRating, buildRatingRequest } from "../../services/avaliacaoService";
+import { submitCancelamento, buildCancelamentoRequest } from "../../services/cancelamentoService";
 
 const Aulas = () => {
     const { user } = useUser();
@@ -104,25 +105,47 @@ const Aulas = () => {
         try {
             setUnenrollmentLoading(true);
 
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            // Obter dados do usuário logado
+            if (!user || !user.matricula) {
+                console.error("Usuário não está logado ou não possui matrícula");
+                alert("Erro: usuário não autenticado");
+                return;
+            }
 
-            setClasses((prevClasses) =>
-                prevClasses.map((classItem) =>
-                    classItem.id === classId
-                        ? {
-                              ...classItem,
-                              enrolled: classItem.enrollmentStatus === "enrolled" ? Math.max(0, classItem.enrolled - 1) : classItem.enrolled,
-                              enrollmentStatus: "not_enrolled" as EnrollmentStatus,
-                              waitingList: classItem.enrollmentStatus === "waiting_list" ? Math.max(0, classItem.waitingList - 1) : classItem.waitingList,
-                          }
-                        : classItem,
-                ),
-            );
+            // Construir requisição
+            const request = buildCancelamentoRequest(classId, user.matricula);
 
-            handleCloseUnenrollModal();
-            console.log("Cancelamento realizado com sucesso!");
+            // Enviar para o backend
+            const response = await submitCancelamento(request);
+
+            if (response.sucesso) {
+                console.log("Cancelamento realizado com sucesso:", response.mensagem);
+
+                // Atualizar estado local após sucesso
+                setClasses((prevClasses) =>
+                    prevClasses.map((classItem) =>
+                        classItem.id === classId
+                            ? {
+                                  ...classItem,
+                                  enrolled: classItem.enrollmentStatus === "enrolled" ? Math.max(0, classItem.enrolled - 1) : classItem.enrolled,
+                                  enrollmentStatus: "not_enrolled" as EnrollmentStatus,
+                                  waitingList: classItem.enrollmentStatus === "waiting_list" ? Math.max(0, classItem.waitingList - 1) : classItem.waitingList,
+                              }
+                            : classItem,
+                    ),
+                );
+
+                handleCloseUnenrollModal();
+                
+                // Exibir mensagem do backend (inclui informação sobre reembolso)
+                alert(response.mensagem);
+            } else {
+                console.error("Erro ao cancelar reserva:", response.mensagem);
+                alert(`Erro: ${response.mensagem}`);
+            }
         } catch (error) {
             console.error("Erro ao cancelar inscrição:", error);
+            alert("Erro ao processar cancelamento. Tente novamente.");
         } finally {
             setUnenrollmentLoading(false);
         }

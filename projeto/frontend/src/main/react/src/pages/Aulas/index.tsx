@@ -10,8 +10,11 @@ import { animationVariants } from "../../hooks/useScrollAnimation";
 import ClassEnrollmentModal from "../../components/common/ClassEnrollmentModal";
 import UnenrollModal from "../../components/common/UnenrollModal";
 import { RatingModal } from "../../components/common/RatingModal";
+import { useUser } from "../../contexts/UserContext";
+import { submitRating, buildRatingRequest } from "../../services/avaliacaoService";
 
 const Aulas = () => {
+    const { user } = useUser();
     const [selectedCategory, setSelectedCategory] = useState("Todas");
     const [searchQuery, setSearchQuery] = useState("");
     const [classes, setClasses] = useState<Class[]>([]);
@@ -149,26 +152,58 @@ const Aulas = () => {
         try {
             setRatingLoading(true);
 
-            // Simula delay de rede
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            // Obter dados do usuário logado
+            if (!user || !user.matricula) {
+                console.error("Usuário não está logado ou não possui matrícula");
+                alert("Erro: usuário não autenticado");
+                return;
+            }
 
-            // Remove a aula da lista de "Minhas Aulas" após avaliação
-            setClasses((prevClasses) =>
-                prevClasses.map((classItem) =>
-                    classItem.id === classId
-                        ? {
-                              ...classItem,
-                              enrollmentStatus: "not_enrolled" as EnrollmentStatus,
-                              userRating: rating,
-                          }
-                        : classItem,
-                ),
+            // Buscar dados da aula
+            const classData = classes.find((c) => c.id === classId);
+            if (!classData || !classData.instructorId || !classData.classDate) {
+                console.error("Dados da aula incompletos", classData);
+                alert("Erro: dados da aula incompletos");
+                return;
+            }
+
+            // Construir requisição
+            const request = buildRatingRequest(
+                classId,
+                rating,
+                user.matricula,
+                classData.instructorId,
+                classData.classDate,
             );
 
-            handleCloseRatingModal();
-            console.log("Avaliação realizada com sucesso!");
+            // Enviar para o backend
+            const response = await submitRating(request);
+
+            if (response.sucesso) {
+                console.log("Avaliação enviada com sucesso:", response.mensagem);
+
+                // Remove a aula da lista de "Minhas Aulas" após avaliação
+                setClasses((prevClasses) =>
+                    prevClasses.map((classItem) =>
+                        classItem.id === classId
+                            ? {
+                                  ...classItem,
+                                  enrollmentStatus: "not_enrolled" as EnrollmentStatus,
+                                  userRating: rating,
+                              }
+                            : classItem,
+                    ),
+                );
+
+                handleCloseRatingModal();
+               //  alert("Avaliação realizada com sucesso!"); adicionar uma visualização que não seja um alert
+            } else {
+                console.error("Erro ao enviar avaliação:", response.mensagem);
+                alert(`Erro: ${response.mensagem}`);
+            }
         } catch (error) {
             console.error("Erro ao realizar avaliação:", error);
+            alert("Erro ao enviar avaliação. Tente novamente.");
         } finally {
             setRatingLoading(false);
         }

@@ -45,6 +45,7 @@ br\com\forgefit\dominio\frequencia\enums\StatusFrequencia.class
 br\com\forgefit\dominio\treino\TreinoService.class
 br\com\forgefit\dominio\avaliacao\AvaliacaoId.class
 br\com\forgefit\dominio\aula\Reserva.class
+br\com\forgefit\dominio\avaliacao\AvaliacaoBuilder.class
 br\com\forgefit\dominio\checkin\CheckinId.class
 br\com\forgefit\dominio\guilda\GuildaId.class
 br\com\forgefit\dominio\aula\Recorrencia.class

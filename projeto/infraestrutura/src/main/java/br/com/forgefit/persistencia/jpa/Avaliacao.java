@@ -19,7 +19,7 @@ class Avaliacao {
 	private String alunoMatricula;
 
 	@ManyToOne
-	@JoinColumn(name = "AVA_PROFESSOR_ID", nullable = false)
+	@JoinColumn(name = "PROFESSOR_ID", nullable = false)
 	private ProfessorJpa professor;
 
 	@Column(name = "AULA_ID", nullable = false)

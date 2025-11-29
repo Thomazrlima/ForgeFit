@@ -462,7 +462,7 @@ class ReservaRepositorioImpl implements br.com.forgefit.aplicacao.aula.ReservaRe
 	}
 }
 
-@org.springframework.stereotype.Repository
+@org.springframework.stereotype.Repository("aulaRepositorioAplicacao")
 class AulaRepositorioAplicacaoImpl implements br.com.forgefit.aplicacao.aula.AulaRepositorioAplicacao {
 	@org.springframework.beans.factory.annotation.Autowired
 	AulaJpaRepository repositorio;

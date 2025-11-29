@@ -1,7 +1,9 @@
 package br.com.forgefit.persistencia.jpa;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 import org.modelmapper.AbstractConverter;
 import org.modelmapper.ModelMapper;
@@ -48,6 +50,20 @@ class JpaMapeador extends ModelMapper {
             @Override
             protected LocalDate convert(String source) {
                 return source != null ? LocalDate.parse(source, DateTimeFormatter.ISO_LOCAL_DATE) : null;
+            }
+        });
+
+        addConverter(new AbstractConverter<LocalDate, Date>() {
+            @Override
+            protected Date convert(LocalDate source) {
+                return source != null ? Date.from(source.atStartOfDay(ZoneId.systemDefault()).toInstant()) : null;
+            }
+        });
+
+        addConverter(new AbstractConverter<Date, LocalDate>() {
+            @Override
+            protected LocalDate convert(Date source) {
+                return source != null ? source.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : null;
             }
         });
     }

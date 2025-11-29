@@ -27,6 +27,8 @@ import br.com.forgefit.dominio.guilda.GuildaRepositorio;
 import br.com.forgefit.dominio.guilda.GuildaService;
 import br.com.forgefit.dominio.torneio.TorneioRepositorio;
 import br.com.forgefit.dominio.torneio.TorneioService;
+import br.com.forgefit.dominio.avaliacao.AvaliacaoRepositorio;
+import br.com.forgefit.dominio.avaliacao.AvaliacaoService;
 
 @SpringBootApplication
 public class BackendAplicacao {
@@ -67,6 +69,11 @@ public class BackendAplicacao {
     @Bean
     public TorneioService torneioService(TorneioRepositorio repositorio) {
         return new TorneioService(repositorio);
+    }
+
+    @Bean
+    public AvaliacaoService avaliacaoService(AvaliacaoRepositorio repositorio) {
+        return new AvaliacaoService(repositorio);
     }
 
     @Bean

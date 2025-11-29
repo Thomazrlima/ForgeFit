@@ -36,7 +36,19 @@ public class AvaliacaoService {
             return "É necessário preencher todas as métricas de avaliação";
         }
         
-        criarAvaliacao(alunoMatricula, professorId, aulaId, dataDaOcorrencia, notas, comentario);
+        AvaliacaoId id = new AvaliacaoId(contadorId.getAndIncrement());
+        
+        Avaliacao avaliacao = new AvaliacaoBuilder()
+            .comId(id)
+            .comAlunoMatricula(alunoMatricula)
+            .comProfessorId(professorId)
+            .comAulaId(aulaId)
+            .comDataDaOcorrenciaDaAula(dataDaOcorrencia)
+            .comNotas(notas)
+            .comComentario(comentario)
+            .build();
+        
+        avaliacaoRepositorio.salvar(avaliacao);
         return "A avaliação foi registrada com sucesso";
     }
 }

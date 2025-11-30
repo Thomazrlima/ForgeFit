@@ -4,13 +4,26 @@ import static org.apache.commons.lang3.Validate.notNull;
 
 import br.com.forgefit.dominio.aluno.Matricula;
 import br.com.forgefit.dominio.ranking.enums.PeriodoRanking;
+import br.com.forgefit.dominio.ranking.strategy.CalculoPontuacaoPadraoStrategy;
+import br.com.forgefit.dominio.ranking.strategy.CalculoPontuacaoStrategy;
 
 public class RankingService {
     private final RankingRepositorio rankingRepositorio;
+    private CalculoPontuacaoStrategy calculoPontuacaoStrategy;
 
     public RankingService(RankingRepositorio rankingRepositorio) {
         notNull(rankingRepositorio, "O repositório de rankings não pode ser nulo");
         this.rankingRepositorio = rankingRepositorio;
+        this.calculoPontuacaoStrategy = new CalculoPontuacaoPadraoStrategy();
+    }
+
+    public void setCalculoPontuacaoStrategy(CalculoPontuacaoStrategy strategy) {
+        notNull(strategy, "A estratégia de cálculo não pode ser nula");
+        this.calculoPontuacaoStrategy = strategy;
+    }
+
+    public CalculoPontuacaoStrategy getCalculoPontuacaoStrategy() {
+        return this.calculoPontuacaoStrategy;
     }
 
     public Ranking obterRanking(PeriodoRanking periodo) {
@@ -22,27 +35,41 @@ public class RankingService {
             });
     }
 
-    public void registrarPontosFrequencia(Matricula alunoMatricula, int pontos, PeriodoRanking periodo) {
+    public void registrarPontosFrequencia(Matricula alunoMatricula, int pontosBase, int aulasConsecutivas, PeriodoRanking periodo) {
         Ranking ranking = obterRanking(periodo);
         ranking.adicionarOuAtualizar(alunoMatricula);
         ItemRanking item = ranking.getItemPorMatricula(alunoMatricula);
-        item.adicionarPontosFrequencia(pontos);
+        
+        int pontosCalculados = calculoPontuacaoStrategy.calcularPontosFrequencia(pontosBase, aulasConsecutivas);
+        item.adicionarPontosFrequencia(pontosCalculados);
+        rankingRepositorio.salvar(ranking);
+    }
+
+    public void registrarPontosFrequencia(Matricula alunoMatricula, int pontos, PeriodoRanking periodo) {
+        registrarPontosFrequencia(alunoMatricula, pontos, 0, periodo);
+    }
+
+    public void registrarPontosGuilda(Matricula alunoMatricula, int pontosBase, int nivelGuilda, PeriodoRanking periodo) {
+        Ranking ranking = obterRanking(periodo);
+        ranking.adicionarOuAtualizar(alunoMatricula);
+        ItemRanking item = ranking.getItemPorMatricula(alunoMatricula);
+        
+        int pontosCalculados = calculoPontuacaoStrategy.calcularPontosGuilda(pontosBase, nivelGuilda);
+        item.adicionarPontosGuilda(pontosCalculados);
         rankingRepositorio.salvar(ranking);
     }
 
     public void registrarPontosGuilda(Matricula alunoMatricula, int pontos, PeriodoRanking periodo) {
-        Ranking ranking = obterRanking(periodo);
-        ranking.adicionarOuAtualizar(alunoMatricula);
-        ItemRanking item = ranking.getItemPorMatricula(alunoMatricula);
-        item.adicionarPontosGuilda(pontos);
-        rankingRepositorio.salvar(ranking);
+        registrarPontosGuilda(alunoMatricula, pontos, 0, periodo);
     }
 
-    public void registrarPontosPerformance(Matricula alunoMatricula, int pontos, double nota, PeriodoRanking periodo) {
+    public void registrarPontosPerformance(Matricula alunoMatricula, int pontosBase, double nota, PeriodoRanking periodo) {
         Ranking ranking = obterRanking(periodo);
         ranking.adicionarOuAtualizar(alunoMatricula);
         ItemRanking item = ranking.getItemPorMatricula(alunoMatricula);
-        item.adicionarPontosPerformance(pontos, nota);
+        
+        int pontosCalculados = calculoPontuacaoStrategy.calcularPontosPerformance(pontosBase, nota);
+        item.adicionarPontosPerformance(pontosCalculados, nota);
         rankingRepositorio.salvar(ranking);
     }
 

@@ -30,7 +30,7 @@ class RankingControlador {
      * Lista o ranking completo de um período específico.
      * GET /api/ranking?periodo=SEMANAL
      * 
-     * @param periodo Período do ranking (SEMANAL, MENSAL, ANUAL). Default: SEMANAL
+     * @param periodo Período do ranking (SEMANAL, MENSAL, GERAL). Default: SEMANAL
      * @return Lista ordenada de itens do ranking
      */
     @RequestMapping(method = GET)
@@ -40,7 +40,7 @@ class RankingControlador {
             PeriodoRanking periodoEnum = PeriodoRanking.valueOf(periodo.toUpperCase());
             return rankingServicoAplicacao.listarRanking(periodoEnum);
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Período inválido: " + periodo + ". Use SEMANAL, MENSAL ou ANUAL");
+            throw new IllegalArgumentException("Período inválido: " + periodo + ". Use SEMANAL, MENSAL ou GERAL");
         }
     }
 
@@ -48,7 +48,7 @@ class RankingControlador {
      * Lista o pódio (top 3) do ranking.
      * GET /api/ranking/podio?periodo=SEMANAL
      * 
-     * @param periodo Período do ranking (SEMANAL, MENSAL, ANUAL). Default: SEMANAL
+     * @param periodo Período do ranking (SEMANAL, MENSAL, GERAL). Default: SEMANAL
      * @return Lista com os 3 primeiros colocados
      */
     @RequestMapping(method = GET, path = "/podio")
@@ -58,7 +58,7 @@ class RankingControlador {
             PeriodoRanking periodoEnum = PeriodoRanking.valueOf(periodo.toUpperCase());
             return rankingServicoAplicacao.listarPodio(periodoEnum);
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Período inválido: " + periodo + ". Use SEMANAL, MENSAL ou ANUAL");
+            throw new IllegalArgumentException("Período inválido: " + periodo + ". Use SEMANAL, MENSAL ou GERAL");
         }
     }
 
@@ -67,7 +67,7 @@ class RankingControlador {
      * GET /api/ranking/top/{limite}?periodo=SEMANAL
      * 
      * @param limite  Número de alunos a retornar
-     * @param periodo Período do ranking (SEMANAL, MENSAL, ANUAL). Default: SEMANAL
+     * @param periodo Período do ranking (SEMANAL, MENSAL, GERAL). Default: SEMANAL
      * @return Lista com os N primeiros colocados
      */
     @RequestMapping(method = GET, path = "/top/{limite}")
@@ -78,7 +78,7 @@ class RankingControlador {
             PeriodoRanking periodoEnum = PeriodoRanking.valueOf(periodo.toUpperCase());
             return rankingServicoAplicacao.listarTopN(periodoEnum, limite);
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Período inválido: " + periodo + ". Use SEMANAL, MENSAL ou ANUAL");
+            throw new IllegalArgumentException("Período inválido: " + periodo + ". Use SEMANAL, MENSAL ou GERAL");
         }
     }
 
@@ -87,7 +87,7 @@ class RankingControlador {
      * GET /api/ranking/aluno/{matricula}?periodo=SEMANAL
      * 
      * @param matricula Matrícula do aluno
-     * @param periodo   Período do ranking (SEMANAL, MENSAL, ANUAL). Default:
+     * @param periodo   Período do ranking (SEMANAL, MENSAL, GERAL). Default:
      *                  SEMANAL
      * @return Item do ranking do aluno
      */
@@ -105,7 +105,7 @@ class RankingControlador {
 
             return ResponseEntity.ok(item);
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Período inválido: " + periodo + ". Use SEMANAL, MENSAL ou ANUAL");
+            throw new IllegalArgumentException("Período inválido: " + periodo + ". Use SEMANAL, MENSAL ou GERAL");
         }
     }
 
@@ -117,6 +117,6 @@ class RankingControlador {
      */
     @RequestMapping(method = GET, path = "/periodos")
     List<String> listarPeriodos() {
-        return List.of("SEMANAL", "MENSAL", "ANUAL");
+        return List.of("SEMANAL", "MENSAL", "GERAL");
     }
 }

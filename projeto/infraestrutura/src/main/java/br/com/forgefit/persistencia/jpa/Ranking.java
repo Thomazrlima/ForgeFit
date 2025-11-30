@@ -62,7 +62,7 @@ class ItemRanking {
 	private Integer id;
 
 	@ManyToOne
-	@JoinColumn(name = "RNK_ID", nullable = false)
+	@JoinColumn(name = "RANKING_ID", nullable = false)
 	private Ranking ranking;
 
 	@Column(name = "ALUNO_MATRICULA", nullable = false, length = 50)
@@ -80,10 +80,10 @@ class ItemRanking {
 	@Column(name = "PONTUACAO_TOTAL")
 	private Integer pontuacaoTotal = 0;
 
-	@Column(name = "POSICAO_RANK")
+	@Column(name = "POSICAO")
 	private Integer posicao;
 
-	@Column(name = "NUM_AULAS_PARTICIPADAS")
+	@Column(name = "NUMERO_AULAS_PARTICIPADAS")
 	private Integer numeroAulasParticipadas = 0;
 
 	@Column(name = "MEDIA_PERFORMANCE")
@@ -192,7 +192,7 @@ interface ItemRankingJpaRepository extends JpaRepository<ItemRanking, Integer> {
 				SELECT i.posicao AS posicao,
 				       i.alunoMatricula AS alunoMatricula,
 				       a.nome AS alunoNome,
-				       a.userId AS alunoAvatar,
+				       u.avatar AS alunoAvatar,
 				       i.pontuacaoTotal AS pontuacaoTotal,
 				       i.pontosFrequencia AS pontosFrequencia,
 				       i.pontosGuilda AS pontosGuilda,
@@ -201,6 +201,7 @@ interface ItemRankingJpaRepository extends JpaRepository<ItemRanking, Integer> {
 				       i.mediaPerformance AS mediaPerformance
 				FROM ItemRanking i
 				LEFT JOIN Aluno a ON i.alunoMatricula = a.matricula
+				LEFT JOIN UsuarioMock u ON CAST(a.userId AS integer) = u.id
 				WHERE i.ranking.periodo = :periodo
 				ORDER BY i.posicao ASC
 			""")
@@ -210,7 +211,7 @@ interface ItemRankingJpaRepository extends JpaRepository<ItemRanking, Integer> {
 				SELECT i.posicao AS posicao,
 				       i.alunoMatricula AS alunoMatricula,
 				       a.nome AS alunoNome,
-				       a.userId AS alunoAvatar,
+				       u.avatar AS alunoAvatar,
 				       i.pontuacaoTotal AS pontuacaoTotal,
 				       i.pontosFrequencia AS pontosFrequencia,
 				       i.pontosGuilda AS pontosGuilda,
@@ -219,6 +220,7 @@ interface ItemRankingJpaRepository extends JpaRepository<ItemRanking, Integer> {
 				       i.mediaPerformance AS mediaPerformance
 				FROM ItemRanking i
 				LEFT JOIN Aluno a ON i.alunoMatricula = a.matricula
+				LEFT JOIN UsuarioMock u ON CAST(a.userId AS integer) = u.id
 				WHERE i.ranking.periodo = :periodo
 				ORDER BY i.posicao ASC
 				LIMIT :limite
@@ -229,7 +231,7 @@ interface ItemRankingJpaRepository extends JpaRepository<ItemRanking, Integer> {
 				SELECT i.posicao AS posicao,
 				       i.alunoMatricula AS alunoMatricula,
 				       a.nome AS alunoNome,
-				       a.userId AS alunoAvatar,
+				       u.avatar AS alunoAvatar,
 				       i.pontuacaoTotal AS pontuacaoTotal,
 				       i.pontosFrequencia AS pontosFrequencia,
 				       i.pontosGuilda AS pontosGuilda,
@@ -238,6 +240,7 @@ interface ItemRankingJpaRepository extends JpaRepository<ItemRanking, Integer> {
 				       i.mediaPerformance AS mediaPerformance
 				FROM ItemRanking i
 				LEFT JOIN Aluno a ON i.alunoMatricula = a.matricula
+				LEFT JOIN UsuarioMock u ON CAST(a.userId AS integer) = u.id
 				WHERE i.ranking.periodo = :periodo AND i.alunoMatricula = :matricula
 			""")
 	RankingItemResumo findByPeriodoAndMatricula(@Param("periodo") PeriodoRanking periodo,

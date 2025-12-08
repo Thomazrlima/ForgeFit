@@ -695,6 +695,7 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 			       SIZE(a.listaDeEspera) as tamanhoListaEspera
 			FROM Aula a
 			WHERE a.professor.id = :professorId
+			  AND a.status = 'ATIVA'
 			ORDER BY a.inicio ASC
 			""")
 	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorProfessor(

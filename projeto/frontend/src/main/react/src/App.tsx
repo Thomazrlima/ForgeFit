@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { theme, GlobalStyle } from "./styles";
 import AppRouter from "./router/AppRouter";
 import { UserProvider } from "./contexts/UserContext";
+import ToastProvider from "./contexts/ToastContext";
 
 // Criar instância do QueryClient
 const queryClient = new QueryClient({
@@ -20,9 +21,11 @@ function App() {
         <QueryClientProvider client={queryClient}>
             <ThemeProvider theme={theme}>
                 <GlobalStyle />
-                <UserProvider>
-                    <AppRouter />
-                </UserProvider>
+                <ToastProvider>
+                    <UserProvider>
+                        <AppRouter />
+                    </UserProvider>
+                </ToastProvider>
             </ThemeProvider>
         </QueryClientProvider>
     );

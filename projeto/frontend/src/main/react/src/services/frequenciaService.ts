@@ -30,14 +30,9 @@ export interface BloqueioResponse {
 /**
  * Registra presença ou falta de um aluno.
  */
-export const registrarFrequencia = async (
-    request: RegistroFrequenciaResumo
-): Promise<FrequenciaResponse> => {
+export const registrarFrequencia = async (request: RegistroFrequenciaResumo): Promise<FrequenciaResponse> => {
     try {
-        const response = await axios.post<FrequenciaResponse>(
-            `${API_BASE_URL}/frequencia`, 
-            request
-        );
+        const response = await axios.post<FrequenciaResponse>(`${API_BASE_URL}/frequencia`, request);
         return response.data;
     } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
@@ -50,16 +45,11 @@ export const registrarFrequencia = async (
 /**
  * Verifica se um aluno está bloqueado por faltas.
  */
-export const verificarBloqueio = async (
-    alunoMatricula: string
-): Promise<BloqueioResponse> => {
+export const verificarBloqueio = async (alunoMatricula: string): Promise<BloqueioResponse> => {
     try {
-        const response = await axios.get<BloqueioResponse>(
-            `${API_BASE_URL}/frequencia/verificar-bloqueio`,
-            {
-                params: { alunoMatricula }
-            }
-        );
+        const response = await axios.get<BloqueioResponse>(`${API_BASE_URL}/frequencia/verificar-bloqueio`, {
+            params: { alunoMatricula },
+        });
         return response.data;
     } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
@@ -72,31 +62,23 @@ export const verificarBloqueio = async (
 /**
  * Helper para construir requisição de registro de presença.
  */
-export const buildRegistroPresenca = (
-    aulaId: number,
-    alunoMatricula: string,
-    data: Date = new Date()
-): RegistroFrequenciaResumo => {
+export const buildRegistroPresenca = (aulaId: number, alunoMatricula: string, data: Date = new Date()): RegistroFrequenciaResumo => {
     return {
         alunoMatricula,
         aulaId,
-        data: data.toISOString().split('T')[0], // YYYY-MM-DD
-        tipoRegistro: "PRESENCA"
+        data: data.toISOString().split("T")[0], // YYYY-MM-DD
+        tipoRegistro: "PRESENCA",
     };
 };
 
 /**
  * Helper para construir requisição de registro de falta.
  */
-export const buildRegistroFalta = (
-    aulaId: number,
-    alunoMatricula: string,
-    data: Date = new Date()
-): RegistroFrequenciaResumo => {
+export const buildRegistroFalta = (aulaId: number, alunoMatricula: string, data: Date = new Date()): RegistroFrequenciaResumo => {
     return {
         alunoMatricula,
         aulaId,
-        data: data.toISOString().split('T')[0], // YYYY-MM-DD
-        tipoRegistro: "FALTA"
+        data: data.toISOString().split("T")[0], // YYYY-MM-DD
+        tipoRegistro: "FALTA",
     };
 };

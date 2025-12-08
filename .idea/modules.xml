@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/persistencia/forgefit-persistencia.iml" filepath="$PROJECT_DIR$/persistencia/forgefit-persistencia.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ForgeFit.iml" filepath="$PROJECT_DIR$/ForgeFit.iml" />
     </modules>
   </component>
 </project>

@@ -9,7 +9,6 @@ export interface ClassRating {
 
 export interface Class {
     id: number;
-    name: string;
     instructor: string;
     instructorId: number; // ID do professor no banco
     category: string;
@@ -28,7 +27,6 @@ export interface Class {
 export const mockClasses: Class[] = [
     {
         id: 1,
-        name: "Yoga Matinal",
         instructor: "Ana Silva",
         instructorId: 4, // joao.silva@forgefit.com
         category: "Yoga",
@@ -43,8 +41,21 @@ export const mockClasses: Class[] = [
         classDate: "2025-11-25", // Data da aula que já ocorreu
     },
     {
+        id: 6,
+        instructor: "Usuário Mockado",
+        instructorId: 1, // Usuário mockado (professor)
+        category: "Funcional",
+        schedule: "Qua - 19:00",
+        capacity: 20,
+        enrolled: 12,
+        location: "Sala 4",
+        image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500",
+        enrollmentStatus: "not_enrolled" as EnrollmentStatus,
+        waitingList: 0,
+        classDate: "2025-12-11",
+    },
+    {
         id: 2,
-        name: "Spinning Intenso",
         instructor: "Carlos Mendes",
         instructorId: 5, // maria.santos@forgefit.com
         category: "Spinning",
@@ -59,7 +70,6 @@ export const mockClasses: Class[] = [
     },
     {
         id: 3,
-        name: "Funcional Cross",
         instructor: "Pedro Santos",
         instructorId: 6, // pedro.oliveira@forgefit.com
         category: "Funcional",
@@ -74,7 +84,6 @@ export const mockClasses: Class[] = [
     },
     {
         id: 4,
-        name: "Pilates",
         instructor: "Mariana Costa",
         instructorId: 7, // julia.costa@forgefit.com
         category: "Pilates",
@@ -89,7 +98,6 @@ export const mockClasses: Class[] = [
     },
     {
         id: 5,
-        name: "Muay Thai",
         instructor: "Roberto Oliveira",
         instructorId: 8, // ricardo.souza@forgefit.com
         category: "Luta",

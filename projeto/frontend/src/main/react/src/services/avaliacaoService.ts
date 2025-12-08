@@ -36,13 +36,7 @@ export const submitRating = async (request: SubmitRatingRequest): Promise<Submit
 /**
  * Helper para converter ClassRating + informações da aula em SubmitRatingRequest
  */
-export const buildRatingRequest = (
-    classId: number,
-    rating: ClassRating,
-    alunoMatricula: string,
-    professorId: number,
-    dataOcorrenciaAula: string,
-): SubmitRatingRequest => {
+export const buildRatingRequest = (classId: number, rating: ClassRating, alunoMatricula: string, professorId: number, dataOcorrenciaAula: string): SubmitRatingRequest => {
     return {
         alunoMatricula,
         professorId,

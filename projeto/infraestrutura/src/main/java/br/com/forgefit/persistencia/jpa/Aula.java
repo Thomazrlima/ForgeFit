@@ -65,15 +65,12 @@ class Aula {
 	private Recorrencia recorrencia;
 
 	@OneToMany(mappedBy = "aula", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OrderColumn(name = "POSICAO")
 	private List<OcorrenciaExcecao> excecoes = new ArrayList<>();
 
 	@OneToMany(mappedBy = "aula", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OrderColumn(name = "POSICAO")
 	private List<Reserva> reservas = new ArrayList<>();
 
 	@OneToMany(mappedBy = "aula", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OrderColumn(name = "POSICAO")
 	private List<PosicaoListaDeEspera> listaDeEspera = new ArrayList<>();
 
 	public Integer getId() {
@@ -319,7 +316,7 @@ class Aula {
 	}
 
 	@Entity
-	@Table(name = "LES_LISTA_ESPERA")
+	@Table(name = "LISTA_DE_ESPERA")
 	static class PosicaoListaDeEspera {
 
 		@Id
@@ -328,7 +325,7 @@ class Aula {
 		private Integer id;
 
 		@ManyToOne
-		@JoinColumn(name = "AUL_ID", nullable = false)
+		@JoinColumn(name = "AULA_ID", nullable = false)
 		private Aula aula;
 
 		@Column(name = "ALUNO_MATRICULA", nullable = false, length = 50)
@@ -381,7 +378,7 @@ class Aula {
 		private Integer id;
 
 		@ManyToOne
-		@JoinColumn(name = "AUL_ID", nullable = false)
+		@JoinColumn(name = "AULA_ID", nullable = false)
 		private Aula aula;
 
 		@Column(name = "ALUNO_MATRICULA", nullable = false, length = 50)

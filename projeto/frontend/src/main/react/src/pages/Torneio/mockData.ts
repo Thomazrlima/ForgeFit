@@ -27,15 +27,15 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const calculateStatus = (startDate: Date, endDate: Date): TournamentStatus => {
     const now = new Date();
-    
+
     if (startDate > now) {
         return "scheduled";
     }
-    
+
     if (startDate <= now && endDate >= now) {
         return "active";
     }
-    
+
     return "active";
 };
 

@@ -2,6 +2,7 @@ import { Calendar, Users, MapPin, AlertCircle } from "lucide-react";
 import Modal, { ModalAction } from "../Modal";
 import type { Class } from "../../../pages/Aulas/mockData";
 import { ClassInfoContainer, ClassImageContainer, ClassImage, ClassContentWrapper, ClassTitle, ClassDetails, ClassDetail, WarningSection, CustomFooter, FooterRefundSection, ButtonContainer } from "./styles";
+import { getModalidadeImage } from "../../../utils/modalidadeImages";
 
 interface UnenrollModalProps {
     isOpen: boolean;
@@ -83,12 +84,12 @@ const UnenrollModal = ({ isOpen, onClose, classData, onConfirm, isLoading = fals
         <Modal isOpen={isOpen} onClose={onClose} title={isWaitingList ? "Sair da Lista de Espera" : "Cancelar Inscrição"} footer={footer} closeOnOverlayClick={!isLoading} closeOnEsc={!isLoading}>
             <ClassInfoContainer>
                 <ClassImageContainer>
-                    <ClassImage src={classData.image} alt={classData.name} />
+                    <ClassImage src={getModalidadeImage(classData.category)} alt={classData.category} />
                 </ClassImageContainer>
 
                 <ClassContentWrapper>
                     <div>
-                        <ClassTitle>{classData.name}</ClassTitle>
+                        <ClassTitle>{classData.category}</ClassTitle>
 
                         <ClassDetails>
                             <ClassDetail>

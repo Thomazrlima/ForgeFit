@@ -34,26 +34,39 @@ export const ModalOverlay = styled.div<{ isOpen: boolean }>`
     animation: ${fadeIn} 0.3s ease-out;
     padding: 1rem;
     box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
 `;
 
-export const ModalContent = styled.div`
+export const ModalContent = styled.div<{ size?: "sm" | "md" | "lg" }>`
     background: ${({ theme }) => theme.colors.background};
     border: 2px solid;
     border-image: linear-gradient(135deg, ${({ theme }) => theme.colors.primary}, ${({ theme }) => theme.colors.secondary}) 1;
     border-radius: 0.75rem;
     position: relative;
     width: 100%;
-    max-width: 800px;
+    max-width: ${({ size }) => {
+        if (size === "sm") return "400px";
+        if (size === "lg") return "900px";
+        return "700px";
+    }};
     max-height: 90vh;
-    overflow-y: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     animation: ${slideIn} 0.3s ease-out;
     box-shadow:
         0 25px 80px rgba(171, 37, 34, 0.15),
         0 0 20px rgba(239, 117, 43, 0.1);
     margin: auto;
+    box-sizing: border-box;
 
     @media (max-width: 64rem) {
-        max-width: 700px;
+        max-width: ${({ size }) => {
+            if (size === "sm") return "400px";
+            if (size === "lg") return "90%";
+            return "90%";
+        }};
         width: 90%;
     }
 
@@ -117,11 +130,13 @@ export const CloseButton = styled.button`
 `;
 
 export const ModalBody = styled.div`
-    padding: 1.5rem 2rem;
-
-    @media (max-width: 48rem) {
-        padding: 1rem 1.5rem;
-    }
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
 `;
 
 export const ModalFooter = styled.div`
@@ -130,6 +145,8 @@ export const ModalFooter = styled.div`
     justify-content: flex-end;
     padding: 1rem 2rem 1.5rem;
     border-top: 1px solid ${({ theme }) => theme.colors.primary}33;
+    flex-shrink: 0;
+    background-color: ${({ theme }) => theme.colors.background};
 
     @media (max-width: 48rem) {
         padding: 0.75rem 1.5rem 1rem;

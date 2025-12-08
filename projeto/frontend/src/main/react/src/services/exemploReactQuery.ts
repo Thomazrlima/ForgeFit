@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from './api';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "./api";
 
 // ============================================
 // EXEMPLO: Hook para buscar aulas
@@ -18,9 +18,9 @@ export interface Aula {
 
 export const useAulas = () => {
     return useQuery({
-        queryKey: ['aulas'],
+        queryKey: ["aulas"],
         queryFn: async () => {
-            const response = await api.get<Aula[]>('/aulas');
+            const response = await api.get<Aula[]>("/aulas");
             return response.data;
         },
     });
@@ -45,12 +45,12 @@ export const useReservarAula = () => {
 
     return useMutation({
         mutationFn: async (data: ReservaRequest) => {
-            const response = await api.post<ReservaResponse>('/aulas/reservar', data);
+            const response = await api.post<ReservaResponse>("/aulas/reservar", data);
             return response.data;
         },
         onSuccess: () => {
             // Invalidar e refetch de aulas após reserva bem-sucedida
-            queryClient.invalidateQueries({ queryKey: ['aulas'] });
+            queryClient.invalidateQueries({ queryKey: ["aulas"] });
         },
     });
 };
@@ -112,9 +112,9 @@ export interface RankingItem {
     avatar?: string;
 }
 
-export const useRanking = (periodo: 'SEMANAL' | 'MENSAL' | 'GERAL') => {
+export const useRanking = (periodo: "SEMANAL" | "MENSAL" | "GERAL") => {
     return useQuery({
-        queryKey: ['ranking', periodo],
+        queryKey: ["ranking", periodo],
         queryFn: async () => {
             const response = await api.get<RankingItem[]>(`/ranking/${periodo}`);
             return response.data;
@@ -138,7 +138,7 @@ export interface Guilda {
 
 export const useMinhaGuilda = (alunoMatricula?: string) => {
     return useQuery({
-        queryKey: ['guilda', alunoMatricula],
+        queryKey: ["guilda", alunoMatricula],
         queryFn: async () => {
             const response = await api.get<Guilda>(`/guildas/aluno/${alunoMatricula}`);
             return response.data;

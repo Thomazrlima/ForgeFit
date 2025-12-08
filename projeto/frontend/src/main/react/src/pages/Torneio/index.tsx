@@ -226,12 +226,13 @@ const TorneiosDetalhes = () => {
     }));
 
     // Adaptar último pódio para o formato esperado pelo RankingPodium
-    const lastPodiumTopThree = lastPodium?.slice(0, 3).map((guild) => ({
-        id: guild.id,
-        name: guild.name,
-        avatar: guild.imageUrl,
-        score: guild.score,
-    })) || [];
+    const lastPodiumTopThree =
+        lastPodium?.slice(0, 3).map((guild) => ({
+            id: guild.id,
+            name: guild.name,
+            avatar: guild.imageUrl,
+            score: guild.score,
+        })) || [];
 
     const isActiveTournament = tournamentData?.status === "active";
     const isScheduledTournament = tournamentData?.status === "scheduled";
@@ -329,13 +330,7 @@ const TorneiosDetalhes = () => {
                                 ) : (
                                     <PrizesList>
                                         {prizes.map((prize, index) => (
-                                            <PrizeCardVertical
-                                                key={prize.id}
-                                                as={motion.div}
-                                                initial={{ opacity: 0, y: 50 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: index * 0.15, duration: 0.5 }}
-                                            >
+                                            <PrizeCardVertical key={prize.id} as={motion.div} initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.15, duration: 0.5 }}>
                                                 <PrizePosition>#{prize.position}</PrizePosition>
                                                 <PrizeImageVertical src={prize.imageUrl} alt={prize.name} />
                                                 <PrizeName>{prize.name}</PrizeName>

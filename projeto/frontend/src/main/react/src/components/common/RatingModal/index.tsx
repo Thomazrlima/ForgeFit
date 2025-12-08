@@ -68,7 +68,7 @@ export const RatingModal = ({ isOpen, onClose, classData, onConfirm, isLoading =
             <HeaderContainer>
                 <ModalTitle>Avaliar Aula</ModalTitle>
                 <ClassInfo>
-                    <h3>{classData.name}</h3>
+                    <h3>{classData.category}</h3>
                     <p>Professor(a): {classData.instructor}</p>
                 </ClassInfo>
             </HeaderContainer>

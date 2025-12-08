@@ -20,14 +20,9 @@ export interface CancelamentoResponse {
 /**
  * Envia requisição de cancelamento para o backend.
  */
-export const submitCancelamento = async (
-    request: CancelamentoResumo
-): Promise<CancelamentoResponse> => {
+export const submitCancelamento = async (request: CancelamentoResumo): Promise<CancelamentoResponse> => {
     try {
-        const response = await axios.post<CancelamentoResponse>(
-            `${API_BASE_URL}/reservas/cancelar`, 
-            request
-        );
+        const response = await axios.post<CancelamentoResponse>(`${API_BASE_URL}/reservas/cancelar`, request);
         return response.data;
     } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
@@ -42,12 +37,9 @@ export const submitCancelamento = async (
 /**
  * Helper para construir requisição de cancelamento.
  */
-export const buildCancelamentoRequest = (
-    aulaId: number,
-    alunoMatricula: string
-): CancelamentoResumo => {
+export const buildCancelamentoRequest = (aulaId: number, alunoMatricula: string): CancelamentoResumo => {
     return {
         alunoMatricula,
-        aulaId
+        aulaId,
     };
 };

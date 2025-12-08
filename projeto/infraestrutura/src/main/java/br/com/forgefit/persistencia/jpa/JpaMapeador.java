@@ -78,6 +78,13 @@ class JpaMapeador extends ModelMapper {
             }
         });
 
+        addConverter(new AbstractConverter<LocalDateTime, Date>() {
+            @Override
+            protected Date convert(LocalDateTime source) {
+                return source != null ? Date.from(source.atZone(ZoneId.systemDefault()).toInstant()) : null;
+            }
+        });
+
         addConverter(new AbstractConverter<Integer, AulaId>() {
             @Override
             protected AulaId convert(Integer source) {

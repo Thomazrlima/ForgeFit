@@ -15,7 +15,7 @@ interface ModalProps {
     closeOnEsc?: boolean;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer, closeOnOverlayClick = true, closeOnEsc = true }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer, size = "md", closeOnOverlayClick = true, closeOnEsc = true }) => {
     useEffect(() => {
         if (!closeOnEsc || !isOpen) return;
 
@@ -51,7 +51,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer,
 
     return createPortal(
         <ModalOverlay isOpen={isOpen} onClick={handleOverlayClick}>
-            <ModalContent>
+            <ModalContent size={size}>
                 {title && (
                     <ModalHeader>
                         <ModalTitle>{title}</ModalTitle>

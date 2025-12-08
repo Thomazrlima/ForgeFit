@@ -34,14 +34,14 @@ export const mapPeriodToBackend = (period: "monthly" | "all-time"): PeriodoRanki
 /**
  * Lista o ranking completo de um período específico.
  * GET /api/ranking?periodo=MENSAL
- * 
+ *
  * @param periodo Período do ranking (SEMANAL, MENSAL, ANUAL)
  * @returns Lista ordenada de itens do ranking
  */
 export const listarRanking = async (periodo: PeriodoRanking = "MENSAL"): Promise<RankingItemResumo[]> => {
     try {
         const response = await api.get<RankingItemResumo[]>("/ranking", {
-            params: { periodo }
+            params: { periodo },
         });
         return response.data;
     } catch (error) {
@@ -53,14 +53,14 @@ export const listarRanking = async (periodo: PeriodoRanking = "MENSAL"): Promise
 /**
  * Lista o pódio (top 3) do ranking.
  * GET /api/ranking/podio?periodo=MENSAL
- * 
+ *
  * @param periodo Período do ranking (SEMANAL, MENSAL, ANUAL)
  * @returns Lista com os 3 primeiros colocados
  */
 export const listarPodio = async (periodo: PeriodoRanking = "MENSAL"): Promise<RankingItemResumo[]> => {
     try {
         const response = await api.get<RankingItemResumo[]>("/ranking/podio", {
-            params: { periodo }
+            params: { periodo },
         });
         return response.data;
     } catch (error) {
@@ -72,7 +72,7 @@ export const listarPodio = async (periodo: PeriodoRanking = "MENSAL"): Promise<R
 /**
  * Lista os top N alunos do ranking.
  * GET /api/ranking/top/{limite}?periodo=MENSAL
- * 
+ *
  * @param limite Número de alunos a retornar
  * @param periodo Período do ranking (SEMANAL, MENSAL, ANUAL)
  * @returns Lista com os N primeiros colocados
@@ -80,7 +80,7 @@ export const listarPodio = async (periodo: PeriodoRanking = "MENSAL"): Promise<R
 export const listarTopN = async (limite: number, periodo: PeriodoRanking = "MENSAL"): Promise<RankingItemResumo[]> => {
     try {
         const response = await api.get<RankingItemResumo[]>(`/ranking/top/${limite}`, {
-            params: { periodo }
+            params: { periodo },
         });
         return response.data;
     } catch (error) {
@@ -92,7 +92,7 @@ export const listarTopN = async (limite: number, periodo: PeriodoRanking = "MENS
 /**
  * Busca a posição de um aluno específico no ranking.
  * GET /api/ranking/aluno/{matricula}?periodo=MENSAL
- * 
+ *
  * @param matricula Matrícula do aluno
  * @param periodo Período do ranking (SEMANAL, MENSAL, ANUAL)
  * @returns Item do ranking do aluno ou null se não encontrado
@@ -100,12 +100,12 @@ export const listarTopN = async (limite: number, periodo: PeriodoRanking = "MENS
 export const buscarPosicaoAluno = async (matricula: string, periodo: PeriodoRanking = "MENSAL"): Promise<RankingItemResumo | null> => {
     try {
         const response = await api.get<RankingItemResumo>(`/ranking/aluno/${matricula}`, {
-            params: { periodo }
+            params: { periodo },
         });
         return response.data;
     } catch (error: unknown) {
         // Se o aluno não foi encontrado, retorna null
-        if (error && typeof error === 'object' && 'response' in error) {
+        if (error && typeof error === "object" && "response" in error) {
             const axiosError = error as { response?: { status?: number } };
             if (axiosError.response?.status === 404) {
                 return null;
@@ -119,7 +119,7 @@ export const buscarPosicaoAluno = async (matricula: string, periodo: PeriodoRank
 /**
  * Lista os períodos disponíveis para consulta.
  * GET /api/ranking/periodos
- * 
+ *
  * @returns Lista de períodos disponíveis
  */
 export const listarPeriodos = async (): Promise<string[]> => {

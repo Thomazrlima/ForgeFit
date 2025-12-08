@@ -13,17 +13,11 @@
         <module name="forgefit-backend" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="forgefit-infraestrutura (1)" target="17" />
-      <module name="forgefit-persistencia" target="1.8" />
-    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="forgefit-backend" options="-parameters" />
       <module name="forgefit-infraestrutura" options="-parameters" />
-      <module name="forgefit-infraestrutura (1)" options="-parameters" />
-      <module name="forgefit-persistencia" options="-parameters" />
     </option>
   </component>
 </project>

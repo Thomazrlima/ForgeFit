@@ -11,11 +11,15 @@ import ClassEnrollmentModal from "../../components/common/ClassEnrollmentModal";
 import UnenrollModal from "../../components/common/UnenrollModal";
 import { RatingModal } from "../../components/common/RatingModal";
 import { useUser } from "../../contexts/UserContext";
+import { useToast } from "../../contexts/ToastContext";
 import { submitRating, buildRatingRequest } from "../../services/avaliacaoService";
 import { submitCancelamento, buildCancelamentoRequest } from "../../services/cancelamentoService";
+import CriarAula from "../CriarAula";
+import { getModalidadeImage } from "../../utils/modalidadeImages";
 
 const Aulas = () => {
     const { user } = useUser();
+    const { success, error: showError } = useToast();
     const [selectedCategory, setSelectedCategory] = useState("Todas");
     const [searchQuery, setSearchQuery] = useState("");
     const [classes, setClasses] = useState<Class[]>([]);
@@ -51,7 +55,7 @@ const Aulas = () => {
         };
 
         loadData();
-    }, []);
+    }, []); // Carrega apenas uma vez ao montar o componente
 
     const handleSearch = (query: string) => {
         setSearchQuery(query);
@@ -108,7 +112,7 @@ const Aulas = () => {
             // Obter dados do usuário logado
             if (!user || !user.matricula) {
                 console.error("Usuário não está logado ou não possui matrícula");
-                alert("Erro: usuário não autenticado");
+                showError("Erro: usuário não autenticado");
                 return;
             }
 
@@ -136,16 +140,16 @@ const Aulas = () => {
                 );
 
                 handleCloseUnenrollModal();
-                
+
                 // Exibir mensagem do backend (inclui informação sobre reembolso)
-                alert(response.mensagem);
+                success(response.mensagem);
             } else {
                 console.error("Erro ao cancelar reserva:", response.mensagem);
-                alert(`Erro: ${response.mensagem}`);
+                showError(`Erro: ${response.mensagem}`);
             }
-        } catch (error) {
-            console.error("Erro ao cancelar inscrição:", error);
-            alert("Erro ao processar cancelamento. Tente novamente.");
+        } catch (err) {
+            console.error("Erro ao cancelar inscrição:", err);
+            showError("Erro ao processar cancelamento. Tente novamente.");
         } finally {
             setUnenrollmentLoading(false);
         }
@@ -178,7 +182,7 @@ const Aulas = () => {
             // Obter dados do usuário logado
             if (!user || !user.matricula) {
                 console.error("Usuário não está logado ou não possui matrícula");
-                alert("Erro: usuário não autenticado");
+                showError("Erro: usuário não autenticado");
                 return;
             }
 
@@ -186,18 +190,12 @@ const Aulas = () => {
             const classData = classes.find((c) => c.id === classId);
             if (!classData || !classData.instructorId || !classData.classDate) {
                 console.error("Dados da aula incompletos", classData);
-                alert("Erro: dados da aula incompletos");
+                showError("Erro: dados da aula incompletos");
                 return;
             }
 
             // Construir requisição
-            const request = buildRatingRequest(
-                classId,
-                rating,
-                user.matricula,
-                classData.instructorId,
-                classData.classDate,
-            );
+            const request = buildRatingRequest(classId, rating, user.matricula, classData.instructorId, classData.classDate);
 
             // Enviar para o backend
             const response = await submitRating(request);
@@ -219,14 +217,14 @@ const Aulas = () => {
                 );
 
                 handleCloseRatingModal();
-               //  alert("Avaliação realizada com sucesso!"); adicionar uma visualização que não seja um alert
+                success("Avaliação realizada com sucesso!");
             } else {
                 console.error("Erro ao enviar avaliação:", response.mensagem);
-                alert(`Erro: ${response.mensagem}`);
+                showError(`Erro: ${response.mensagem}`);
             }
-        } catch (error) {
-            console.error("Erro ao realizar avaliação:", error);
-            alert("Erro ao enviar avaliação. Tente novamente.");
+        } catch (err) {
+            console.error("Erro ao realizar avaliação:", err);
+            showError("Erro ao enviar avaliação. Tente novamente.");
         } finally {
             setRatingLoading(false);
         }
@@ -246,7 +244,7 @@ const Aulas = () => {
 
         const matchesCategory = normalizedSelectedCategory === "Todas" || normalizedClassCategory === normalizedSelectedCategory;
 
-        const matchesSearch = searchQuery === "" || classItem.name.toLowerCase().includes(searchQuery.toLowerCase()) || classItem.instructor.toLowerCase().includes(searchQuery.toLowerCase()) || classItem.location.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = searchQuery === "" || classItem.category.toLowerCase().includes(searchQuery.toLowerCase()) || classItem.instructor.toLowerCase().includes(searchQuery.toLowerCase()) || classItem.location.toLowerCase().includes(searchQuery.toLowerCase());
 
         return matchesCategory && matchesSearch;
     });
@@ -362,9 +360,9 @@ const Aulas = () => {
                                 return (
                                     <motion.div key={`enrolled-${classItem.id}`} variants={animationVariants.fadeInUp}>
                                         <CardComponent>
-                                            <ClassImage src={classItem.image} alt={classItem.name} />
+                                            <ClassImage src={getModalidadeImage(classItem.category)} alt={classItem.category} />
                                             <ClassInfo>
-                                                <ClassTitle>{classItem.name}</ClassTitle>
+                                                <ClassTitle>{classItem.category}</ClassTitle>
                                                 <ClassDetail>
                                                     <Users size={18} />
                                                     <span>{classItem.instructor}</span>
@@ -421,9 +419,9 @@ const Aulas = () => {
                         {availableClasses.map((classItem) => (
                             <motion.div key={`available-${classItem.id}`} variants={animationVariants.fadeInUp}>
                                 <ClassCard>
-                                    <ClassImage src={classItem.image} alt={classItem.name} />
+                                    <ClassImage src={getModalidadeImage(classItem.category)} alt={classItem.category} />
                                     <ClassInfo>
-                                        <ClassTitle>{classItem.name}</ClassTitle>
+                                        <ClassTitle>{classItem.category}</ClassTitle>
                                         <ClassDetail>
                                             <Users size={18} />
                                             <span>{classItem.instructor}</span>
@@ -465,6 +463,11 @@ const Aulas = () => {
         );
     };
 
+    // Conditional rendering: se o usuário for professor, mostra a página de criar aula
+    if (user?.role === "professor") {
+        return <CriarAula />;
+    }
+
     return (
         <Container>
             {renderContent()}
@@ -472,8 +475,6 @@ const Aulas = () => {
             <ClassEnrollmentModal isOpen={isModalOpen} onClose={handleCloseModal} classData={selectedClass} onConfirm={handleConfirmEnrollment} isLoading={enrollmentLoading} />
 
             <UnenrollModal isOpen={isUnenrollModalOpen} onClose={handleCloseUnenrollModal} classData={selectedClassToUnenroll} onConfirm={handleUnenroll} isLoading={unenrollmentLoading} />
-
-            <RatingModal isOpen={isRatingModalOpen} onClose={handleCloseRatingModal} classData={selectedClassToRate} onConfirm={handleConfirmRating} isLoading={ratingLoading} />
 
             <RatingModal isOpen={isRatingModalOpen} onClose={handleCloseRatingModal} classData={selectedClassToRate} onConfirm={handleConfirmRating} isLoading={ratingLoading} />
         </Container>

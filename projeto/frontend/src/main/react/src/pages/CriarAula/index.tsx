@@ -10,6 +10,7 @@ import { Container, Title, HeaderSection, AddButton, ClassesGrid, ClassCard, Cla
 import { getModalidadeImage } from "../../utils/modalidadeImages";
 import Spinner from "../../components/common/Spinner";
 import Modal, { ModalAction } from "../../components/common/Modal";
+import aulaService from "../../services/aulaService";
 
 const CriarAula = () => {
     const { user } = useUser();
@@ -22,21 +23,38 @@ const CriarAula = () => {
     const [deletingClass, setDeletingClass] = useState<Class | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    useEffect(() => {
-        const loadClasses = async () => {
-            try {
-                setLoading(true);
-                const classesData = await fetchClasses();
-                // Filtrar apenas as aulas do professor logado
-                const professorClasses = classesData.filter((classItem) => classItem.instructorId === user?.id);
-                setClasses(professorClasses);
-            } catch (error) {
-                console.error("Erro ao carregar aulas:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const loadClasses = async () => {
+        try {
+            setLoading(true);
+            // Buscar aulas do professor do backend
+            const aulasDoProfessor = await aulaService.listarAulasDoProfessor();
+            
+            // Converter para o formato esperado pelo componente
+            const classesFormatted: Class[] = aulasDoProfessor.map((aula: any) => ({
+                id: aula.id,
+                instructor: user?.name || "Professor",
+                instructorId: user?.id || 0,
+                category: modalidadeLabels[aula.modalidade as Modalidade] || aula.modalidade,
+                schedule: `${new Date(aula.inicio).toLocaleDateString("pt-BR")} - ${new Date(aula.inicio).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`,
+                capacity: aula.capacidade,
+                enrolled: 0, // TODO: buscar do backend
+                location: espacoLabels[aula.espaco as Espaco] || aula.espaco,
+                image: getModalidadeImage(aula.modalidade),
+                enrollmentStatus: "not_enrolled" as const,
+                waitingList: 0, // TODO: buscar do backend
+                classDate: new Date(aula.inicio).toISOString().split("T")[0],
+            }));
+            
+            setClasses(classesFormatted);
+        } catch (err) {
+            console.error("Erro ao carregar aulas:", err);
+            error("Erro ao carregar suas aulas");
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         if (user?.id) {
             loadClasses();
         }
@@ -82,20 +100,11 @@ const CriarAula = () => {
 
             if (editingClass) {
                 // Editar aula existente
-                const updatedClass: Class = {
-                    ...editingClass,
-                    category: modalidadeLabel,
-                    schedule: schedule,
-                    capacity: classData.capacity,
-                    location: espacoLabels[classData.espaco as Espaco] || classData.espaco,
-                    image: getModalidadeImage(classData.modalidade),
-                    classDate: classDate,
-                };
-
-                console.log("Aula editada:", updatedClass);
-                // TODO: Implementar chamada à API para editar aula
-
-                setClasses((prev) => prev.map((c) => (c.id === editingClass.id ? updatedClass : c)));
+                console.log("Editando aula:", editingClass);
+                // Chamar API para atualizar aula
+                await aulaService.atualizarAula(editingClass.id as unknown as number, classData);
+                // Recarregar lista do backend
+                await loadClasses();
                 success("Aula editada com sucesso!");
             } else {
                 // Criar nova aula
@@ -115,9 +124,10 @@ const CriarAula = () => {
                 };
 
                 console.log("Aula criada:", newClass);
-                // TODO: Implementar chamada à API para criar aula
-
-                setClasses((prev) => [newClass, ...prev]);
+                // Chamar API para criar aula
+                await aulaService.criarAula(classData, user?.id || 0);
+                // Recarregar lista do backend
+                await loadClasses();
                 success("Aula criada com sucesso!");
             }
 
@@ -140,12 +150,10 @@ const CriarAula = () => {
         try {
             setIsDeleting(true);
 
-            // Simula delay de exclusão
-            await new Promise((resolve) => setTimeout(resolve, 1000));
 
-            console.log("Aula excluída:", classId);
-            // TODO: Implementar chamada à API para excluir aula
 
+            // Chamar API para deletar aula
+            await aulaService.deletarAula(classId);
             setClasses((prev) => prev.filter((c) => c.id !== classId));
             success("Aula excluída com sucesso!");
             setDeletingClass(null);

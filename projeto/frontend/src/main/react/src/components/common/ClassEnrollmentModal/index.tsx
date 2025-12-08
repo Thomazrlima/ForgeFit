@@ -2,6 +2,7 @@ import { Calendar, Users, MapPin } from "lucide-react";
 import Modal, { ModalAction } from "../Modal";
 import type { Class } from "../../../pages/Aulas/mockData";
 import { ClassInfoContainer, ClassImageContainer, ClassImage, ClassContentWrapper, ClassTitle, ClassDetails, ClassDetail, EnrollmentInfo, WarningText } from "./styles";
+import { getModalidadeImage } from "../../../utils/modalidadeImages";
 
 interface ClassEnrollmentModalProps {
     isOpen: boolean;
@@ -36,12 +37,12 @@ const ClassEnrollmentModal = ({ isOpen, onClose, classData, onConfirm, isLoading
         <Modal isOpen={isOpen} onClose={onClose} title="Confirmar Inscrição" footer={footer} closeOnOverlayClick={!isLoading} closeOnEsc={!isLoading}>
             <ClassInfoContainer>
                 <ClassImageContainer>
-                    <ClassImage src={classData.image} alt={classData.name} />
+                    <ClassImage src={getModalidadeImage(classData.category)} alt={classData.category} />
                 </ClassImageContainer>
 
                 <ClassContentWrapper>
                     <div>
-                        <ClassTitle>{classData.name}</ClassTitle>
+                        <ClassTitle>{classData.category}</ClassTitle>
 
                         <ClassDetails>
                             <ClassDetail>

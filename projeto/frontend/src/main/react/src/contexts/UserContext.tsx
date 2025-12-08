@@ -30,9 +30,21 @@ interface UserProviderProps {
 const STORAGE_KEY = "@forgefit:user";
 const TOKEN_KEY = "@forgefit:token";
 
+// Usuário mockado para desenvolvimento
+const MOCK_USER: User = {
+    id: 1,
+    name: "Usuário Mockado",
+    avatar: "https://via.placeholder.com/150",
+    role: "professor",
+    matricula: "2024001",
+    pontuacaoTotal: 1500,
+    creditos: 50,
+};
+
 export const UserProvider = ({ children }: UserProviderProps) => {
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
+    // Usar usuário mockado por padrão
+    const [user, setUser] = useState<User | null>(MOCK_USER);
+    const [loading, setLoading] = useState(false);
 
     const saveUserToStorage = (userData: User) => {
         try {
@@ -69,7 +81,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         setLoading(true);
         try {
             const response = await authService.login(email, password);
-            
+
             if (!response.sucesso || !response.user) {
                 throw new Error(response.mensagem || "Erro ao fazer login");
             }
@@ -112,19 +124,22 @@ export const UserProvider = ({ children }: UserProviderProps) => {
             if (storedUser) {
                 setUser(storedUser);
             } else {
-                setUser(null);
+                // Usar usuário mockado quando não houver usuário no storage
+                setUser(MOCK_USER);
             }
         } catch (error) {
             console.error("Erro ao carregar dados do usuário:", error);
-            setUser(null);
+            // Usar usuário mockado em caso de erro
+            setUser(MOCK_USER);
         } finally {
             setLoading(false);
         }
     }, []);
 
-    useEffect(() => {
-        refreshUser();
-    }, [refreshUser]);
+    // Comentado para manter usuário mockado ativo
+    // useEffect(() => {
+    //     refreshUser();
+    // }, [refreshUser]);
 
     const value: UserContextType = {
         user,

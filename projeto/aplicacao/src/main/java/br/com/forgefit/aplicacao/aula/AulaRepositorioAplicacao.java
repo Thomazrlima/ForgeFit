@@ -17,6 +17,13 @@ public interface AulaRepositorioAplicacao {
     List<AulaResumo> pesquisarResumosAtivas();
     
     /**
+     * Pesquisa todas as aulas ativas (futuras) excluindo aquelas em que o aluno já está inscrito.
+     * @param matricula Matrícula do aluno
+     * @return Lista de resumos de aulas disponíveis para o aluno
+     */
+    List<AulaResumo> pesquisarResumosAtivasExcluindoAluno(String matricula);
+    
+    /**
      * Pesquisa aulas por modalidade.
      * @param modalidade Nome da modalidade (YOGA, SPINNING, etc.)
      * @return Lista de resumos de aulas da modalidade especificada
@@ -74,4 +81,11 @@ public interface AulaRepositorioAplicacao {
         LocalDateTime fim, 
         Boolean apenasComVagas
     );
+    
+    /**
+     * Busca aulas em que um aluno específico está inscrito.
+     * @param matricula Matrícula do aluno
+     * @return Lista de resumos de aulas do aluno
+     */
+    List<AulaResumo> buscarAulasPorMatriculaAluno(String matricula);
 }

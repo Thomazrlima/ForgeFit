@@ -13,4 +13,5 @@ public interface AulaRepositorio {
     List<Aula> listarTodas();
     List<Aula> buscarPorEspacoEPeriodo(Espaco espaco, LocalDateTime inicio, LocalDateTime fim);
     List<Aula> buscarPorProfessorEPeriodo(ProfessorId professorId, LocalDateTime inicio, LocalDateTime fim);
+    Integer obterProximoIdDisponivel();
 }

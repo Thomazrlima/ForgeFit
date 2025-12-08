@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Calendar, Users, MapPin, Filter, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { Container, ClassesGrid, ClassCard, ClassImage, ClassInfo, ClassTitle, ClassDetail, ClassFooter, EmptyState, SkeletonCard, SkeletonCardImage, SkeletonCardContent, SkeletonFilterButton, SkeletonSearchSection, EnrolledSection, SectionTitle, EnrolledClassCard, WaitingListClassCard, UnenrollButton, LeaveWaitingListButton, NoEnrolledClasses, SearchSection, ToEvaluateClassCard, EvaluateButton } from "./styles.ts";
-import { fetchClasses, fetchCategories, type Class, type EnrollmentStatus, type ClassRating } from "./mockData.ts";
+import { type ClassRating } from "./mockData.ts";
 import SearchAndFilterBar from "../../components/common/SearchAndFilterBar";
 import { Button } from "../../components/common/Button";
 import Skeleton from "../../components/common/Skeleton";
@@ -16,16 +16,37 @@ import { submitRating, buildRatingRequest } from "../../services/avaliacaoServic
 import { submitCancelamento, buildCancelamentoRequest } from "../../services/cancelamentoService";
 import CriarAula from "../CriarAula";
 import { getModalidadeImage } from "../../utils/modalidadeImages";
+import aulaService, { type AulaFrontend } from "../../services/aulaService";
+import { useAulasComInscricao, useInscreverAula, useCancelarInscricao } from "../../hooks/useAulas";
+
+// Type alias para manter compatibilidade
+type Class = AulaFrontend;
+type EnrollmentStatus = AulaFrontend["enrollmentStatus"];
 
 const Aulas = () => {
     const { user } = useUser();
     const { success, error: showError } = useToast();
+    
+    // React Query: buscar aulas com status de inscrição
+    const { aulas, aulasInscritas, isLoading, error } = useAulasComInscricao(
+        user?.matricula,
+        user?.role === "student"
+    );
+    
+    // Debug: verificar o que está sendo retornado
+    console.log("Debug Aulas:", { 
+        aulas: aulas?.length, 
+        aulasInscritas: aulasInscritas?.length,
+        matricula: user?.matricula,
+        isStudent: user?.role === "student"
+    });
+    
+    // Mutations
+    const inscreverMutation = useInscreverAula();
+    const cancelarMutation = useCancelarInscricao();
+    
     const [selectedCategory, setSelectedCategory] = useState("Todas");
     const [searchQuery, setSearchQuery] = useState("");
-    const [classes, setClasses] = useState<Class[]>([]);
-    const [categories, setCategories] = useState<string[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [selectedClass, setSelectedClass] = useState<Class | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [enrollmentLoading, setEnrollmentLoading] = useState(false);
@@ -36,26 +57,11 @@ const Aulas = () => {
     const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
     const [ratingLoading, setRatingLoading] = useState(false);
 
-    useEffect(() => {
-        const loadData = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-
-                const [classesData, categoriesData] = await Promise.all([fetchClasses(), fetchCategories()]);
-
-                setClasses(classesData);
-                setCategories(categoriesData);
-            } catch (err) {
-                setError("Erro ao carregar dados. Tente novamente.");
-                console.error("Erro ao carregar dados:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadData();
-    }, []); // Carrega apenas uma vez ao montar o componente
+    // Extrair categorias únicas das aulas
+    const categories = ["Todas", ...new Set(aulas.map(a => a.category))];
+    
+    // Converter error para string se existir
+    const errorMessage = error ? "Erro ao carregar dados. Tente novamente." : null;
 
     const handleSearch = (query: string) => {
         setSearchQuery(query);
@@ -72,84 +78,56 @@ const Aulas = () => {
     };
 
     const handleConfirmEnrollment = async (classId: number) => {
+        if (!user?.matricula) {
+            showError("Usuário não autenticado");
+            return;
+        }
+
         try {
             setEnrollmentLoading(true);
 
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-
-            setClasses((prevClasses) =>
-                prevClasses.map((classItem) =>
-                    classItem.id === classId
-                        ? {
-                              ...classItem,
-                              enrolled: classItem.enrolled >= classItem.capacity ? classItem.enrolled : classItem.enrolled + 1,
-                              enrollmentStatus: classItem.enrolled >= classItem.capacity ? ("waiting_list" as EnrollmentStatus) : ("enrolled" as EnrollmentStatus),
-                              waitingList: classItem.enrolled >= classItem.capacity ? classItem.waitingList + 1 : classItem.waitingList,
-                          }
-                        : classItem,
-                ),
-            );
-
+            // Fazer inscrição via mutation
+            await inscreverMutation.mutateAsync({
+                aulaId: classId,
+                matricula: user.matricula,
+            });
+            
             handleCloseModal();
 
-            const selectedClassData = classes.find((c) => c.id === classId);
+            const selectedClassData = aulas.find((c) => c.id === classId);
             if (selectedClassData && selectedClassData.enrolled >= selectedClassData.capacity) {
-                console.log("Adicionado à lista de espera!");
+                success("Adicionado à lista de espera!");
             } else {
-                console.log("Inscrição realizada com sucesso!");
+                success("Inscrição realizada com sucesso!");
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Erro ao realizar inscrição:", error);
+            showError(error?.response?.data || "Erro ao realizar inscrição");
         } finally {
             setEnrollmentLoading(false);
         }
     };
 
     const handleUnenroll = async (classId: number) => {
+        if (!user?.matricula) {
+            showError("Usuário não autenticado");
+            return;
+        }
+
         try {
             setUnenrollmentLoading(true);
 
-            // Obter dados do usuário logado
-            if (!user || !user.matricula) {
-                console.error("Usuário não está logado ou não possui matrícula");
-                showError("Erro: usuário não autenticado");
-                return;
-            }
+            // Cancelar via mutation
+            const response = await cancelarMutation.mutateAsync({
+                aulaId: classId,
+                matricula: user.matricula,
+            });
 
-            // Construir requisição
-            const request = buildCancelamentoRequest(classId, user.matricula);
-
-            // Enviar para o backend
-            const response = await submitCancelamento(request);
-
-            if (response.sucesso) {
-                console.log("Cancelamento realizado com sucesso:", response.mensagem);
-
-                // Atualizar estado local após sucesso
-                setClasses((prevClasses) =>
-                    prevClasses.map((classItem) =>
-                        classItem.id === classId
-                            ? {
-                                  ...classItem,
-                                  enrolled: classItem.enrollmentStatus === "enrolled" ? Math.max(0, classItem.enrolled - 1) : classItem.enrolled,
-                                  enrollmentStatus: "not_enrolled" as EnrollmentStatus,
-                                  waitingList: classItem.enrollmentStatus === "waiting_list" ? Math.max(0, classItem.waitingList - 1) : classItem.waitingList,
-                              }
-                            : classItem,
-                    ),
-                );
-
-                handleCloseUnenrollModal();
-
-                // Exibir mensagem do backend (inclui informação sobre reembolso)
-                success(response.mensagem);
-            } else {
-                console.error("Erro ao cancelar reserva:", response.mensagem);
-                showError(`Erro: ${response.mensagem}`);
-            }
-        } catch (err) {
+            handleCloseUnenrollModal();
+            success("Cancelamento realizado com sucesso!");
+        } catch (err: any) {
             console.error("Erro ao cancelar inscrição:", err);
-            showError("Erro ao processar cancelamento. Tente novamente.");
+            showError(err?.response?.data || "Erro ao processar cancelamento");
         } finally {
             setUnenrollmentLoading(false);
         }
@@ -187,7 +165,7 @@ const Aulas = () => {
             }
 
             // Buscar dados da aula
-            const classData = classes.find((c) => c.id === classId);
+            const classData = aulas.find((c) => c.id === classId);
             if (!classData || !classData.instructorId || !classData.classDate) {
                 console.error("Dados da aula incompletos", classData);
                 showError("Erro: dados da aula incompletos");
@@ -230,15 +208,13 @@ const Aulas = () => {
         }
     };
 
-    const enrolledClasses = classes.filter((classItem) => classItem.enrollmentStatus === "enrolled" || classItem.enrollmentStatus === "waiting_list" || classItem.enrollmentStatus === "to_evaluate");
+    // Aulas inscritas vêm diretamente do hook (já filtradas pelo backend)
+    const enrolledClasses = aulasInscritas;
 
-    const availableClasses = classes.filter((classItem) => {
-        // Primeiro filtra apenas as aulas disponíveis (não inscritas)
-        if (classItem.enrollmentStatus !== "not_enrolled") {
-            return false;
-        }
+    const availableClasses = aulas.filter((classItem) => {
+        // 'aulas' já contém apenas aulas não inscritas (filtrado pelo backend)
+        // Apenas aplicar os filtros de categoria e busca
 
-        // Depois aplica os filtros de categoria e busca
         const normalizedClassCategory = classItem.category.trim();
         const normalizedSelectedCategory = selectedCategory.trim();
 
@@ -250,7 +226,7 @@ const Aulas = () => {
     });
 
     const renderContent = () => {
-        if (loading) {
+        if (isLoading) {
             return (
                 <>
                     <EnrolledSection>
@@ -329,8 +305,8 @@ const Aulas = () => {
             );
         }
 
-        if (error) {
-            return <p style={{ color: "#ef4444", textAlign: "center", marginTop: "2rem" }}>{error}</p>;
+        if (errorMessage) {
+            return <p style={{ color: "#ef4444", textAlign: "center", marginTop: "2rem" }}>{errorMessage}</p>;
         }
 
         return (

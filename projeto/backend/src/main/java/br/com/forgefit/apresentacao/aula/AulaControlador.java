@@ -51,15 +51,22 @@ class AulaControlador {
     @Autowired
     private ReservaService reservaService;
 
-    /**
-     * Lista todas as aulas ativas ou filtra por categoria/modalidade.
-     * GET /api/aulas?categoria=Yoga
-     * 
-     * @param categoria Filtro opcional de categoria/modalidade
-     * @return Lista de resumos de aulas
-     */
     @RequestMapping(method = GET)
-    List<AulaResumo> listarAulas(@RequestParam(required = false) String categoria) {
+    List<AulaResumo> listarAulas(
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String matricula) {
+        
+        // Se matricula for informada, excluir aulas já inscritas
+        if (matricula != null && !matricula.isEmpty()) {
+            if (categoria != null && !categoria.isEmpty() && !categoria.equalsIgnoreCase("Todas")) {
+                // TODO: Implementar filtro por modalidade excluindo aluno
+                return aulaServicoAplicacao.listarPorModalidade(categoria);
+            } else {
+                return aulaServicoAplicacao.listarAulasAtivasParaAluno(matricula);
+            }
+        }
+        
+        // Comportamento original quando não há matricula
         if (categoria != null && !categoria.isEmpty() && !categoria.equalsIgnoreCase("Todas")) {
             return aulaServicoAplicacao.listarPorModalidade(categoria);
         } else {
@@ -78,6 +85,12 @@ class AulaControlador {
         // Por enquanto, retorna as categorias fixas do mock
         // Pode ser substituído por consulta ao banco quando necessário
         return List.of("Todas", "Yoga", "Spinning", "Funcional", "Pilates", "Dança", "Luta", "CrossFit", "Musculação");
+    }
+
+
+    @RequestMapping(method = GET, path = "/aluno/{matricula}")
+    List<AulaResumo> listarAulasDoAluno(@PathVariable String matricula) {
+        return aulaServicoAplicacao.listarAulasDoAluno(matricula);
     }
 
     /**

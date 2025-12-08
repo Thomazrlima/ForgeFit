@@ -484,6 +484,11 @@ class AulaRepositorioAplicacaoImpl implements br.com.forgefit.aplicacao.aula.Aul
 	}
 
 	@Override
+	public List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarResumosAtivasExcluindoAluno(String matricula) {
+		return repositorio.pesquisarResumosAtivasExcluindoAluno(matricula);
+	}
+
+	@Override
 	public List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorModalidade(String modalidade) {
 		return repositorio.pesquisarPorModalidade(modalidade);
 	}
@@ -524,6 +529,11 @@ class AulaRepositorioAplicacaoImpl implements br.com.forgefit.aplicacao.aula.Aul
 		java.util.Date fimDate = fim != null ? DateTimeConverter.toDate(fim) : null;
 		return repositorio.pesquisarComFiltros(modalidade, espaco, inicioDate, fimDate, apenasComVagas);
 	}
+
+	@Override
+	public List<br.com.forgefit.aplicacao.aula.AulaResumo> buscarAulasPorMatriculaAluno(String matricula) {
+		return repositorio.buscarAulasPorMatriculaAluno(matricula);
+	}
 }
 
 // Interfaces e classes que estavam em AlunoRepositorioJpa.java - movidas para
@@ -531,6 +541,9 @@ class AulaRepositorioAplicacaoImpl implements br.com.forgefit.aplicacao.aula.Aul
 interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 
 	List<Aula> findByStatus(StatusAula status);
+
+	@org.springframework.data.jpa.repository.Query("SELECT MAX(a.id) FROM Aula a")
+	Integer findMaxId();
 
 	@org.springframework.data.jpa.repository.Query("""
 			select a
@@ -572,9 +585,37 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 			       SIZE(a.listaDeEspera) as tamanhoListaEspera
 			FROM Aula a
 			WHERE a.status = 'ATIVA'
+			  AND a.inicio >= CURRENT_TIMESTAMP
 			ORDER BY a.inicio ASC
 			""")
 	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarResumosAtivas();
+
+	@org.springframework.data.jpa.repository.Query("""
+			SELECT a.id as id,
+			       a.modalidade as modalidade,
+			       a.espaco as espaco,
+			       a.inicio as inicio,
+			       a.fim as fim,
+			       a.capacidade as capacidade,
+			       a.status as status,
+			       a.professor.id as professorId,
+			       a.professor.nome as professorNome,
+			       SIZE(a.reservas) as vagasOcupadas,
+			       (a.capacidade - SIZE(a.reservas)) as vagasDisponiveis,
+			       SIZE(a.listaDeEspera) as tamanhoListaEspera
+			FROM Aula a
+			WHERE a.status = 'ATIVA'
+			  AND a.inicio >= CURRENT_TIMESTAMP
+			  AND a.id NOT IN (
+			      SELECT r.aula.id 
+			      FROM br.com.forgefit.persistencia.jpa.Aula$Reserva r
+			      WHERE r.alunoMatricula = :matricula
+			        AND r.status = 'CONFIRMADA'
+			  )
+			ORDER BY a.inicio ASC
+			""")
+	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarResumosAtivasExcluindoAluno(
+			@org.springframework.data.repository.query.Param("matricula") String matricula);
 
 	@org.springframework.data.jpa.repository.Query("""
 			SELECT a.id as id,
@@ -729,6 +770,31 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 			@org.springframework.data.repository.query.Param("inicio") java.util.Date inicio,
 			@org.springframework.data.repository.query.Param("fim") java.util.Date fim,
 			@org.springframework.data.repository.query.Param("apenasComVagas") Boolean apenasComVagas);
+
+	@org.springframework.data.jpa.repository.Query("""
+			SELECT a.id as id,
+			       a.modalidade as modalidade,
+			       a.espaco as espaco,
+			       a.inicio as inicio,
+			       a.fim as fim,
+			       a.capacidade as capacidade,
+			       a.status as status,
+			       a.professor.id as professorId,
+			       a.professor.nome as professorNome,
+			       SIZE(a.reservas) as vagasOcupadas,
+			       (a.capacidade - SIZE(a.reservas)) as vagasDisponiveis,
+			       SIZE(a.listaDeEspera) as tamanhoListaEspera
+			FROM Aula a
+			JOIN a.reservas r
+			WHERE r.alunoMatricula = :matricula
+			  AND r.status = 'CONFIRMADA'
+			  AND a.status = 'ATIVA'
+			  AND a.inicio >= CURRENT_TIMESTAMP
+			  AND a.inicio <= FUNCTION('TIMESTAMPADD', DAY, 7, CURRENT_TIMESTAMP)
+			ORDER BY a.inicio ASC
+			""")
+	List<br.com.forgefit.aplicacao.aula.AulaResumo> buscarAulasPorMatriculaAluno(
+			@org.springframework.data.repository.query.Param("matricula") String matricula);
 }
 
 @org.springframework.stereotype.Repository("aulaRepositorio")
@@ -741,7 +807,14 @@ class AulaRepositorioImpl implements br.com.forgefit.dominio.aula.AulaRepositori
 
 	@Override
 	public void salvar(br.com.forgefit.dominio.aula.Aula aula) {
+		Integer idOriginal = aula.getId().getId();
 		Aula aulaJpa = mapeador.map(aula, Aula.class);
+		
+		// Se o ID não existe no banco, deixa null para o banco gerar automaticamente
+		if (!repositorio.existsById(idOriginal)) {
+			aulaJpa.setId(null);
+		}
+		
 		repositorio.save(aulaJpa);
 	}
 
@@ -780,5 +853,11 @@ class AulaRepositorioImpl implements br.com.forgefit.dominio.aula.AulaRepositori
 		return repositorio.buscarPorProfessorEPeriodo(professorId.getId(), inicioDate, fimDate).stream()
 				.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aula.Aula.class))
 				.toList();
+	}
+
+	@Override
+	public Integer obterProximoIdDisponivel() {
+		Integer maxId = repositorio.findMaxId();
+		return (maxId == null) ? 1 : maxId + 1;
 	}
 }

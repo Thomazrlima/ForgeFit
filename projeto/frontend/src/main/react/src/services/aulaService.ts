@@ -1,6 +1,37 @@
 import api from "./api";
 import { Modalidade, Espaco, TipoAula } from "../components/common/CreateClassModal";
 
+export interface MinhaAulaResponse {
+    id: number;
+    modalidade: string;
+    espaco: string;
+    inicio: string; // ISO 8601
+    fim: string; // ISO 8601
+    capacidade: number;
+    status: string;
+    professorId: number;
+    professorNome: string;
+    vagasOcupadas: number;
+    vagasDisponiveis: number;
+    tamanhoListaEspera: number;
+}
+
+export interface AulaFrontend {
+    id: number;
+    instructor: string;
+    instructorId: number;
+    category: string;
+    schedule: string;
+    capacity: number;
+    enrolled: number;
+    location: string;
+    image: string;
+    enrollmentStatus: "not_enrolled" | "enrolled" | "waiting_list" | "to_evaluate";
+    waitingList: number;
+    isClassFinished?: boolean;
+    classDate?: string;
+}
+
 /**
  * Interface para dados de aula enviados ao backend
  */
@@ -192,6 +223,91 @@ class AulaService {
         }
 
         return dateObj.toISOString().split("T")[0];
+    }
+
+    async buscarAulasDoAluno(matricula: string): Promise<AulaFrontend[]> {
+        try {
+            const response = await api.get<MinhaAulaResponse[]>(`/aulas/aluno/${matricula}`);
+            return response.data.map(aula => this.converterParaAulaFrontend(aula, "enrolled"));
+        } catch (error) {
+            console.error("Erro ao buscar aulas do aluno:", error);
+            throw error;
+        }
+    }
+
+    async buscarTodasAulasFormatadas(matricula?: string): Promise<AulaFrontend[]> {
+        try {
+            const params = matricula ? { matricula } : {};
+            const response = await api.get<MinhaAulaResponse[]>("/aulas", { params });
+            return response.data.map(aula => this.converterParaAulaFrontend(aula, "not_enrolled"));
+        } catch (error) {
+            console.error("Erro ao buscar todas as aulas:", error);
+            throw error;
+        }
+    }
+
+    private converterParaAulaFrontend(
+        aula: MinhaAulaResponse, 
+        enrollmentStatus: "not_enrolled" | "enrolled" | "waiting_list" | "to_evaluate"
+    ): AulaFrontend {
+        const inicio = new Date(aula.inicio);
+        const diaSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][inicio.getDay()];
+        const horario = inicio.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+        
+        return {
+            id: aula.id,
+            instructor: aula.professorNome,
+            instructorId: aula.professorId,
+            category: this.formatarModalidade(aula.modalidade),
+            schedule: `${diaSemana} - ${horario}`,
+            capacity: aula.capacidade,
+            enrolled: aula.vagasOcupadas,
+            location: this.formatarEspaco(aula.espaco),
+            image: this.obterImagemModalidade(aula.modalidade),
+            enrollmentStatus,
+            waitingList: aula.tamanhoListaEspera,
+            isClassFinished: aula.status === "CONCLUIDA",
+            classDate: aula.inicio.split("T")[0],
+        };
+    }
+
+    private formatarModalidade(modalidade: string): string {
+        const mapa: Record<string, string> = {
+            "YOGA": "Yoga",
+            "SPINNING": "Spinning",
+            "FUNCIONAL": "Funcional",
+            "PILATES": "Pilates",
+            "DANCA": "Dança",
+            "LUTA": "Luta",
+            "CROSSFIT": "CrossFit",
+            "MUSCULACAO": "Musculação",
+        };
+        return mapa[modalidade] || modalidade;
+    }
+
+    private formatarEspaco(espaco: string): string {
+        const mapa: Record<string, string> = {
+            "SALA01_MULTIUSO": "Sala 1",
+            "SALA02_SPINNING": "Sala 2",
+            "SALA03_PILATES": "Sala 3",
+            "SALA04_FUNCIONAL": "Sala 4",
+            "AREA_EXTERNA": "Área Externa",
+            "RING_LUTA": "Ring de Luta",
+        };
+        return mapa[espaco] || espaco;
+    }
+
+    private obterImagemModalidade(modalidade: string): string {
+        const imagens: Record<string, string> = {
+            "YOGA": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=500",
+            "SPINNING": "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?w=500",
+            "FUNCIONAL": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500",
+            "PILATES": "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=500",
+            "LUTA": "https://images.unsplash.com/photo-1555597408-26bc8e548a46?w=500",
+            "CROSSFIT": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500",
+            "MUSCULACAO": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500",
+        };
+        return imagens[modalidade] || "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=500";
     }
 }
 

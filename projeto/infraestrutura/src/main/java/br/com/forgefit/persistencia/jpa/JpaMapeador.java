@@ -16,7 +16,6 @@ import br.com.forgefit.dominio.professor.ProfessorId;
 import br.com.forgefit.dominio.aula.AulaId;
 import br.com.forgefit.dominio.aluno.Matricula;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 @Component
 class JpaMapeador extends ModelMapper {
@@ -123,6 +122,21 @@ class JpaMapeador extends ModelMapper {
                 return aula;
             }
         });
+
+        // Custom mapping para Aula Domain -> JPA (para garantir que Reservas tenham referência à Aula)
+        typeMap(br.com.forgefit.dominio.aula.Aula.class, br.com.forgefit.persistencia.jpa.Aula.class)
+            .setPostConverter(context -> {
+                br.com.forgefit.persistencia.jpa.Aula aulaJpa = context.getDestination();
+                if (aulaJpa != null && aulaJpa.getReservas() != null) {
+                    // Setar referência bidirecional nas reservas
+                    for (br.com.forgefit.persistencia.jpa.Aula.Reserva reserva : aulaJpa.getReservas()) {
+                        if (reserva != null) {
+                            reserva.setAula(aulaJpa);
+                        }
+                    }
+                }
+                return aulaJpa;
+            });
     }
 
     @Override

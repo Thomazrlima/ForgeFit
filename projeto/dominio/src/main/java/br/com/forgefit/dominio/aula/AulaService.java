@@ -17,7 +17,6 @@ import static org.apache.commons.lang3.Validate.notNull;
 
 public class AulaService {
     private final AulaRepositorio aulaRepositorio;
-    private final AtomicInteger aulaIdCounter = new AtomicInteger(1);
     private final AtomicInteger excecaoIdCounter = new AtomicInteger(1);
 
     public AulaService(AulaRepositorio aulaRepositorio) {
@@ -25,11 +24,16 @@ public class AulaService {
         this.aulaRepositorio = aulaRepositorio;
     }
 
+    private AulaId gerarProximoIdDisponivel() {
+        Integer proximoId = aulaRepositorio.obterProximoIdDisponivel();
+        return new AulaId(proximoId);
+    }
+
     public Aula criarAulaUnica(ProfessorId professorId, Modalidade modalidade, Espaco espaco, int capacidade,
                                LocalDateTime inicio, LocalDateTime fim) {
         verificarConflitoHorario(espaco, professorId, inicio, fim, null);
         
-        AulaId id = new AulaId(aulaIdCounter.getAndIncrement());
+        AulaId id = gerarProximoIdDisponivel();
         Aula aula = new Aula(id, professorId, modalidade, espaco, capacidade, inicio, fim);
         aulaRepositorio.salvar(aula);
         return aula;
@@ -71,7 +75,7 @@ public class AulaService {
             }
         }
         
-        AulaId id = new AulaId(aulaIdCounter.getAndIncrement());
+        AulaId id = gerarProximoIdDisponivel();
         Aula aula = new Aula(id, professorId, modalidade, espaco, capacidade, inicio, fim, recorrencia);
         
         aulaRepositorio.salvar(aula);

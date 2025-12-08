@@ -26,6 +26,11 @@ public class AulaServicoAplicacao {
         return repositorio.pesquisarResumosAtivas();
     }
 
+    public List<AulaResumo> listarAulasAtivasParaAluno(String matricula) {
+        notNull(matricula, "A matrícula do aluno não pode ser nula");
+        return repositorio.pesquisarResumosAtivasExcluindoAluno(matricula);
+    }
+
     /**
      * Lista aulas filtradas por modalidade.
      * @param modalidade Nome da modalidade
@@ -106,6 +111,11 @@ public class AulaServicoAplicacao {
             filtros.getFim(),
             filtros.getApenasComVagas()
         );
+    }
+
+    public List<AulaResumo> listarAulasDoAluno(String matricula) {
+        notNull(matricula, "A matrícula do aluno não pode ser nula");
+        return repositorio.buscarAulasPorMatriculaAluno(matricula);
     }
 
     /**

@@ -441,23 +441,15 @@ interface ReservaJpaRepository extends JpaRepository<Aula.Reserva, Integer> {
 	List<Aula.Reserva> findByAlunoMatriculaAndStatus(String matricula, StatusReserva status);
 
 	@org.springframework.data.jpa.repository.Query("""
-			SELECT r.id as reservaId,
-				   r.aula.id as aulaId,
-				   r.aula.inicio as inicioAula,
-				   r.aula.fim as fimAula,
-				   r.aula.modalidade as modalidade,
-				   r.aula.espaco as espaco,
-				   r.aula.professor.nome as nomeProfessor,
-				   r.alunoMatricula as alunoMatricula,
-				   r.dataReserva as dataReserva,
-				   r.status as statusReserva
+			SELECT r.alunoMatricula as alunoMatricula,
+				   r.aula.id as aulaId
 			FROM br.com.forgefit.persistencia.jpa.Aula$Reserva r
 			WHERE r.alunoMatricula = :#{#matricula.valor}
 			  AND r.status = 'CONFIRMADA'
 			  AND r.aula.inicio > CURRENT_TIMESTAMP
 			ORDER BY r.aula.inicio ASC
 			""")
-	List<br.com.forgefit.aplicacao.aula.CancelamentoResumo> buscarReservasConfirmadas(
+	List<br.com.forgefit.aplicacao.aula.ReservaResumo> buscarReservasConfirmadas(
 			@org.springframework.data.repository.query.Param("matricula") br.com.forgefit.dominio.aluno.Matricula matricula);
 }
 
@@ -469,7 +461,14 @@ class ReservaRepositorioImpl implements br.com.forgefit.aplicacao.aula.ReservaRe
 	@Override
 	public List<br.com.forgefit.aplicacao.aula.CancelamentoResumo> buscarReservasConfirmadas(
 			br.com.forgefit.dominio.aluno.Matricula matricula) {
-		return repositorio.buscarReservasConfirmadas(matricula);
+		return repositorio.buscarReservasConfirmadas(matricula).stream()
+				.map(r -> {
+					br.com.forgefit.aplicacao.aula.CancelamentoResumo dto = new br.com.forgefit.aplicacao.aula.CancelamentoResumo();
+					dto.setAlunoMatricula(r.getAlunoMatricula());
+					dto.setAulaId(r.getAulaId());
+					return dto;
+				})
+				.collect(java.util.stream.Collectors.toList());
 	}
 }
 
@@ -544,6 +543,13 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 
 	@org.springframework.data.jpa.repository.Query("SELECT MAX(a.id) FROM Aula a")
 	Integer findMaxId();
+
+	@org.springframework.data.jpa.repository.Query("""
+			SELECT a FROM Aula a
+			LEFT JOIN FETCH a.reservas
+			WHERE a.id = :id
+			""")
+	java.util.Optional<Aula> findByIdWithReservas(@org.springframework.data.repository.query.Param("id") Integer id);
 
 	@org.springframework.data.jpa.repository.Query("""
 			select a
@@ -808,20 +814,70 @@ class AulaRepositorioImpl implements br.com.forgefit.dominio.aula.AulaRepositori
 	@Override
 	public void salvar(br.com.forgefit.dominio.aula.Aula aula) {
 		Integer idOriginal = aula.getId().getId();
-		Aula aulaJpa = mapeador.map(aula, Aula.class);
 		
-		// Se o ID não existe no banco, deixa null para o banco gerar automaticamente
+		// Se o ID não existe no banco, criar nova aula
 		if (!repositorio.existsById(idOriginal)) {
+			Aula aulaJpa = mapeador.map(aula, Aula.class);
 			aulaJpa.setId(null);
+			repositorio.save(aulaJpa);
+			return;
 		}
 		
-		repositorio.save(aulaJpa);
+		// Se já existe, buscar a entidade existente e sincronizar as reservas
+		java.util.Optional<Aula> aulaExistenteOpt = repositorio.findByIdWithReservas(idOriginal);
+		if (aulaExistenteOpt.isPresent()) {
+			Aula aulaExistente = aulaExistenteOpt.get();
+			
+			// Criar map das reservas existentes no banco por matrícula
+			java.util.Map<String, Aula.Reserva> reservasExistentes = new java.util.HashMap<>();
+			for (Aula.Reserva reservaJpa : aulaExistente.getReservas()) {
+				reservasExistentes.put(reservaJpa.getAlunoMatricula(), reservaJpa);
+			}
+			
+			// Coletar reservas a remover e atualizar
+			java.util.List<Aula.Reserva> reservasParaRemover = new java.util.ArrayList<>();
+			java.util.List<Aula.Reserva> reservasParaAdicionar = new java.util.ArrayList<>();
+			
+			// Processar todas as reservas do domínio
+			for (br.com.forgefit.dominio.aula.Reserva reservaDominio : aula.getReservas()) {
+				String matricula = reservaDominio.getAlunoMatricula().getValor();
+				Aula.Reserva reservaExistente = reservasExistentes.get(matricula);
+				
+				if (reservaDominio.getStatus() == br.com.forgefit.dominio.aula.enums.StatusReserva.CANCELADA_PELO_ALUNO ||
+					reservaDominio.getStatus() == br.com.forgefit.dominio.aula.enums.StatusReserva.CANCELADA_PELA_ACADEMIA) {
+					// Reserva cancelada - remover se existir
+					if (reservaExistente != null) {
+						reservasParaRemover.add(reservaExistente);
+					}
+				} else {
+					// Reserva confirmada
+					if (reservaExistente == null) {
+						// Nova reserva - criar
+						Aula.Reserva novaReserva = new Aula.Reserva();
+						novaReserva.setAula(aulaExistente);
+						novaReserva.setAlunoMatricula(matricula);
+						novaReserva.setDataReserva(java.util.Date.from(
+							reservaDominio.getDataDaReserva().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+						novaReserva.setStatus(br.com.forgefit.persistencia.jpa.enums.StatusReserva.CONFIRMADA);
+						reservasParaAdicionar.add(novaReserva);
+					}
+					// Se já existe e está confirmada, não precisa fazer nada
+				}
+			}
+			
+			// Aplicar mudanças
+			aulaExistente.getReservas().removeAll(reservasParaRemover);
+			aulaExistente.getReservas().addAll(reservasParaAdicionar);
+			
+			// Salvar
+			repositorio.save(aulaExistente);
+		}
 	}
 
 	@Override
 	public java.util.Optional<br.com.forgefit.dominio.aula.Aula> obterPorId(
 			br.com.forgefit.dominio.aula.AulaId aulaId) {
-		return repositorio.findById(aulaId.getId())
+		return repositorio.findByIdWithReservas(aulaId.getId())
 				.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aula.Aula.class));
 	}
 

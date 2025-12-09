@@ -111,11 +111,11 @@ VALUES
 -- ============================================
 
 INSERT INTO AULA(PROFESSOR_ID, MODALIDADE, ESPACO, CAPACIDADE, INICIO, FIM, STATUS) VALUES 
-    (1, 'MUSCULACAO', 'AREA_DE_PESO_LIVRE', 20, '2025-01-20 08:00:00', '2025-01-20 09:00:00', 'ATIVA'),
-    (2, 'YOGA', 'SALA01_MULTIUSO', 15, '2025-01-20 10:00:00', '2025-01-20 11:00:00', 'ATIVA'),
-    (3, 'SPINNING', 'SALA03_SPINNING', 25, '2025-01-20 18:00:00', '2025-01-20 19:00:00', 'ATIVA'),
-    (2, 'PILATES', 'ESTUDIO_PILATES', 12, '2025-01-21 09:00:00', '2025-01-21 10:00:00', 'ATIVA'),
-    (1, 'CROSSFIT', 'SALA02_MULTIUSO', 18, '2025-01-21 19:00:00', '2025-01-21 20:00:00', 'ATIVA');
+    (1, 'MUSCULACAO', 'AREA_DE_PESO_LIVRE', 20, '2025-12-09 08:00:00', '2025-12-09 09:00:00', 'ATIVA'),
+    (2, 'YOGA', 'SALA01_MULTIUSO', 15, '2025-12-10 10:00:00', '2025-12-10 11:00:00', 'ATIVA'),
+    (3, 'SPINNING', 'SALA03_SPINNING', 25, '2025-12-11 18:00:00', '2025-12-11 19:00:00', 'ATIVA'),
+    (2, 'PILATES', 'ESTUDIO_PILATES', 12, '2025-12-12 09:00:00', '2025-12-12 10:00:00', 'ATIVA'),
+    (1, 'CROSSFIT', 'SALA02_MULTIUSO', 18, '2025-12-13 19:00:00', '2025-12-13 20:00:00', 'ATIVA');
 
 -- Recorrência para aula de Yoga (toda Segunda, Quarta e Sexta)
 INSERT INTO RECORRENCIA(AULA_ID, TIPO, DATA_FIM_RECORRENCIA) VALUES 
@@ -126,9 +126,9 @@ INSERT INTO RECORRENCIA_DIAS(RECORRENCIA_ID, DIA_DA_SEMANA) VALUES
     (1, 'QUARTA'),
     (1, 'SEXTA');
 
--- Exceção: aula de yoga do dia 20/02 será reagendada
+-- Exceção: aula de yoga do dia 17/12 será reagendada
 INSERT INTO OCORRENCIA_EXCECAO(AULA_ID, DATA_ORIGINAL_OCORRENCIA, CANCELADA, NOVO_INICIO, NOVO_FIM) VALUES 
-    (2, '2025-02-20', FALSE, '2025-02-20 11:00:00', '2025-02-20 12:00:00');
+    (2, '2025-12-17', FALSE, '2025-12-17 11:00:00', '2025-12-17 12:00:00');
 
 -- ============================================
 -- RESERVAS E LISTA DE ESPERA
@@ -151,11 +151,11 @@ INSERT INTO LISTA_DE_ESPERA(AULA_ID, ALUNO_MATRICULA) VALUES
 -- ============================================
 
 INSERT INTO FREQUENCIA(ALUNO_MATRICULA, AULA_ID, DATA_OCORRENCIA, STATUS) VALUES 
-    ('ALU001', 1, '2025-01-15', 'PRESENTE'),
-    ('ALU001', 2, '2025-01-16', 'PRESENTE'),
-    ('ALU002', 1, '2025-01-15', 'PRESENTE'),
-    ('ALU002', 3, '2025-01-17', 'FALTA'),
-    ('ALU003', 2, '2025-01-16', 'PRESENTE');
+    ('ALU001', 1, '2025-12-09', 'PRESENTE'),
+    ('ALU001', 2, '2025-12-10', 'PRESENTE'),
+    ('ALU002', 1, '2025-12-09', 'PRESENTE'),
+    ('ALU002', 3, '2025-12-11', 'FALTA'),
+    ('ALU003', 2, '2025-12-10', 'PRESENTE');
 
 -- ============================================
 -- CHECK-INS
@@ -179,8 +179,8 @@ VALUES
 INSERT INTO AVALIACAO(ALUNO_MATRICULA, PROFESSOR_ID, AULA_ID, DATA_OCORRENCIA_AULA, 
     NOTA_PONTUALIDADE, NOTA_DIDATICA, NOTA_ATENCAO, COMENTARIO) 
 VALUES 
-    ('ALU001', 1, 1, '2025-01-15', 5, 5, 5, 'Professor excelente! Explica muito bem os exercícios.'),
-    ('ALU002', 2, 2, '2025-01-16', 5, 4, 5, 'Aula maravilhosa, muito tranquila e relaxante.');
+    ('ALU001', 1, 1, '2025-12-09', 5, 5, 5, 'Professor excelente! Explica muito bem os exercícios.'),
+    ('ALU002', 2, 2, '2025-12-10', 5, 4, 5, 'Aula maravilhosa, muito tranquila e relaxante.');
 
 -- ============================================
 -- RANKINGS

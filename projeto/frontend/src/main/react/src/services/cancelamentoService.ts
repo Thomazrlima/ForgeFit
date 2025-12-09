@@ -35,6 +35,19 @@ export const submitCancelamento = async (request: CancelamentoResumo): Promise<C
 };
 
 /**
+ * Busca as reservas confirmadas do aluno que podem ser canceladas.
+ */
+export const buscarReservasParaCancelamento = async (alunoMatricula: string): Promise<CancelamentoResumo[]> => {
+    try {
+        const response = await axios.get<CancelamentoResumo[]>(`${API_BASE_URL}/reservas/aluno/${alunoMatricula}`);
+        return response.data;
+    } catch (error) {
+        console.error("Erro ao buscar reservas para cancelamento:", error);
+        throw new Error("Erro ao buscar reservas. Tente novamente.");
+    }
+};
+
+/**
  * Helper para construir requisição de cancelamento.
  */
 export const buildCancelamentoRequest = (aulaId: number, alunoMatricula: string): CancelamentoResumo => {

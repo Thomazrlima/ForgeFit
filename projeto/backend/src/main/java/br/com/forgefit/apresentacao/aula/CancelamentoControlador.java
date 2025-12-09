@@ -34,7 +34,7 @@ public class CancelamentoControlador {
     @RequestMapping(method = POST)
     public ResponseEntity<CancelamentoResponse> cancelarReserva(@RequestBody CancelamentoResumo request) {
         try {
-            logger.info("Recebendo cancelamento: alunoMatricula={}, aulaId={}", 
+            logger.info("Recebendo cancelamento: alunoMatricula='{}', aulaId={}", 
                 request.getAlunoMatricula(), request.getAulaId());
             
             if (!request.isValid()) {
@@ -44,6 +44,9 @@ public class CancelamentoControlador {
 
             Matricula matricula = new Matricula(request.getAlunoMatriculaTrimmed());
             AulaId aulaId = new AulaId(request.getAulaId());
+            
+            logger.info("Tentando cancelar reserva - matricula='{}', aulaId={}", 
+                matricula.getValor(), request.getAulaId());
             
             String mensagem = reservaService.cancelarReserva(
                 matricula,

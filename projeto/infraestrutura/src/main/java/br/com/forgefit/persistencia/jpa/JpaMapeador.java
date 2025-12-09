@@ -119,6 +119,32 @@ class JpaMapeador extends ModelMapper {
                     id, professorId, modalidade, espaco, capacidade, inicio, fim
                 );
 
+                // Mapear reservas
+                if (source.getReservas() != null) {
+                    for (br.com.forgefit.persistencia.jpa.Aula.Reserva reservaJpa : source.getReservas()) {
+                        Matricula matricula = new Matricula(reservaJpa.getAlunoMatricula());
+                        LocalDateTime dataReserva = reservaJpa.getDataReserva().toInstant()
+                            .atZone(ZoneId.systemDefault()).toLocalDateTime();
+                        
+                        br.com.forgefit.dominio.aula.Reserva reservaDominio = 
+                            new br.com.forgefit.dominio.aula.Reserva(matricula, dataReserva);
+                        
+                        // Se a reserva foi cancelada, atualizar o status
+                        if (reservaJpa.getStatus() == br.com.forgefit.persistencia.jpa.enums.StatusReserva.CANCELADA_PELO_ALUNO) {
+                            reservaDominio.cancelarPeloAluno();
+                        } else if (reservaJpa.getStatus() == br.com.forgefit.persistencia.jpa.enums.StatusReserva.CANCELADA_PELA_ACADEMIA) {
+                            reservaDominio.cancelarPelaAcademia();
+                        }
+                        
+                        // Adicionar reserva à aula (só se estiver confirmada ou queremos todas)
+                        try {
+                            aula.adicionarReserva(reservaDominio);
+                        } catch (Exception e) {
+                            // Ignora se já existe ou aula está cancelada
+                        }
+                    }
+                }
+
                 return aula;
             }
         });

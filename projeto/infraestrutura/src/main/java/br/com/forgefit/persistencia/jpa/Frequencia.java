@@ -117,6 +117,16 @@ interface FrequenciaJpaRepository extends org.springframework.data.jpa.repositor
 		@org.springframework.data.repository.query.Param("matricula") String matricula,
 		@org.springframework.data.repository.query.Param("inicio") java.util.Date inicio,
 		@org.springframework.data.repository.query.Param("fim") java.util.Date fim);
+	
+	@org.springframework.data.jpa.repository.Query("""
+		SELECT DISTINCT f.aluno.matricula FROM Frequencia f
+		WHERE f.status = 'FALTA'
+		  AND f.dataOcorrencia >= :inicio
+		  AND f.dataOcorrencia <= :fim
+		""")
+	java.util.List<String> buscarAlunosComFaltasRecentes(
+		@org.springframework.data.repository.query.Param("inicio") java.util.Date inicio,
+		@org.springframework.data.repository.query.Param("fim") java.util.Date fim);
 }
 
 @org.springframework.stereotype.Repository("frequenciaRepositorio")
@@ -166,5 +176,16 @@ class FrequenciaRepositorioImpl implements br.com.forgefit.dominio.frequencia.Fr
 		java.util.Date inicioDate = DateTimeConverter.toDate(inicio);
 		java.util.Date fimDate = DateTimeConverter.toDate(fim);
 		return repositorio.contarFaltasPorPeriodo(alunoMatricula.getValor(), inicioDate, fimDate);
+	}
+	
+	@Override
+	public java.util.List<br.com.forgefit.dominio.aluno.Matricula> buscarAlunosComFaltasRecentes(
+			java.time.LocalDate inicio, 
+			java.time.LocalDate fim) {
+		java.util.Date inicioDate = DateTimeConverter.toDate(inicio);
+		java.util.Date fimDate = DateTimeConverter.toDate(fim);
+		return repositorio.buscarAlunosComFaltasRecentes(inicioDate, fimDate).stream()
+			.map(br.com.forgefit.dominio.aluno.Matricula::new)
+			.toList();
 	}
 }

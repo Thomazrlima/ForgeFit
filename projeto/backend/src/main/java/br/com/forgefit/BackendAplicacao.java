@@ -4,6 +4,7 @@ import static org.springframework.boot.SpringApplication.run;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import br.com.forgefit.aplicacao.aula.AulaRepositorioAplicacao;
 import br.com.forgefit.aplicacao.aula.AulaServicoAplicacao;
@@ -33,6 +34,7 @@ import br.com.forgefit.dominio.frequencia.FrequenciaRepositorio;
 import br.com.forgefit.dominio.frequencia.FrequenciaService;
 
 @SpringBootApplication
+@EnableScheduling
 public class BackendAplicacao {
 
     @Bean
@@ -83,6 +85,20 @@ public class BackendAplicacao {
             AlunoRepositorio alunoRepositorio,
             AulaRepositorio aulaRepositorio) {
         return new FrequenciaService(frequenciaRepositorio, alunoRepositorio, aulaRepositorio);
+    }
+    
+    @Bean
+    public br.com.forgefit.aplicacao.frequencia.FrequenciaVerificacaoService frequenciaVerificacaoService(
+            FrequenciaService frequenciaService,
+            FrequenciaRepositorio frequenciaRepositorio,
+            AlunoRepositorio alunoRepositorio) {
+        var service = new br.com.forgefit.aplicacao.frequencia.FrequenciaVerificacaoService(
+            frequenciaService, frequenciaRepositorio, alunoRepositorio
+        );
+        // Registra observers
+        service.adicionarObserver(new br.com.forgefit.aplicacao.frequencia.LogFrequenciaObserver());
+        service.adicionarObserver(new br.com.forgefit.aplicacao.frequencia.EmailFrequenciaObserver());
+        return service;
     }
 
     @Bean

@@ -44,4 +44,21 @@ public class AlunoService {
                 throw new IllegalArgumentException("Aluno não encontrado");
             });
     }
+
+    /**
+     * Verifica se o aluno está bloqueado por excesso de faltas.
+     * Lança exceção se o aluno estiver bloqueado.
+     */
+    public void validarSeAlunoPodeReservar(Matricula alunoMatricula) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
+        
+        alunoRepository.obterPorMatricula(alunoMatricula)
+            .ifPresentOrElse(aluno -> {
+                if (aluno.estaBloqueado()) {
+                    throw new IllegalStateException("Aluno bloqueado.");
+                }
+            }, () -> {
+                throw new IllegalArgumentException("Aluno não encontrado");
+            });
+    }
 }

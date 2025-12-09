@@ -75,7 +75,8 @@ INSERT INTO USUARIOS_MOCK (ID, ROLE, EMAIL, PASSWORD, AVATAR) VALUES
 (37, 'student', 'leticia.moraes@forgefit.com', 'Aluno@123', 'https://github.com/leticiapleite.png'),
 (38, 'student', 'matheus.barbosa@forgefit.com', 'Aluno@123', 'https://github.com/gheysonmelo.png'),
 (39, 'student', 'aline.dias@forgefit.com', 'Aluno@123', 'https://github.com/ArthurCapistrano.png'),
-(40, 'student', 'paulo.castro@forgefit.com', 'Aluno@123', 'https://github.com/erico-chen.png');
+(40, 'student', 'paulo.castro@forgefit.com', 'Aluno@123', 'https://github.com/erico-chen.png'),
+(41, 'student', 'carlos.faltoso@forgefit.com', 'Aluno@123', 'https://github.com/deadcube04.png');
 
 -- ============================================
 -- FIM DA MIGRAÇÃO

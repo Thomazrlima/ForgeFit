@@ -195,6 +195,10 @@ class AlunoRepositorioImpl implements br.com.forgefit.dominio.aluno.AlunoReposit
 			alunoJpa.setNome(aluno.getNome());
 			alunoJpa.setCreditos(aluno.getCreditos());
 			alunoJpa.setPontuacaoTotal(aluno.getPontuacaoTotal());
+			alunoJpa.setStatus(StatusAluno.valueOf(aluno.getStatus().name()));
+			alunoJpa.setBloqueioAte(aluno.getBloqueioAte() != null 
+				? java.sql.Date.valueOf(aluno.getBloqueioAte()) 
+				: null);
 			// Não atualiza relacionamentos complexos como planoAtual, avaliacoes, etc.
 		}
 		

@@ -33,6 +33,9 @@ public class FrequenciaControlador {
     
     @Autowired
     private FrequenciaService frequenciaService;
+    
+    @Autowired
+    private FrequenciaScheduler frequenciaScheduler;
 
     /**
      * Registra presença ou falta de um aluno em uma aula.
@@ -125,6 +128,30 @@ public class FrequenciaControlador {
                 .body(new BloqueioResponse(false, "Erro ao verificar bloqueio: " + e.getMessage(), null, 0));
         }
     }
+    
+    /**
+     * Endpoint admin para executar verificação manual.
+     */
+    @RequestMapping(value = "/verificar-todos", method = POST)
+    public ResponseEntity<VerificacaoResponse> verificarTodos() {
+        try {
+            logger.info("Executando verificação manual de frequência");
+            var relatorio = frequenciaScheduler.executarManual();
+            
+            return ResponseEntity.ok(new VerificacaoResponse(
+                true,
+                "Verificação executada com sucesso",
+                relatorio.getTotalVerificados(),
+                relatorio.getAlunosBloqueados(),
+                relatorio.getAlunosDesbloqueados(),
+                relatorio.getAlunosAdvertidos()
+            ));
+        } catch (Exception e) {
+            logger.error("Erro ao executar verificação", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new VerificacaoResponse(false, "Erro: " + e.getMessage(), 0, 0, 0, 0));
+        }
+    }
 }
 
 record FrequenciaResponse(
@@ -138,4 +165,13 @@ record BloqueioResponse(
     String mensagem,
     Boolean bloqueado,
     long faltasRecentes
+) {}
+
+record VerificacaoResponse(
+    boolean sucesso,
+    String mensagem,
+    int totalVerificados,
+    int bloqueados,
+    int desbloqueados,
+    int advertidos
 ) {}

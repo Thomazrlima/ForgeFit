@@ -30,4 +30,9 @@ public interface FrequenciaRepositorio {
      * Conta quantas faltas um aluno teve em um período.
      */
     long contarFaltasPorPeriodo(Matricula alunoMatricula, LocalDate inicio, LocalDate fim);
+    
+    /**
+     * Busca matrículas de alunos que tiveram pelo menos uma falta no período.
+     */
+    List<Matricula> buscarAlunosComFaltasRecentes(LocalDate inicio, LocalDate fim);
 }

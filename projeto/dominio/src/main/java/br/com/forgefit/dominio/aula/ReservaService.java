@@ -25,6 +25,9 @@ public class ReservaService {
         notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         notNull(aulaId, "O id da aula não pode ser nulo");
 
+        // Verifica se o aluno está bloqueado antes de permitir a reserva
+        alunoService.validarSeAlunoPodeReservar(alunoMatricula);
+
         Aula aula = obterAula(aulaId);
 
         if (aula.temVagaDisponivel()) {

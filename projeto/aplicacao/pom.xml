@@ -38,5 +38,12 @@
       <artifactId>commons-lang3</artifactId>
       <version>3.14.0</version>
     </dependency>
+    
+    <!-- SLF4J API (para logging nos observers) -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>2.0.9</version>
+    </dependency>
   </dependencies>
 </project>

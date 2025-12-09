@@ -177,6 +177,15 @@ public class Aluno {
         historicoDeFrequencia.add(frequencia);
     }
 
+    /**
+     * Verifica se o aluno está bloqueado.
+     * Um aluno está bloqueado se seu status for BLOQUEADO e a data de bloqueio ainda não expirou.
+     */
+    public boolean estaBloqueado() {
+        return status == StatusAluno.BLOQUEADO && 
+               (bloqueioAte == null || !LocalDate.now().isAfter(bloqueioAte));
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)

@@ -11,11 +11,11 @@ import java.time.LocalDateTime;
  */
 public class ReembolsoService {
 
-    // Política de reembolso: 15 dias de antecedência = 100%, 5 dias = 50%
+    // Política de reembolso: ≥15 dias = 100%, 2-14 dias = 50%, ≤1 dia = 0%
     private static final long HORAS_MINIMAS_REEMBOLSO_TOTAL = 15 * 24; // 15 dias = 360 horas
     private static final double PERCENTUAL_REEMBOLSO_TOTAL = 1.0; // 100%
     private static final double PERCENTUAL_REEMBOLSO_PARCIAL = 0.5; // 50%
-    private static final long HORAS_MINIMAS_REEMBOLSO_PARCIAL = 5 * 24; // 5 dias = 120 horas
+    private static final long HORAS_MINIMAS_REEMBOLSO_PARCIAL = 2 * 24; // 2 dias = 48 horas
 
     /**
      * Calcula o crédito de reembolso baseado na antecedência do cancelamento
@@ -39,12 +39,12 @@ public class ReembolsoService {
             return calcularValorBase() * PERCENTUAL_REEMBOLSO_TOTAL;
         }
 
-        // Se cancelou com mais de 5 dias (120 horas): reembolso parcial (50%)
+        // Se cancelou com 2 a 14 dias (48-359 horas): reembolso parcial (50%)
         if (horasAntecedencia >= HORAS_MINIMAS_REEMBOLSO_PARCIAL) {
             return calcularValorBase() * PERCENTUAL_REEMBOLSO_PARCIAL;
         }
 
-        // Menos de 5 dias: sem reembolso
+        // Menos de 2 dias (≤1 dia antes): sem reembolso
         return 0.0;
     }
 
@@ -73,11 +73,11 @@ public class ReembolsoService {
         double valorBase = calcularValorBase();
         
         if (credito >= valorBase * PERCENTUAL_REEMBOLSO_TOTAL * 0.99) { // 100% com margem
-            return "cancelamento aprovado, reembolso integral em processamento";
+            return "Cancelamento aprovado, reembolso integral em processamento";
         } else if (credito >= valorBase * PERCENTUAL_REEMBOLSO_PARCIAL * 0.99) { // 50% com margem
-            return "cancelamento aprovado, reembolso parcial em processamento";
+            return "Cancelamento aprovado, reembolso parcial em processamento";
         } else {
-            return "cancelamento realizado sem direito a reembolso";
+            return "Cancelamento realizado sem direito a reembolso";
         }
     }
 }

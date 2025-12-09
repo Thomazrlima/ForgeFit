@@ -110,12 +110,19 @@ VALUES
 -- AULAS
 -- ============================================
 
+-- Aulas com datas estratégicas para teste de reembolso (hoje = 09/12/2025):
+-- Regras: ≥15 dias = 100%, 2-14 dias = 50%, ≤1 dia = 0%
+-- Aula 1: 26/12 (17 dias) = reembolso TOTAL (100% = R$ 20,00)
+-- Aula 2: 19/12 (10 dias) = reembolso PARCIAL (50% = R$ 10,00)
+-- Aula 3: 12/12 (3 dias) = reembolso PARCIAL (50% = R$ 10,00)
+-- Aula 4: 30/12 (21 dias) = reembolso TOTAL (100% = R$ 20,00)
+-- Aula 5: 10/12 (1 dia) = SEM reembolso (0% = R$ 0,00)
 INSERT INTO AULA(PROFESSOR_ID, MODALIDADE, ESPACO, CAPACIDADE, INICIO, FIM, STATUS) VALUES 
-    (1, 'MUSCULACAO', 'AREA_DE_PESO_LIVRE', 20, '2025-12-09 08:00:00', '2025-12-09 09:00:00', 'ATIVA'),
-    (2, 'YOGA', 'SALA01_MULTIUSO', 15, '2025-12-10 10:00:00', '2025-12-10 11:00:00', 'ATIVA'),
-    (3, 'SPINNING', 'SALA03_SPINNING', 25, '2025-12-11 18:00:00', '2025-12-11 19:00:00', 'ATIVA'),
-    (2, 'PILATES', 'ESTUDIO_PILATES', 12, '2025-12-12 09:00:00', '2025-12-12 10:00:00', 'ATIVA'),
-    (1, 'CROSSFIT', 'SALA02_MULTIUSO', 18, '2025-12-13 19:00:00', '2025-12-13 20:00:00', 'ATIVA');
+    (1, 'MUSCULACAO', 'AREA_DE_PESO_LIVRE', 20, '2025-12-26 08:00:00', '2025-12-26 09:00:00', 'ATIVA'),
+    (2, 'YOGA', 'SALA01_MULTIUSO', 15, '2025-12-19 10:00:00', '2025-12-19 11:00:00', 'ATIVA'),
+    (3, 'SPINNING', 'SALA03_SPINNING', 25, '2025-12-12 18:00:00', '2025-12-12 19:00:00', 'ATIVA'),
+    (2, 'PILATES', 'ESTUDIO_PILATES', 12, '2025-12-30 09:00:00', '2025-12-30 10:00:00', 'ATIVA'),
+    (1, 'CROSSFIT', 'SALA02_MULTIUSO', 18, '2025-12-10 19:00:00', '2025-12-10 20:00:00', 'ATIVA');
 
 -- Recorrência para aula de Yoga (toda Segunda, Quarta e Sexta)
 INSERT INTO RECORRENCIA(AULA_ID, TIPO, DATA_FIM_RECORRENCIA) VALUES 
@@ -128,7 +135,7 @@ INSERT INTO RECORRENCIA_DIAS(RECORRENCIA_ID, DIA_DA_SEMANA) VALUES
 
 -- Exceção: aula de yoga do dia 17/12 será reagendada
 INSERT INTO OCORRENCIA_EXCECAO(AULA_ID, DATA_ORIGINAL_OCORRENCIA, CANCELADA, NOVO_INICIO, NOVO_FIM) VALUES 
-    (2, '2025-12-17', FALSE, '2025-12-17 11:00:00', '2025-12-17 12:00:00');
+    (2, '2025-12-26', FALSE, '2025-12-26 11:00:00', '2025-12-26 12:00:00');
 
 -- ============================================
 -- RESERVAS E LISTA DE ESPERA
@@ -151,11 +158,11 @@ INSERT INTO LISTA_DE_ESPERA(AULA_ID, ALUNO_MATRICULA) VALUES
 -- ============================================
 
 INSERT INTO FREQUENCIA(ALUNO_MATRICULA, AULA_ID, DATA_OCORRENCIA, STATUS) VALUES 
-    ('ALU001', 1, '2025-12-09', 'PRESENTE'),
-    ('ALU001', 2, '2025-12-10', 'PRESENTE'),
-    ('ALU002', 1, '2025-12-09', 'PRESENTE'),
-    ('ALU002', 3, '2025-12-11', 'FALTA'),
-    ('ALU003', 2, '2025-12-10', 'PRESENTE');
+    ('ALU001', 1, '2025-12-26', 'PRESENTE'),
+    ('ALU001', 2, '2025-12-19', 'PRESENTE'),
+    ('ALU002', 1, '2025-12-26', 'PRESENTE'),
+    ('ALU002', 3, '2025-12-12', 'FALTA'),
+    ('ALU003', 5, '2025-12-10', 'PRESENTE');
 
 -- ============================================
 -- CHECK-INS

@@ -63,9 +63,21 @@ class JpaMapeador extends ModelMapper {
             }
         });
 
+        // Converter específico para java.sql.Date -> LocalDate (DEVE VIR ANTES de Date -> LocalDate)
+        addConverter(new AbstractConverter<java.sql.Date, LocalDate>() {
+            @Override
+            protected LocalDate convert(java.sql.Date source) {
+                return source != null ? source.toLocalDate() : null;
+            }
+        });
+
         addConverter(new AbstractConverter<Date, LocalDate>() {
             @Override
             protected LocalDate convert(Date source) {
+                // Se for java.sql.Date, usa o método nativo toLocalDate()
+                if (source instanceof java.sql.Date) {
+                    return ((java.sql.Date) source).toLocalDate();
+                }
                 return source != null ? source.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : null;
             }
         });

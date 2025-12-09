@@ -1,19 +1,24 @@
 package br.com.forgefit.apresentacao.aula;
 
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import br.com.forgefit.aplicacao.aula.CancelamentoResumo;
 import br.com.forgefit.dominio.aluno.Matricula;
+import br.com.forgefit.dominio.aula.Aula;
 import br.com.forgefit.dominio.aula.AulaId;
+import br.com.forgefit.dominio.aula.AulaRepositorio;
+import br.com.forgefit.dominio.aula.ReembolsoService;
 import br.com.forgefit.dominio.aula.ReservaService;
 
 import java.time.LocalDateTime;
@@ -30,6 +35,34 @@ public class CancelamentoControlador {
     
     @Autowired
     private ReservaService reservaService;
+    
+    @Autowired
+    private AulaRepositorio aulaRepositorio;
+    
+    @Autowired
+    private ReembolsoService reembolsoService;
+
+    @RequestMapping(method = GET, path = "/preview")
+    public ResponseEntity<ReembolsoPreview> calcularReembolso(
+            @RequestParam("aulaId") Integer aulaId) {
+        try {
+            AulaId id = new AulaId(aulaId);
+            Aula aula = aulaRepositorio.obterPorId(id)
+                .orElseThrow(() -> new IllegalArgumentException("Aula não encontrada"));
+            
+            LocalDateTime agora = LocalDateTime.now();
+            double credito = reembolsoService.calcularCreditoDeReembolso(id, aula, agora);
+            String mensagem = reembolsoService.obterMensagemDeReembolso(credito);
+            boolean elegivel = credito > 0;
+            
+            return ResponseEntity.ok(new ReembolsoPreview(elegivel, credito, mensagem));
+            
+        } catch (Exception e) {
+            logger.error("Erro ao calcular reembolso", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ReembolsoPreview(false, 0.0, "Erro ao calcular reembolso"));
+        }
+    }
 
     @RequestMapping(method = POST)
     public ResponseEntity<CancelamentoResponse> cancelarReserva(@RequestBody CancelamentoResumo request) {
@@ -74,4 +107,10 @@ public class CancelamentoControlador {
 record CancelamentoResponse(
     boolean sucesso,
     String mensagem
+) {}
+
+record ReembolsoPreview(
+    boolean elegivel,
+    double valor,
+    String motivo
 ) {}

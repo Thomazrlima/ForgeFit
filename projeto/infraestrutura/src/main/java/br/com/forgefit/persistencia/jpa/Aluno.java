@@ -183,7 +183,21 @@ class AlunoRepositorioImpl implements br.com.forgefit.dominio.aluno.AlunoReposit
 
 	@Override
 	public void salvar(br.com.forgefit.dominio.aluno.Aluno aluno) {
-		Aluno alunoJpa = mapeador.map(aluno, Aluno.class);
+		// Busca a entidade existente para atualizar, evitando problemas com relacionamentos nullable=false
+		Aluno alunoJpa = repositorio.findById(aluno.getMatricula().getValor())
+			.orElseGet(() -> {
+				// Se não existe, cria novo através do ModelMapper
+				return mapeador.map(aluno, Aluno.class);
+			});
+		
+		// Atualiza apenas os campos necessários do aluno existente
+		if (repositorio.existsById(aluno.getMatricula().getValor())) {
+			alunoJpa.setNome(aluno.getNome());
+			alunoJpa.setCreditos(aluno.getCreditos());
+			alunoJpa.setPontuacaoTotal(aluno.getPontuacaoTotal());
+			// Não atualiza relacionamentos complexos como planoAtual, avaliacoes, etc.
+		}
+		
 		repositorio.save(alunoJpa);
 	}
 

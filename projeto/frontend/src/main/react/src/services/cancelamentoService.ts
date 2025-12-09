@@ -17,6 +17,12 @@ export interface CancelamentoResponse {
     mensagem: string;
 }
 
+export interface ReembolsoPreview {
+    elegivel: boolean;
+    valor: number;
+    motivo: string;
+}
+
 /**
  * Envia requisição de cancelamento para o backend.
  */
@@ -44,6 +50,23 @@ export const buscarReservasParaCancelamento = async (alunoMatricula: string): Pr
     } catch (error) {
         console.error("Erro ao buscar reservas para cancelamento:", error);
         throw new Error("Erro ao buscar reservas. Tente novamente.");
+    }
+};
+
+/**
+ * Calcula preview do reembolso antes de cancelar.
+ */
+export const calcularReembolso = async (aulaId: number): Promise<ReembolsoPreview> => {
+    try {
+        const response = await axios.get<ReembolsoPreview>(`${API_BASE_URL}/reservas/cancelar/preview?aulaId=${aulaId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Erro ao calcular reembolso:", error);
+        return {
+            elegivel: false,
+            valor: 0,
+            motivo: "Erro ao calcular reembolso"
+        };
     }
 };
 

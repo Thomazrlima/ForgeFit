@@ -1,8 +1,10 @@
 import { Calendar, Users, MapPin, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
 import Modal, { ModalAction } from "../Modal";
 import type { Class } from "../../../pages/Aulas/mockData";
 import { ClassInfoContainer, ClassImageContainer, ClassImage, ClassContentWrapper, ClassTitle, ClassDetails, ClassDetail, WarningSection, CustomFooter, FooterRefundSection, ButtonContainer } from "./styles";
 import { getModalidadeImage } from "../../../utils/modalidadeImages";
+import { calcularReembolso, type ReembolsoPreview } from "../../../services/cancelamentoService";
 
 interface UnenrollModalProps {
     isOpen: boolean;
@@ -13,36 +15,38 @@ interface UnenrollModalProps {
 }
 
 const UnenrollModal = ({ isOpen, onClose, classData, onConfirm, isLoading = false }: UnenrollModalProps) => {
+    const [refundInfo, setRefundInfo] = useState<{ isEligible: boolean; amount: number; reason: string } | null>(null);
+    const [loadingRefund, setLoadingRefund] = useState(false);
+
+    const isWaitingList = classData?.enrollmentStatus === "waiting_list";
+
+    // Busca informações de reembolso do backend quando o modal abre
+    useEffect(() => {
+        if (isOpen && classData && !isWaitingList) {
+            setLoadingRefund(true);
+            calcularReembolso(classData.id)
+                .then((preview: ReembolsoPreview) => {
+                    setRefundInfo({
+                        isEligible: preview.elegivel,
+                        amount: preview.valor,
+                        reason: preview.motivo
+                    });
+                })
+                .catch((error) => {
+                    console.error('Erro ao calcular reembolso:', error);
+                    setRefundInfo({
+                        isEligible: false,
+                        amount: 0,
+                        reason: 'Erro ao calcular reembolso'
+                    });
+                })
+                .finally(() => {
+                    setLoadingRefund(false);
+                });
+        }
+    }, [isOpen, classData, isWaitingList]);
+
     if (!classData) return null;
-
-    const isWaitingList = classData.enrollmentStatus === "waiting_list";
-
-    // Função para calcular informações de reembolso (apenas para aulas inscritas)
-    const getRefundInfo = () => {
-        if (isWaitingList) {
-            return null; // Não há reembolso para lista de espera
-        }
-
-        // Simula diferentes cenários de reembolso baseado no ID da aula
-        const classPrice = 50; // Preço exemplo
-
-        switch (classData.id) {
-            case 1: // Yoga Matinal - pode cancelar com reembolso total
-                return { isEligible: true, amount: classPrice, reason: "Cancelamento com mais de 24h de antecedência" };
-            case 2: // Spinning - pode cancelar com reembolso parcial
-                return { isEligible: true, amount: classPrice * 0.5, reason: "Cancelamento com menos de 24h" };
-            case 3: // Funcional - sem reembolso
-                return { isEligible: false, amount: 0, reason: "Aula já iniciada ou cancelamento muito próximo" };
-            case 4: // Pilates - reembolso total
-                return { isEligible: true, amount: classPrice, reason: "Cancelamento dentro do prazo permitido" };
-            case 5: // Zumba - reembolso parcial
-                return { isEligible: true, amount: classPrice * 0.75, reason: "Cancelamento com 12h de antecedência" };
-            default:
-                return { isEligible: false, amount: 0, reason: "Aula não elegível para reembolso" };
-        }
-    };
-
-    const refundInfo = getRefundInfo();
 
     const handleConfirm = () => {
         onConfirm(classData.id);
@@ -50,21 +54,25 @@ const UnenrollModal = ({ isOpen, onClose, classData, onConfirm, isLoading = fals
 
     const footer = (
         <CustomFooter style={{ justifyContent: isWaitingList ? "flex-end" : "space-between" }}>
-            {!isWaitingList && refundInfo && (
+            {!isWaitingList && (
                 <FooterRefundSection>
                     <h4>Informações de Reembolso</h4>
-                    {refundInfo.isEligible ? (
+                    {loadingRefund ? (
+                        <p><small>Calculando reembolso...</small></p>
+                    ) : refundInfo?.isEligible ? (
                         <p>
                             <span className="refund-amount">Valor do reembolso: R$ {refundInfo.amount.toFixed(2)}</span>
                             <br />
                             <small>{refundInfo.reason}</small>
                         </p>
-                    ) : (
+                    ) : refundInfo ? (
                         <p>
                             <span className="no-refund">Não elegível para reembolso</span>
                             <br />
                             <small>{refundInfo.reason}</small>
                         </p>
+                    ) : (
+                        <p><small>Informação não disponível</small></p>
                     )}
                 </FooterRefundSection>
             )}

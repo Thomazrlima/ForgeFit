@@ -15,6 +15,9 @@ export interface CancelamentoResumo {
 export interface CancelamentoResponse {
     sucesso: boolean;
     mensagem: string;
+    reembolsoElegivel: boolean;
+    valorReembolso: number;
+    mensagemReembolso: string;
 }
 
 export interface ReembolsoPreview {

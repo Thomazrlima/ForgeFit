@@ -65,11 +65,31 @@ public class ReembolsoService {
 
     /**
      * Obtém a mensagem apropriada baseada no valor do crédito calculado
+     * Para uso em preview/informação antes do cancelamento
      * 
      * @param credito Valor do crédito de reembolso
-     * @return Mensagem descritiva do tipo de reembolso
+     * @return Mensagem descritiva do status de elegibilidade
      */
-    public String obterMensagemDeReembolso(double credito) {
+    public String obterMensagemElegibilidade(double credito) {
+        double valorBase = calcularValorBase();
+        
+        if (credito >= valorBase * PERCENTUAL_REEMBOLSO_TOTAL * 0.99) { // 100% com margem
+            return "Reembolso integral (100%)";
+        } else if (credito >= valorBase * PERCENTUAL_REEMBOLSO_PARCIAL * 0.99) { // 50% com margem
+            return "Reembolso parcial (50%)";
+        } else {
+            return "Não elegível para reembolso";
+        }
+    }
+    
+    /**
+     * Obtém a mensagem de confirmação após o cancelamento ser efetivado
+     * Para uso em notificação pós-cancelamento
+     * 
+     * @param credito Valor do crédito de reembolso
+     * @return Mensagem de confirmação do processamento
+     */
+    public String obterMensagemConfirmacao(double credito) {
         double valorBase = calcularValorBase();
         
         if (credito >= valorBase * PERCENTUAL_REEMBOLSO_TOTAL * 0.99) { // 100% com margem

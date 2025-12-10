@@ -25,7 +25,7 @@ type EnrollmentStatus = AulaFrontend["enrollmentStatus"];
 
 const Aulas = () => {
     const { user } = useUser();
-    const { success, error: showError } = useToast();
+    const { success, error: showError, warn } = useToast();
     
     // React Query: buscar aulas com status de inscrição
     const { aulas, aulasInscritas, isLoading, error } = useAulasComInscricao(
@@ -124,7 +124,13 @@ const Aulas = () => {
             });
 
             handleCloseUnenrollModal();
-            success("Cancelamento realizado com sucesso!");
+            
+            // Exibir notificação com a mensagem de reembolso vinda do backend
+            if (response.sucesso && response.mensagemReembolso) {
+                warn(response.mensagemReembolso);
+            } else {
+                success("Cancelamento realizado com sucesso!");
+            }
         } catch (err: any) {
             console.error("Erro ao cancelar inscrição:", err);
             showError(err?.response?.data || "Erro ao processar cancelamento");

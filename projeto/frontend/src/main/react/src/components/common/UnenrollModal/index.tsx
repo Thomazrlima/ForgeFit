@@ -67,9 +67,7 @@ const UnenrollModal = ({ isOpen, onClose, classData, onConfirm, isLoading = fals
                         </p>
                     ) : refundInfo ? (
                         <p>
-                            <span className="no-refund">Não elegível para reembolso</span>
-                            <br />
-                            <small>{refundInfo.reason}</small>
+                            <span className="no-refund">{refundInfo.reason}</span>
                         </p>
                     ) : (
                         <p><small>Informação não disponível</small></p>

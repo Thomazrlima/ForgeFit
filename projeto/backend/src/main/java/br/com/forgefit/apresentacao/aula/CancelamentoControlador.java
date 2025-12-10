@@ -52,10 +52,10 @@ public class CancelamentoControlador {
             
             LocalDateTime agora = LocalDateTime.now();
             double credito = reembolsoService.calcularCreditoDeReembolso(id, aula, agora);
-            String mensagem = reembolsoService.obterMensagemDeReembolso(credito);
+            String mensagemElegibilidade = reembolsoService.obterMensagemElegibilidade(credito);
             boolean elegivel = credito > 0;
             
-            return ResponseEntity.ok(new ReembolsoPreview(elegivel, credito, mensagem));
+            return ResponseEntity.ok(new ReembolsoPreview(elegivel, credito, mensagemElegibilidade));
             
         } catch (Exception e) {
             logger.error("Erro ao calcular reembolso", e);
@@ -72,41 +72,49 @@ public class CancelamentoControlador {
             
             if (!request.isValid()) {
                 return ResponseEntity.badRequest()
-                    .body(new CancelamentoResponse(false, "Todos os campos obrigatórios devem ser preenchidos"));
+                    .body(new CancelamentoResponse(false, "Cancelamento falhou", false, 0.0, "Todos os campos obrigatórios devem ser preenchidos"));
             }
 
             Matricula matricula = new Matricula(request.getAlunoMatriculaTrimmed());
             AulaId aulaId = new AulaId(request.getAulaId());
             
-            logger.info("Tentando cancelar reserva - matricula='{}', aulaId={}", 
-                matricula.getValor(), request.getAulaId());
+            // Calcular reembolso ANTES do cancelamento
+            Aula aula = aulaRepositorio.obterPorId(aulaId)
+                .orElseThrow(() -> new IllegalArgumentException("Aula não encontrada"));
+            LocalDateTime agora = LocalDateTime.now();
+            double credito = reembolsoService.calcularCreditoDeReembolso(aulaId, aula, agora);
+            boolean elegivel = credito > 0;
+            String mensagemConfirmacao = reembolsoService.obterMensagemConfirmacao(credito);
             
-            String mensagem = reservaService.cancelarReserva(
-                matricula,
-                aulaId,
-                LocalDateTime.now()
-            );
+            logger.info("Tentando cancelar reserva - matricula='{}', aulaId={}, reembolso={}", 
+                matricula.getValor(), request.getAulaId(), credito);
             
-            logger.info("Cancelamento realizado com sucesso: {}", mensagem);
+            // Executar cancelamento
+            reservaService.cancelarReserva(matricula, aulaId, agora);
+            
+            logger.info("Cancelamento realizado com sucesso: {} (reembolso: R$ {})", mensagemConfirmacao, credito);
             
             return ResponseEntity.status(HttpStatus.OK)
-                .body(new CancelamentoResponse(true, mensagem));
+                .body(new CancelamentoResponse(true, "Cancelamento realizado com sucesso", elegivel, credito, mensagemConfirmacao));
             
         } catch (IllegalArgumentException e) {
             logger.warn("Erro de validação ao cancelar reserva", e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new CancelamentoResponse(false, e.getMessage()));
+                .body(new CancelamentoResponse(false, e.getMessage(), false, 0.0, ""));
         } catch (Exception e) {
             logger.error("Erro ao cancelar reserva", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new CancelamentoResponse(false, "Erro ao processar cancelamento: " + e.getMessage()));
+                .body(new CancelamentoResponse(false, "Erro ao processar cancelamento: " + e.getMessage(), false, 0.0, ""));
         }
     }
 }
 
 record CancelamentoResponse(
     boolean sucesso,
-    String mensagem
+    String mensagem,
+    boolean reembolsoElegivel,
+    double valorReembolso,
+    String mensagemReembolso
 ) {}
 
 record ReembolsoPreview(

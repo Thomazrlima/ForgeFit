@@ -75,8 +75,8 @@ public class ReservaService {
 
         promoverPrimeiroDaListaSeHouver(aula);
         
-        // Retorna mensagem baseada no valor do crédito calculado pelo ReembolsoService
-        return reembolsoService.obterMensagemDeReembolso(credito);
+        // Retorna mensagem de confirmação baseada no valor do crédito calculado pelo ReembolsoService
+        return reembolsoService.obterMensagemConfirmacao(credito);
     }
 
     private void promoverPrimeiroDaListaSeHouver(Aula aula) {

@@ -78,8 +78,9 @@ export const useCancelarInscricao = () => {
 
     return useMutation({
         mutationFn: async ({ aulaId, matricula }: { aulaId: number; matricula: string }) => {
-            const response = await api.post(`/aulas/${aulaId}/cancelar`, matricula, {
-                headers: { "Content-Type": "text/plain" },
+            const response = await api.post(`/reservas/cancelar`, {
+                alunoMatricula: matricula,
+                aulaId: aulaId
             });
             return response.data;
         },

@@ -11,9 +11,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import br.com.forgefit.dominio.aluno.enums.StatusAluno;
 import br.com.forgefit.dominio.frequencia.Frequencia;
-import br.com.forgefit.dominio.frequencia.AlunoBloqueadoEvento;
-import br.com.forgefit.dominio.frequencia.AlunoAdvertidoEvento;
-import br.com.forgefit.dominio.frequencia.AlunoDesbloqueadoEvento;
 import br.com.forgefit.dominio.treino.PlanoDeTreinoId;
 import br.com.forgefit.dominio.guilda.GuildaId;
 
@@ -207,14 +204,13 @@ public class Aluno {
     
     /**
      * Bloqueia o aluno por excesso de faltas.
-     * REGRA DE NEGÓCIO: Retorna evento de domínio para notificação.
+     * REGRA DE NEGÓCIO: Atualiza status e data de bloqueio.
      * 
      * @param quantidadeFaltas total de faltas que motivou o bloqueio
      * @param diasBloqueio quantidade de dias que o aluno ficará bloqueado
-     * @return evento de bloqueio para ser publicado
      * @throws IllegalStateException se o aluno já estiver bloqueado
      */
-    public AlunoBloqueadoEvento bloquearPorFaltas(long quantidadeFaltas, int diasBloqueio) {
+    public void bloquearPorFaltas(long quantidadeFaltas, int diasBloqueio) {
         if (!podeSerBloqueado()) {
             throw new IllegalStateException("Aluno já está bloqueado até " + bloqueioAte);
         }
@@ -222,37 +218,30 @@ public class Aluno {
         LocalDate dataBloqueio = LocalDate.now().plusDays(diasBloqueio);
         this.status = StatusAluno.BLOQUEADO;
         this.bloqueioAte = dataBloqueio;
-        
-        return new AlunoBloqueadoEvento(matricula, nome, quantidadeFaltas, diasBloqueio, dataBloqueio);
     }
     
     /**
      * Desbloqueia o aluno após o período de bloqueio.
-     * REGRA DE NEGÓCIO: Retorna evento de domínio para notificação.
-     * 
-     * @return evento de desbloqueio para ser publicado
+     * REGRA DE NEGÓCIO: Atualiza status para ativo e limpa data de bloqueio.
      */
-    public AlunoDesbloqueadoEvento desbloquear() {
+    public void desbloquear() {
         if (status != StatusAluno.BLOQUEADO) {
             throw new IllegalStateException("Aluno não está bloqueado");
         }
         
         this.status = StatusAluno.ATIVO;
         this.bloqueioAte = null;
-        
-        return new AlunoDesbloqueadoEvento(matricula, nome);
     }
     
     /**
      * Emite advertência para o aluno por acumulação de faltas.
-     * REGRA DE NEGÓCIO: Não muda status, apenas retorna evento para notificação.
+     * REGRA DE NEGÓCIO: Não muda status, notificações enviadas via Observer pattern.
      * 
      * @param quantidadeFaltas total de faltas atual
      * @param faltasRestantes quantas faltas faltam para o bloqueio
-     * @return evento de advertência para ser publicado
      */
-    public AlunoAdvertidoEvento advertirPorFaltas(long quantidadeFaltas, int faltasRestantes) {
-        return new AlunoAdvertidoEvento(matricula, nome, quantidadeFaltas, faltasRestantes);
+    public void advertirPorFaltas(long quantidadeFaltas, int faltasRestantes) {
+        // Advertência é puramente notificacional - Observer pattern cuida das notificações
     }
     
     /**

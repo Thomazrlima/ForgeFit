@@ -3,45 +3,92 @@ package br.com.forgefit.dominio.frequencia;
 import static org.apache.commons.lang3.Validate.notNull;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
-import br.com.forgefit.dominio.aluno.AlunoRepositorio;
 import br.com.forgefit.dominio.aluno.Aluno;
+import br.com.forgefit.dominio.aluno.AlunoRepositorio;
 import br.com.forgefit.dominio.aluno.Matricula;
 import br.com.forgefit.dominio.aluno.enums.StatusAluno;
 import br.com.forgefit.dominio.aula.AulaId;
 import br.com.forgefit.dominio.aula.AulaRepositorio;
 import br.com.forgefit.dominio.frequencia.enums.StatusFrequencia;
-import br.com.forgefit.dominio.evento.EventoBarramento;
 
 /**
- * Serviço de domínio para gerenciar frequência e bloqueios por falta.
- * Seguindo DDD: coordena agregados e publica eventos de domínio.
+ * Serviço de domínio para controle de frequência.
+ * Implementa o padrão Observer (Subject) para notificar mudanças de status.
  */
 public class FrequenciaService {
-    private final FrequenciaRepositorio frequenciaRepositorio;
-    private final AlunoRepositorio alunoRepositorio;
-    private final AulaRepositorio aulaRepositorio;
-    private final EventoBarramento eventoBarramento;
-    
-    // Regras de negócio
     private static final int LIMITE_FALTAS_PARA_BLOQUEIO = 3;
     private static final int LIMITE_FALTAS_PARA_ADVERTENCIA = 2;
     private static final int DIAS_PERIODO_CONTAGEM_FALTAS = 30;
     private static final int DIAS_BLOQUEIO = 7;
+    
+    private final FrequenciaRepositorio frequenciaRepositorio;
+    private final AlunoRepositorio alunoRepositorio;
+    private final AulaRepositorio aulaRepositorio;
+    private final List<FrequenciaObserver> observadores;
 
     public FrequenciaService(FrequenciaRepositorio frequenciaRepositorio,
                            AlunoRepositorio alunoRepositorio,
-                           AulaRepositorio aulaRepositorio,
-                           EventoBarramento eventoBarramento) {
+                           AulaRepositorio aulaRepositorio) {
         notNull(frequenciaRepositorio, "O repositório de frequência não pode ser nulo");
         notNull(alunoRepositorio, "O repositório de alunos não pode ser nulo");
         notNull(aulaRepositorio, "O repositório de aulas não pode ser nulo");
-        notNull(eventoBarramento, "O barramento de eventos não pode ser nulo");
         
         this.frequenciaRepositorio = frequenciaRepositorio;
         this.alunoRepositorio = alunoRepositorio;
         this.aulaRepositorio = aulaRepositorio;
-        this.eventoBarramento = eventoBarramento;
+        this.observadores = new ArrayList<>();
+    }
+    
+    // ========== MÉTODOS DO PADRÃO OBSERVER (SUBJECT) ==========
+    
+    /**
+     * Adiciona um observador para ser notificado sobre mudanças de frequência.
+     */
+    public void adicionarObservador(FrequenciaObserver observador) {
+        notNull(observador, "O observador não pode ser nulo");
+        if (!observadores.contains(observador)) {
+            observadores.add(observador);
+        }
+    }
+    
+    /**
+     * Remove um observador da lista de notificações.
+     */
+    public void removerObservador(FrequenciaObserver observador) {
+        observadores.remove(observador);
+    }
+    
+    private void notificarBloqueio(Aluno aluno, long quantidadeFaltas, int diasBloqueio) {
+        for (FrequenciaObserver observador : observadores) {
+            try {
+                observador.notificarBloqueio(aluno, quantidadeFaltas, diasBloqueio);
+            } catch (Exception e) {
+                // Isolamento: falha em um observador não afeta outros
+            }
+        }
+    }
+    
+    private void notificarAdvertencia(Aluno aluno, long quantidadeFaltas, int faltasRestantes) {
+        for (FrequenciaObserver observador : observadores) {
+            try {
+                observador.notificarAdvertencia(aluno, quantidadeFaltas, faltasRestantes);
+            } catch (Exception e) {
+                // Isolamento: falha em um observador não afeta outros
+            }
+        }
+    }
+    
+    private void notificarDesbloqueio(Aluno aluno) {
+        for (FrequenciaObserver observador : observadores) {
+            try {
+                observador.notificarDesbloqueio(aluno);
+            } catch (Exception e) {
+                // Isolamento: falha em um observador não afeta outros
+            }
+        }
     }
 
     /**
@@ -137,24 +184,16 @@ public class FrequenciaService {
         return null;
     }
 
-    /**
-     * Desbloqueia um aluno após período de bloqueio.
-     * PADRÃO DDD: Entidade gera evento, serviço persiste e publica.
-     */
     public void desbloquearAluno(Matricula alunoMatricula) {
         notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
 
         Aluno aluno = alunoRepositorio.obterPorMatricula(alunoMatricula)
                 .orElseThrow(() -> new IllegalArgumentException("Aluno não encontrado"));
 
-        // Entidade gera o evento
-        AlunoDesbloqueadoEvento evento = aluno.desbloquear();
-        
-        // Serviço persiste
+        aluno.desbloquear();
         alunoRepositorio.salvar(aluno);
         
-        // Serviço publica evento
-        eventoBarramento.postar(evento);
+        notificarDesbloqueio(aluno);
     }
 
     /**
@@ -168,10 +207,6 @@ public class FrequenciaService {
         return frequenciaRepositorio.contarFaltasPorPeriodo(alunoMatricula, dataInicio, dataReferencia);
     }
 
-    /**
-     * Verifica e aplica bloqueio/advertência se necessário.
-     * PADRÃO DDD: Lógica de negócio no serviço, entidade gera eventos.
-     */
     public void verificarEAplicarBloqueio(Matricula alunoMatricula, LocalDate dataAtual) {
         long faltas = contarFaltasRecentes(alunoMatricula, dataAtual, DIAS_PERIODO_CONTAGEM_FALTAS);
 
@@ -179,16 +214,14 @@ public class FrequenciaService {
                 .orElseThrow(() -> new IllegalArgumentException("Aluno não encontrado"));
 
         if (faltas >= LIMITE_FALTAS_PARA_BLOQUEIO && aluno.podeSerBloqueado()) {
-            // REGRA: 3+ faltas em 30 dias = bloqueio por 7 dias
-            AlunoBloqueadoEvento evento = aluno.bloquearPorFaltas(faltas, DIAS_BLOQUEIO);
+            aluno.bloquearPorFaltas(faltas, DIAS_BLOQUEIO);
             alunoRepositorio.salvar(aluno);
-            eventoBarramento.postar(evento);
+            notificarBloqueio(aluno, faltas, DIAS_BLOQUEIO);
             
         } else if (faltas == LIMITE_FALTAS_PARA_ADVERTENCIA) {
-            // REGRA: 2 faltas = advertência (falta 1 para bloqueio)
             int faltasRestantes = LIMITE_FALTAS_PARA_BLOQUEIO - (int) faltas;
-            AlunoAdvertidoEvento evento = aluno.advertirPorFaltas(faltas, faltasRestantes);
-            eventoBarramento.postar(evento);
+            aluno.advertirPorFaltas(faltas, faltasRestantes);
+            notificarAdvertencia(aluno, faltas, faltasRestantes);
         }
     }
 }

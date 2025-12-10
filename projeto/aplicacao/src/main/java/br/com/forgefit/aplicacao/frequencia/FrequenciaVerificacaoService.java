@@ -12,15 +12,14 @@ import br.com.forgefit.dominio.frequencia.FrequenciaService;
 
 /**
  * Serviço de aplicação para verificação periódica de frequência.
- * PADRÃO DDD: Orquestra serviços de domínio, não contém lógica de negócio.
- * Eventos são gerados no domínio e publicados automaticamente pelo FrequenciaService.
+ * Orquestra o FrequenciaService sem conter lógica de negócio.
  */
 public class FrequenciaVerificacaoService {
+    private static final int DIAS_PERIODO = 30;
+    
     private final FrequenciaService frequenciaService;
     private final FrequenciaRepositorio frequenciaRepositorio;
     private final AlunoRepositorio alunoRepositorio;
-    
-    private static final int DIAS_PERIODO = 30;
 
     public FrequenciaVerificacaoService(
             FrequenciaService frequenciaService,
@@ -31,14 +30,9 @@ public class FrequenciaVerificacaoService {
         this.alunoRepositorio = alunoRepositorio;
     }
 
-    /**
-     * Verifica frequência de todos os alunos e aplica bloqueios/desbloqueios.
-     * PADRÃO DDD: Apenas orquestra, domínio gera eventos automaticamente.
-     */
     public RelatorioVerificacao verificarTodosAlunos(LocalDate dataAtual) {
         int bloqueados = 0, desbloqueados = 0;
         
-        // Busca alunos com faltas recentes
         LocalDate dataInicio = dataAtual.minusDays(DIAS_PERIODO - 1);
         List<Matricula> matriculas = frequenciaRepositorio.buscarAlunosComFaltasRecentes(dataInicio, dataAtual);
         
@@ -48,7 +42,6 @@ public class FrequenciaVerificacaoService {
             
             Aluno aluno = alunoOpt.get();
             
-            // Desbloquear se período expirou (FrequenciaService gera evento)
             if (aluno.getStatus() == StatusAluno.BLOQUEADO) {
                 LocalDate bloqueioAte = aluno.getBloqueioAte();
                 if (bloqueioAte != null && dataAtual.isAfter(bloqueioAte)) {
@@ -58,17 +51,11 @@ public class FrequenciaVerificacaoService {
                 }
             }
             
-            // Verifica e aplica bloqueio se necessário
-            // A lógica está no FrequenciaService que delega para Aluno
-            // Eventos são gerados automaticamente
             if (aluno.getStatus() == StatusAluno.ATIVO) {
                 long faltas = frequenciaService.contarFaltasRecentes(matricula, dataAtual, DIAS_PERIODO);
                 if (faltas >= 2) {
-                    // Chama o serviço de domínio que verifica e aplica bloqueio/advertência
                     frequenciaService.verificarEAplicarBloqueio(matricula, dataAtual);
-                    if (faltas >= 3) {
-                        bloqueados++;
-                    }
+                    if (faltas >= 3) bloqueados++;
                 }
             }
         }

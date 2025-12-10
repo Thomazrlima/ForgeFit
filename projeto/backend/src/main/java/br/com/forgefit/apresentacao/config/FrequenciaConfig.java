@@ -3,34 +3,38 @@ package br.com.forgefit.apresentacao.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import br.com.forgefit.aplicacao.frequencia.EmailSender;
+import br.com.forgefit.aplicacao.frequencia.FrequenciaEmailObserver;
+import br.com.forgefit.aplicacao.frequencia.FrequenciaLogObserver;
+import br.com.forgefit.aplicacao.frequencia.FrequenciaNotificacaoObserver;
 import br.com.forgefit.aplicacao.frequencia.FrequenciaVerificacaoService;
-import br.com.forgefit.apresentacao.evento.FrequenciaEventoEmailHandler;
-import br.com.forgefit.apresentacao.evento.FrequenciaEventoLogHandler;
 import br.com.forgefit.dominio.aluno.AlunoRepositorio;
-import br.com.forgefit.dominio.evento.EventoBarramento;
-import br.com.forgefit.dominio.evento.EventoBarramentoImpl;
 import br.com.forgefit.dominio.frequencia.FrequenciaRepositorio;
 import br.com.forgefit.dominio.frequencia.FrequenciaService;
+import br.com.forgefit.dominio.usuario.UsuarioMockRepositorio;
 
 /**
- * Configuração dos serviços de frequência usando eventos de domínio.
- * Padrão DDD: Barramento registra handlers da infraestrutura.
+ * Configuração do módulo de controle de frequência.
+ * Implementa o padrão Observer com FrequenciaService como Subject.
  */
 @Configuration
 public class FrequenciaConfig {
     
     @Bean
-    public EventoBarramento eventoBarramento(
-            FrequenciaEventoEmailHandler emailHandler,
-            FrequenciaEventoLogHandler logHandler) {
-        
-        EventoBarramentoImpl barramento = new EventoBarramentoImpl();
-        
-        // Registra handlers da infraestrutura
-        barramento.registrar(logHandler);
-        barramento.registrar(emailHandler);
-        
-        return barramento;
+    public FrequenciaLogObserver frequenciaLogObserver() {
+        return new FrequenciaLogObserver();
+    }
+    
+    @Bean
+    public FrequenciaEmailObserver frequenciaEmailObserver(
+            EmailSender emailSender, 
+            UsuarioMockRepositorio usuarioRepositorio) {
+        return new FrequenciaEmailObserver(emailSender, usuarioRepositorio);
+    }
+    
+    @Bean
+    public FrequenciaNotificacaoObserver frequenciaNotificacaoObserver() {
+        return new FrequenciaNotificacaoObserver();
     }
     
     @Bean
@@ -38,14 +42,21 @@ public class FrequenciaConfig {
             FrequenciaRepositorio frequenciaRepositorio,
             AlunoRepositorio alunoRepositorio,
             br.com.forgefit.dominio.aula.AulaRepositorio aulaRepositorio,
-            EventoBarramento eventoBarramento) {
+            FrequenciaLogObserver logObserver,
+            FrequenciaEmailObserver emailObserver,
+            FrequenciaNotificacaoObserver notificacaoObserver) {
         
-        return new FrequenciaService(
+        FrequenciaService service = new FrequenciaService(
             frequenciaRepositorio,
             alunoRepositorio,
-            aulaRepositorio,
-            eventoBarramento
+            aulaRepositorio
         );
+        
+        service.adicionarObservador(logObserver);
+        service.adicionarObservador(emailObserver);
+        service.adicionarObservador(notificacaoObserver);
+        
+        return service;
     }
     
     @Bean

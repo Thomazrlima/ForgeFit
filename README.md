@@ -75,6 +75,80 @@ O **ForgeFit** é um sistema de gerenciamento de academias voltado a modernizar 
 
 ---
 
+## 🧪 **Testando o Sistema**
+
+### **Sistema de Notificações por Email**
+
+O sistema de controle de frequência envia emails automaticamente quando um aluno é bloqueado por excesso de faltas.
+
+#### **Cenário de Teste: Bloqueio por Faltas**
+
+**Regra de Negócio:**
+- 3 ou mais faltas em 30 dias = bloqueio automático por 7 dias
+- Email de notificação enviado automaticamente
+
+#### **Passo a Passo:**
+
+1. **Inicie o MailHog** (servidor SMTP mock para desenvolvimento):
+   ```powershell
+   .\MailHog_windows_amd64.exe
+   ```
+   - Interface web: http://localhost:8025
+   - Servidor SMTP: localhost:1025
+
+2. **Inicie a aplicação backend** (porta 8080)
+
+3. **Registre 3 faltas para um aluno** (use aulas diferentes):
+
+   ```powershell
+   # Primeira falta (aula 1)
+   $body = @{alunoMatricula='ALU001'; aulaId=1; data='2025-12-10'; tipoRegistro='FALTA'} | ConvertTo-Json
+   Invoke-RestMethod -Uri 'http://localhost:8080/api/frequencia' -Method Post -ContentType 'application/json' -Body $body
+
+   # Segunda falta (aula 2)
+   $body = @{alunoMatricula='ALU001'; aulaId=2; data='2025-12-09'; tipoRegistro='FALTA'} | ConvertTo-Json
+   Invoke-RestMethod -Uri 'http://localhost:8080/api/frequencia' -Method Post -ContentType 'application/json' -Body $body
+
+   # Terceira falta (aula 3) - Aciona o bloqueio!
+   $body = @{alunoMatricula='ALU001'; aulaId=3; data='2025-12-08'; tipoRegistro='FALTA'} | ConvertTo-Json
+   Invoke-RestMethod -Uri 'http://localhost:8080/api/frequencia' -Method Post -ContentType 'application/json' -Body $body
+   ```
+
+4. **Verifique o resultado:**
+   - A resposta da terceira requisição deve conter: `"Aluno bloqueado por excesso de faltas"`
+   - Acesse o MailHog em http://localhost:8025
+   - Você verá um email com o assunto: **"ForgeFit - Bloqueio por Faltas"**
+
+#### **Conteúdo do Email**
+
+O email enviado contém:
+- Nome do aluno
+- Quantidade de faltas acumuladas
+- Data até quando o bloqueio será mantido
+- Quantidade de dias de bloqueio (7 dias)
+
+#### **Endpoint de Teste Manual de Email**
+
+Para testar o envio de email diretamente:
+
+```powershell
+$body = @{
+    destinatario='teste@example.com'
+    assunto='Teste ForgeFit'
+    mensagem='Este é um email de teste'
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri 'http://localhost:8080/api/email-teste' -Method Post -ContentType 'application/json' -Body $body
+```
+
+Verifique a configuração do email:
+
+```powershell
+Invoke-RestMethod -Uri 'http://localhost:8080/api/email-teste/config' -Method Get
+```
+
+---
+
 ## 📋 **Distribuição de Tarefas**
 
 ### **Lista das Funcionalidades**

@@ -40,6 +40,7 @@ public class EventoBarramentoImpl implements EventoBarramento {
             } catch (Exception e) {
                 // Não propaga exceção para não interromper outros handlers
                 System.err.println("Erro ao manipular evento: " + e.getMessage());
+                e.printStackTrace();
             }
         }
     }

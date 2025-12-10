@@ -174,28 +174,21 @@ public class FrequenciaService {
      */
     public void verificarEAplicarBloqueio(Matricula alunoMatricula, LocalDate dataAtual) {
         long faltas = contarFaltasRecentes(alunoMatricula, dataAtual, DIAS_PERIODO_CONTAGEM_FALTAS);
-        System.out.println("[DEBUG] Verificando bloqueio para " + alunoMatricula.getValor() + ": " + faltas + " faltas em 30 dias");
 
         Aluno aluno = alunoRepositorio.obterPorMatricula(alunoMatricula)
                 .orElseThrow(() -> new IllegalArgumentException("Aluno não encontrado"));
 
         if (faltas >= LIMITE_FALTAS_PARA_BLOQUEIO && aluno.podeSerBloqueado()) {
             // REGRA: 3+ faltas em 30 dias = bloqueio por 7 dias
-            System.out.println("[DEBUG] Bloqueando aluno " + aluno.getNome() + " por " + faltas + " faltas");
             AlunoBloqueadoEvento evento = aluno.bloquearPorFaltas(faltas, DIAS_BLOQUEIO);
             alunoRepositorio.salvar(aluno);
-            System.out.println("[DEBUG] Postando evento de bloqueio no barramento");
             eventoBarramento.postar(evento);
-            System.out.println("[DEBUG] Evento de bloqueio postado com sucesso");
             
         } else if (faltas == LIMITE_FALTAS_PARA_ADVERTENCIA) {
             // REGRA: 2 faltas = advertência (falta 1 para bloqueio)
-            System.out.println("[DEBUG] Advertindo aluno " + aluno.getNome() + " por " + faltas + " faltas");
             int faltasRestantes = LIMITE_FALTAS_PARA_BLOQUEIO - (int) faltas;
             AlunoAdvertidoEvento evento = aluno.advertirPorFaltas(faltas, faltasRestantes);
             eventoBarramento.postar(evento);
-        } else {
-            System.out.println("[DEBUG] Nenhuma ação necessária. Faltas: " + faltas + ", podeSerBloqueado: " + aluno.podeSerBloqueado() + ", status: " + aluno.getStatus());
         }
     }
 }

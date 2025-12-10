@@ -1,3 +1,4 @@
+
 <p align="center">
   <img src="https://img.shields.io/badge/Status-Em%20desenvolvimento-green?style=for-the-badge&logo=github" alt="Status" />
   <img src="https://img.shields.io/github/repo-size/Thomazrlima/ForgeFit?style=for-the-badge&logo=github" alt="Repository Size" />
@@ -81,6 +82,43 @@ O **ForgeFit** é um sistema de gerenciamento de academias voltado a modernizar 
 
 O sistema de controle de frequência envia emails automaticamente quando um aluno é bloqueado por excesso de faltas.
 
+#### **Instalação do MailHog**
+
+O **MailHog** é um servidor SMTP de teste que captura emails enviados durante o desenvolvimento, sem enviá-los para destinatários reais.
+
+**Instalação:**
+
+1. **Windows:**
+   - Baixe o executável: [MailHog_windows_amd64.exe](https://github.com/mailhog/MailHog/releases/download/v1.0.1/MailHog_windows_amd64.exe)
+   - Salve na raiz do projeto ou em um diretório de sua preferência
+   - Execute clicando duas vezes ou via PowerShell:
+     ```powershell
+     .\MailHog_windows_amd64.exe
+     ```
+
+2. **macOS (via Homebrew):**
+   ```bash
+   brew install mailhog
+   mailhog
+   ```
+
+3. **Linux:**
+   ```bash
+   # Download do binário
+   wget https://github.com/mailhog/MailHog/releases/download/v1.0.1/MailHog_linux_amd64
+   chmod +x MailHog_linux_amd64
+   ./MailHog_linux_amd64
+   ```
+
+4. **Docker (alternativa multiplataforma):**
+   ```bash
+   docker run -d -p 1025:1025 -p 8025:8025 mailhog/mailhog
+   ```
+
+**Portas utilizadas:**
+- **SMTP Server:** `localhost:1025` (onde a aplicação envia emails)
+- **Web Interface:** `http://localhost:8025` (para visualizar emails capturados)
+
 #### **Cenário de Teste: Bloqueio por Faltas**
 
 **Regra de Negócio:**
@@ -89,32 +127,50 @@ O sistema de controle de frequência envia emails automaticamente quando um alun
 
 #### **Passo a Passo:**
 
-1. **Inicie o MailHog** (servidor SMTP mock para desenvolvimento):
-   ```powershell
-   .\MailHog_windows_amd64.exe
-   ```
-   - Interface web: http://localhost:8025
-   - Servidor SMTP: localhost:1025
+1. **Inicie o MailHog**:
+   - Abra o executável `MailHog_windows_amd64.exe` que você baixou (clique duas vezes no arquivo)
+   - Ou execute via PowerShell no diretório onde salvou o arquivo:
+     ```powershell
+     .\MailHog_windows_amd64.exe
+     ```
+   - Uma janela de terminal será aberta mostrando que o MailHog está rodando
+   - **Portas ativas:**
+     - Interface web: http://localhost:8025 (acesse para ver os emails)
+     - Servidor SMTP: localhost:1025 (usado pela aplicação)
 
 2. **Inicie a aplicação backend** (porta 8080)
 
-3. **Registre 3 faltas para um aluno** (use aulas diferentes):
+3. **Execute a rotina de verificação de bloqueios** (simula a execução automática diária):
+
+   ```powershell
+   Invoke-RestMethod -Uri 'http://localhost:8080/api/frequencia/verificar-todos' -Method Post
+   ```
+   
+   Esta rotina verifica todos os alunos e aplica bloqueios automaticamente se necessário.
+
+4. **Registre 3 faltas para um aluno** (use aulas diferentes):
 
    ```powershell
    # Primeira falta (aula 1)
-   $body = @{alunoMatricula='ALU001'; aulaId=1; data='2025-12-10'; tipoRegistro='FALTA'} | ConvertTo-Json
+   $body = @{alunoMatricula='ALU-TESTE-001'; aulaId=1; data='2025-12-10'; tipoRegistro='FALTA'} | ConvertTo-Json
    Invoke-RestMethod -Uri 'http://localhost:8080/api/frequencia' -Method Post -ContentType 'application/json' -Body $body
 
    # Segunda falta (aula 2)
-   $body = @{alunoMatricula='ALU001'; aulaId=2; data='2025-12-09'; tipoRegistro='FALTA'} | ConvertTo-Json
+   $body = @{alunoMatricula='ALU-TESTE-001'; aulaId=2; data='2025-12-09'; tipoRegistro='FALTA'} | ConvertTo-Json
    Invoke-RestMethod -Uri 'http://localhost:8080/api/frequencia' -Method Post -ContentType 'application/json' -Body $body
 
    # Terceira falta (aula 3) - Aciona o bloqueio!
-   $body = @{alunoMatricula='ALU001'; aulaId=3; data='2025-12-08'; tipoRegistro='FALTA'} | ConvertTo-Json
+   $body = @{alunoMatricula='ALU-TESTE-001'; aulaId=3; data='2025-12-08'; tipoRegistro='FALTA'} | ConvertTo-Json
    Invoke-RestMethod -Uri 'http://localhost:8080/api/frequencia' -Method Post -ContentType 'application/json' -Body $body
    ```
 
-4. **Verifique o resultado:**
+5. **Execute novamente a rotina de verificação** para processar os bloqueios:
+
+   ```powershell
+   Invoke-RestMethod -Uri 'http://localhost:8080/api/frequencia/verificar-todos' -Method Post
+   ```
+
+6. **Verifique o resultado:**
    - A resposta da terceira requisição deve conter: `"Aluno bloqueado por excesso de faltas"`
    - Acesse o MailHog em http://localhost:8025
    - Você verá um email com o assunto: **"ForgeFit - Bloqueio por Faltas"**

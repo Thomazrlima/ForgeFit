@@ -11,6 +11,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import br.com.forgefit.dominio.aluno.enums.StatusAluno;
 import br.com.forgefit.dominio.frequencia.Frequencia;
+import br.com.forgefit.dominio.frequencia.AlunoBloqueadoEvento;
+import br.com.forgefit.dominio.frequencia.AlunoAdvertidoEvento;
+import br.com.forgefit.dominio.frequencia.AlunoDesbloqueadoEvento;
 import br.com.forgefit.dominio.treino.PlanoDeTreinoId;
 import br.com.forgefit.dominio.guilda.GuildaId;
 
@@ -118,7 +121,11 @@ public class Aluno {
         return status;
     }
 
-    public void setStatus(StatusAluno status) {
+    /**
+     * @deprecated Use bloquearPorFaltas() para regra de negócio
+     */
+    @Deprecated
+    void setStatus(StatusAluno status) {
         this.status = status;
     }
 
@@ -126,7 +133,11 @@ public class Aluno {
         return bloqueioAte;
     }
 
-    public void setBloqueioAte(LocalDate bloqueioAte) {
+    /**
+     * @deprecated Use bloquearPorFaltas() para regra de negócio
+     */
+    @Deprecated
+    void setBloqueioAte(LocalDate bloqueioAte) {
         this.bloqueioAte = bloqueioAte;
     }
 
@@ -184,6 +195,72 @@ public class Aluno {
     public boolean estaBloqueado() {
         return status == StatusAluno.BLOQUEADO && 
                (bloqueioAte == null || !LocalDate.now().isAfter(bloqueioAte));
+    }
+    
+    /**
+     * Verifica se o aluno pode ser bloqueado (não pode bloquear um aluno já bloqueado).
+     */
+    public boolean podeSerBloqueado() {
+        return status != StatusAluno.BLOQUEADO || 
+               (bloqueioAte != null && LocalDate.now().isAfter(bloqueioAte));
+    }
+    
+    /**
+     * Bloqueia o aluno por excesso de faltas.
+     * REGRA DE NEGÓCIO: Retorna evento de domínio para notificação.
+     * 
+     * @param quantidadeFaltas total de faltas que motivou o bloqueio
+     * @param diasBloqueio quantidade de dias que o aluno ficará bloqueado
+     * @return evento de bloqueio para ser publicado
+     * @throws IllegalStateException se o aluno já estiver bloqueado
+     */
+    public AlunoBloqueadoEvento bloquearPorFaltas(long quantidadeFaltas, int diasBloqueio) {
+        if (!podeSerBloqueado()) {
+            throw new IllegalStateException("Aluno já está bloqueado até " + bloqueioAte);
+        }
+        
+        LocalDate dataBloqueio = LocalDate.now().plusDays(diasBloqueio);
+        this.status = StatusAluno.BLOQUEADO;
+        this.bloqueioAte = dataBloqueio;
+        
+        return new AlunoBloqueadoEvento(matricula, nome, quantidadeFaltas, diasBloqueio, dataBloqueio);
+    }
+    
+    /**
+     * Desbloqueia o aluno após o período de bloqueio.
+     * REGRA DE NEGÓCIO: Retorna evento de domínio para notificação.
+     * 
+     * @return evento de desbloqueio para ser publicado
+     */
+    public AlunoDesbloqueadoEvento desbloquear() {
+        if (status != StatusAluno.BLOQUEADO) {
+            throw new IllegalStateException("Aluno não está bloqueado");
+        }
+        
+        this.status = StatusAluno.ATIVO;
+        this.bloqueioAte = null;
+        
+        return new AlunoDesbloqueadoEvento(matricula, nome);
+    }
+    
+    /**
+     * Emite advertência para o aluno por acumulação de faltas.
+     * REGRA DE NEGÓCIO: Não muda status, apenas retorna evento para notificação.
+     * 
+     * @param quantidadeFaltas total de faltas atual
+     * @param faltasRestantes quantas faltas faltam para o bloqueio
+     * @return evento de advertência para ser publicado
+     */
+    public AlunoAdvertidoEvento advertirPorFaltas(long quantidadeFaltas, int faltasRestantes) {
+        return new AlunoAdvertidoEvento(matricula, nome, quantidadeFaltas, faltasRestantes);
+    }
+    
+    /**
+     * Verifica se o aluno pode fazer reservas de aula.
+     * REGRA DE NEGÓCIO: Aluno bloqueado não pode reservar.
+     */
+    public boolean podeReservarAula() {
+        return !estaBloqueado();
     }
 
     @Override

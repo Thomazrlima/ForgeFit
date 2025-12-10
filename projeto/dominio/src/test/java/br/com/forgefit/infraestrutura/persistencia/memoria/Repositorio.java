@@ -401,5 +401,28 @@ public class Repositorio implements AlunoRepositorio,
                 .filter(f -> !f.getDataDaOcorrencia().isAfter(fim))
                 .count();
     }
+    
+    @Override
+    public List<Matricula> buscarAlunosComFaltasRecentes(LocalDate inicio, LocalDate fim) {
+        notNull(inicio, "A data de início não pode ser nula");
+        notNull(fim, "A data de fim não pode ser nula");
+        
+        return frequencias.stream()
+                .filter(f -> f.getStatus() == StatusFrequencia.FALTA)
+                .filter(f -> !f.getDataDaOcorrencia().isBefore(inicio))
+                .filter(f -> !f.getDataDaOcorrencia().isAfter(fim))
+                .map(Frequencia::getAlunoMatricula)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public Integer obterProximoIdDisponivel() {
+        int proximoId = aulas.keySet().stream()
+                .mapToInt(id -> id.getId())
+                .max()
+                .orElse(0) + 1;
+        return proximoId;
+    }
     /*-----------------------------------------------------------------------*/
 }

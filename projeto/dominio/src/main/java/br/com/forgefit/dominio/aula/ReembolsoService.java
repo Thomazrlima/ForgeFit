@@ -73,11 +73,11 @@ public class ReembolsoService {
         double valorBase = calcularValorBase();
         
         if (credito >= valorBase * PERCENTUAL_REEMBOLSO_TOTAL * 0.99) { // 100% com margem
-            return "Cancelamento aprovado, reembolso integral em processamento";
+            return "cancelamento aprovado, reembolso integral em processamento";
         } else if (credito >= valorBase * PERCENTUAL_REEMBOLSO_PARCIAL * 0.99) { // 50% com margem
-            return "Cancelamento aprovado, reembolso parcial em processamento";
+            return "cancelamento aprovado, reembolso parcial em processamento";
         } else {
-            return "Cancelamento realizado sem direito a reembolso";
+            return "cancelamento realizado sem direito a reembolso";
         }
     }
 }

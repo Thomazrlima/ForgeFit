@@ -37,4 +37,15 @@ public class UsuarioMockRepositorioJpa implements UsuarioMockRepositorio {
                         entity.getAvatar()
                 ));
     }
+    
+    @Override
+    public Optional<UsuarioMockData> findById(Integer id) {
+        return usuarioMockRepository.findById(id)
+                .map(entity -> new UsuarioMockData(
+                        entity.getId(),
+                        entity.getRole(),
+                        entity.getEmail(),
+                        entity.getAvatar()
+                ));
+    }
 }

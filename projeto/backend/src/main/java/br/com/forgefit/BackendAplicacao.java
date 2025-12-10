@@ -80,26 +80,7 @@ public class BackendAplicacao {
         return new AvaliacaoService(repositorio);
     }
 
-    @Bean
-    public FrequenciaService frequenciaService(FrequenciaRepositorio frequenciaRepositorio,
-            AlunoRepositorio alunoRepositorio,
-            AulaRepositorio aulaRepositorio) {
-        return new FrequenciaService(frequenciaRepositorio, alunoRepositorio, aulaRepositorio);
-    }
-    
-    @Bean
-    public br.com.forgefit.aplicacao.frequencia.FrequenciaVerificacaoService frequenciaVerificacaoService(
-            FrequenciaService frequenciaService,
-            FrequenciaRepositorio frequenciaRepositorio,
-            AlunoRepositorio alunoRepositorio) {
-        var service = new br.com.forgefit.aplicacao.frequencia.FrequenciaVerificacaoService(
-            frequenciaService, frequenciaRepositorio, alunoRepositorio
-        );
-        // Registra observers
-        service.adicionarObserver(new br.com.forgefit.aplicacao.frequencia.LogFrequenciaObserver());
-        service.adicionarObserver(new br.com.forgefit.aplicacao.frequencia.EmailFrequenciaObserver());
-        return service;
-    }
+    // REMOVIDO: Configuração migrada para FrequenciaConfig usando eventos de domínio
 
     @Bean
     public ReservaServicoAplicacao reservaServicoAplicacao(ReservaRepositorioAplicacao repositorio) {

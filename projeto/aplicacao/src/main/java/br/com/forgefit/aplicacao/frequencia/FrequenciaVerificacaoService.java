@@ -1,7 +1,6 @@
 package br.com.forgefit.aplicacao.frequencia;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 import br.com.forgefit.dominio.aluno.Aluno;
@@ -13,18 +12,15 @@ import br.com.forgefit.dominio.frequencia.FrequenciaService;
 
 /**
  * Serviço de aplicação para verificação periódica de frequência.
- * Orquestra a lógica de domínio com notificações via Observer.
+ * PADRÃO DDD: Orquestra serviços de domínio, não contém lógica de negócio.
+ * Eventos são gerados no domínio e publicados automaticamente pelo FrequenciaService.
  */
 public class FrequenciaVerificacaoService {
     private final FrequenciaService frequenciaService;
     private final FrequenciaRepositorio frequenciaRepositorio;
     private final AlunoRepositorio alunoRepositorio;
-    private final List<FrequenciaObserver> observers = new ArrayList<>();
     
-    private static final int LIMITE_FALTAS_PARA_BLOQUEIO = 3;
-    private static final int LIMITE_ADVERTENCIA = 2;
     private static final int DIAS_PERIODO = 30;
-    private static final int DIAS_BLOQUEIO = 7;
 
     public FrequenciaVerificacaoService(
             FrequenciaService frequenciaService,
@@ -35,21 +31,12 @@ public class FrequenciaVerificacaoService {
         this.alunoRepositorio = alunoRepositorio;
     }
 
-    public void adicionarObserver(FrequenciaObserver observer) {
-        if (!observers.contains(observer)) {
-            observers.add(observer);
-        }
-    }
-
-    public void removerObserver(FrequenciaObserver observer) {
-        observers.remove(observer);
-    }
-
     /**
      * Verifica frequência de todos os alunos e aplica bloqueios/desbloqueios.
+     * PADRÃO DDD: Apenas orquestra, domínio gera eventos automaticamente.
      */
     public RelatorioVerificacao verificarTodosAlunos(LocalDate dataAtual) {
-        int bloqueados = 0, desbloqueados = 0, advertidos = 0;
+        int bloqueados = 0, desbloqueados = 0;
         
         // Busca alunos com faltas recentes
         LocalDate dataInicio = dataAtual.minusDays(DIAS_PERIODO - 1);
@@ -60,73 +47,55 @@ public class FrequenciaVerificacaoService {
             if (alunoOpt.isEmpty()) continue;
             
             Aluno aluno = alunoOpt.get();
-            long faltas = frequenciaService.contarFaltasRecentes(matricula, dataAtual, DIAS_PERIODO);
             
-            // Desbloquear se período expirou
+            // Desbloquear se período expirou (FrequenciaService gera evento)
             if (aluno.getStatus() == StatusAluno.BLOQUEADO) {
                 LocalDate bloqueioAte = aluno.getBloqueioAte();
                 if (bloqueioAte != null && dataAtual.isAfter(bloqueioAte)) {
                     frequenciaService.desbloquearAluno(matricula);
-                    notificarDesbloqueio(aluno);
                     desbloqueados++;
                     continue;
                 }
             }
             
-            // Bloquear ou advertir se necessário
+            // Verifica e aplica bloqueio se necessário
+            // A lógica está no FrequenciaService que delega para Aluno
+            // Eventos são gerados automaticamente
             if (aluno.getStatus() == StatusAluno.ATIVO) {
-                if (faltas >= LIMITE_FALTAS_PARA_BLOQUEIO) {
-                    aluno.setStatus(StatusAluno.BLOQUEADO);
-                    aluno.setBloqueioAte(dataAtual.plusDays(DIAS_BLOQUEIO));
-                    alunoRepositorio.salvar(aluno);
-                    notificarBloqueio(aluno, faltas, DIAS_BLOQUEIO);
-                    bloqueados++;
-                } else if (faltas >= LIMITE_ADVERTENCIA) {
-                    int faltasRestantes = LIMITE_FALTAS_PARA_BLOQUEIO - (int) faltas;
-                    notificarAdvertencia(aluno, faltas, faltasRestantes);
-                    advertidos++;
+                long faltas = frequenciaService.contarFaltasRecentes(matricula, dataAtual, DIAS_PERIODO);
+                if (faltas >= 2) {
+                    // Chama o serviço de domínio que verifica e aplica bloqueio/advertência
+                    frequenciaService.verificarEAplicarBloqueio(matricula, dataAtual);
+                    if (faltas >= 3) {
+                        bloqueados++;
+                    }
                 }
             }
         }
         
-        return new RelatorioVerificacao(bloqueados, desbloqueados, advertidos, matriculas.size());
-    }
-    
-    private void notificarBloqueio(Aluno aluno, long faltas, int dias) {
-        observers.forEach(o -> o.notificarBloqueio(aluno, faltas, dias));
-    }
-    
-    private void notificarAdvertencia(Aluno aluno, long faltas, int restantes) {
-        observers.forEach(o -> o.notificarAdvertencia(aluno, faltas, restantes));
-    }
-    
-    private void notificarDesbloqueio(Aluno aluno) {
-        observers.forEach(o -> o.notificarDesbloqueio(aluno));
+        return new RelatorioVerificacao(bloqueados, desbloqueados, matriculas.size());
     }
     
     public static class RelatorioVerificacao {
         private final int alunosBloqueados;
         private final int alunosDesbloqueados;
-        private final int alunosAdvertidos;
         private final int totalVerificados;
         
-        public RelatorioVerificacao(int bloqueados, int desbloqueados, int advertidos, int total) {
+        public RelatorioVerificacao(int bloqueados, int desbloqueados, int total) {
             this.alunosBloqueados = bloqueados;
             this.alunosDesbloqueados = desbloqueados;
-            this.alunosAdvertidos = advertidos;
             this.totalVerificados = total;
         }
         
         public int getAlunosBloqueados() { return alunosBloqueados; }
         public int getAlunosDesbloqueados() { return alunosDesbloqueados; }
-        public int getAlunosAdvertidos() { return alunosAdvertidos; }
         public int getTotalVerificados() { return totalVerificados; }
         
         @Override
         public String toString() {
             return String.format(
-                "Verificação: %d alunos | %d bloqueados | %d desbloqueados | %d advertidos",
-                totalVerificados, alunosBloqueados, alunosDesbloqueados, alunosAdvertidos
+                "Verificação: %d alunos | %d bloqueados | %d desbloqueados",
+                totalVerificados, alunosBloqueados, alunosDesbloqueados
             );
         }
     }

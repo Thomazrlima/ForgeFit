@@ -206,10 +206,10 @@ public class ControleDeFrequenciaFuncionalidade {
         // Cria CPF baseado na matrícula (apenas para testes)
         Cpf cpf = new Cpf(matriculaStr.replaceAll("[^0-9]", "").substring(0, 11));
         Aluno aluno = new Aluno(matriculaAluno, cpf, "Aluno Bloqueado", LocalDate.of(1990, 1, 1), null);
-        aluno.setStatus(StatusAluno.BLOQUEADO);
         
         LocalDate dataBloqueio = LocalDate.parse(dataStr, dateFormatter);
-        aluno.setBloqueioAte(dataBloqueio);
+        // Usa método de domínio para bloquear (simula 3 faltas)
+        aluno.bloquearPorFaltas(3, (int) java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), dataBloqueio));
         
         contexto.repositorio.salvar(aluno);
     }

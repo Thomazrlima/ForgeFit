@@ -3,9 +3,13 @@ package br.com.forgefit.aplicacao.frequencia;
 import br.com.forgefit.dominio.aluno.Aluno;
 
 /**
- * Interface Observer para notificações de eventos de frequência.
- * Implementa o padrão Observer na camada de aplicação.
+ * @deprecated Este padrão Observer foi substituído por eventos de domínio.
+ * Use EventoBarramento com FrequenciaEventoEmailHandler e FrequenciaEventoLogHandler.
+ * Os eventos de domínio (AlunoBloqueadoEvento, AlunoAdvertidoEvento, AlunoDesbloqueadoEvento)
+ * são gerados no domínio e consumidos na infraestrutura, seguindo DDD puro.
+ * Este código será removido em versão futura.
  */
+@Deprecated
 public interface FrequenciaObserver {
     
     /**

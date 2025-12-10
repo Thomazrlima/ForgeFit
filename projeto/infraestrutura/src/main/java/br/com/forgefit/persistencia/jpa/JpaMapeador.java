@@ -142,9 +142,11 @@ class JpaMapeador extends ModelMapper {
                             new br.com.forgefit.dominio.aula.Reserva(matricula, dataReserva);
                         
                         // Se a reserva foi cancelada, atualizar o status
-                        if (reservaJpa.getStatus() == br.com.forgefit.persistencia.jpa.enums.StatusReserva.CANCELADA_PELO_ALUNO) {
+                        @SuppressWarnings("deprecation")
+                        var statusAtual = reservaJpa.getStatus();
+                        if (statusAtual == br.com.forgefit.persistencia.jpa.enums.StatusReserva.CANCELADA_PELO_ALUNO) {
                             reservaDominio.cancelarPeloAluno();
-                        } else if (reservaJpa.getStatus() == br.com.forgefit.persistencia.jpa.enums.StatusReserva.CANCELADA_PELA_ACADEMIA) {
+                        } else if (statusAtual == br.com.forgefit.persistencia.jpa.enums.StatusReserva.CANCELADA_PELA_ACADEMIA) {
                             reservaDominio.cancelarPelaAcademia();
                         }
                         

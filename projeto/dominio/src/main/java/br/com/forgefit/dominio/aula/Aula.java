@@ -210,6 +210,7 @@ public class Aula {
                 .anyMatch(p -> p.getAlunoMatricula().equals(matricula));
     }
 
+    @SuppressWarnings("deprecation")
     public void cancelarReserva(Matricula matricula) {
         notNull(matricula, "A matrícula não pode ser nula");
 

@@ -6,8 +6,11 @@ import org.slf4j.LoggerFactory;
 import br.com.forgefit.dominio.aluno.Aluno;
 
 /**
- * Observer que registra eventos de frequência em log.
+ * @deprecated Substituído por FrequenciaEventoLogHandler na infraestrutura.
+ * A nova implementação consome eventos de domínio via EventoBarramento.
+ * Este código será removido em versão futura.
  */
+@Deprecated
 public class LogFrequenciaObserver implements FrequenciaObserver {
     private static final Logger logger = LoggerFactory.getLogger(LogFrequenciaObserver.class);
 

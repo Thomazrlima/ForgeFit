@@ -62,7 +62,8 @@ public class AcademiaFuncionalidade implements EventoBarramento {
         this.rankingService = new RankingService(this.repositorio);
         this.avaliacaoService = new AvaliacaoService(this.repositorio);
         this.treinoService = new TreinoService(this.repositorio);
-        this.frequenciaService = new FrequenciaService(this.repositorio, this.repositorio, this.repositorio);
+        // FrequenciaService agora requer EventoBarramento
+        this.frequenciaService = new FrequenciaService(this.repositorio, this.repositorio, this.repositorio, this);
         this.avaliacaoFisicaService = new br.com.forgefit.dominio.aluno.AvaliacaoFisicaService(this.repositorio);
     }
 

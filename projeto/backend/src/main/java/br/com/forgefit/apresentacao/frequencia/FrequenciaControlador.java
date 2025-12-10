@@ -144,7 +144,7 @@ public class FrequenciaControlador {
                 relatorio.getTotalVerificados(),
                 relatorio.getAlunosBloqueados(),
                 relatorio.getAlunosDesbloqueados(),
-                relatorio.getAlunosAdvertidos()
+                0  // advertidos não mais rastreados diretamente (vêm via eventos)
             ));
         } catch (Exception e) {
             logger.error("Erro ao executar verificação", e);

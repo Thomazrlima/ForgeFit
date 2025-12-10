@@ -4,4 +4,6 @@ import java.util.Optional;
 
 public interface UsuarioMockRepositorio {
     Optional<UsuarioMockData> findByEmailAndPassword(String email, String password);
+    
+    Optional<UsuarioMockData> findById(Integer id);
 }

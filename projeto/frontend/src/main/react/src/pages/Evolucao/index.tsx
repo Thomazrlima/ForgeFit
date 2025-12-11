@@ -4,9 +4,15 @@ import Avatar from "../../components/common/Avatar";
 import { useUser } from "../../contexts/UserContext";
 import { Container, Header, HeaderContent, Title, ContentWrapper, StatsGrid, StatCard, StatHeader, StatTitle, StatValue, StatChange, HistorySection, SectionTitle, HistoryList, HistoryCard, HistoryHeader, HistoryDate, HistoryProfessor, HistoryGrid, HistoryItem, HistoryItemLabel, HistoryItemValue, EmptyState, SkeletonCard, SkeletonText, SkeletonHistoryCard } from "./styles";
 import { fetchBioimpedanceHistory, type BioimpedanceData } from "./mockData";
+import ProfessorEvolucaoView from "./ProfessorView";
 
 function Evolucao() {
     const { user, loading: userLoading } = useUser();
+
+    // Se for professor, renderiza a visão de gestão
+    if (user?.role === "professor") {
+        return <ProfessorEvolucaoView />;
+    }
     const [history, setHistory] = useState<BioimpedanceData[]>([]);
     const [loading, setLoading] = useState(true);
 

@@ -10,6 +10,7 @@ export interface User {
     matricula?: string;
     pontuacaoTotal?: number;
     creditos?: number;
+    guildaId?: number;
 }
 
 interface UserContextType {
@@ -87,6 +88,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
                 matricula: response.user.matricula,
                 pontuacaoTotal: response.user.pontuacaoTotal,
                 creditos: response.user.creditos,
+                guildaId: response.user.guildaId,
             };
 
             saveUserToStorage(userData);

@@ -96,6 +96,8 @@ interface GuildaJpaRepository extends JpaRepository<GuildaJpa, Integer> {
 		WHERE g.nome = :nome
 		""")
 	GuildaResumo buscarPorNome(@Param("nome") String nome);
+	
+	java.util.Optional<GuildaJpa> findByMestreMatricula(String mestreMatricula);
 }
 
 @org.springframework.stereotype.Repository("guildaRepositorio")
@@ -105,12 +107,43 @@ class GuildaRepositorioImpl implements br.com.forgefit.dominio.guilda.GuildaRepo
 	
 	@org.springframework.beans.factory.annotation.Autowired
 	JpaMapeador mapeador;
+	
+	@org.springframework.beans.factory.annotation.Autowired
+	br.com.forgefit.persistencia.jpa.GuildaMembroRepository guildaMembroRepository;
+	
+	@org.springframework.beans.factory.annotation.Autowired
+	br.com.forgefit.persistencia.jpa.CheckinJpaRepository checkinRepository;
 
 	// Métodos do GuildaRepositorio (domínio)
 	@Override
 	public void salvar(br.com.forgefit.dominio.guilda.Guilda guilda) {
 		GuildaJpa guildaJpa = mapeador.map(guilda, GuildaJpa.class);
-		repositorio.save(guildaJpa);
+		
+		// Verifica se é UPDATE ou INSERT
+		// Se o mestre já é membro da guilda, é UPDATE (edição)
+		// Caso contrário, é INSERT (criação)
+		br.com.forgefit.persistencia.jpa.GuildaMembroId membroId = 
+			new br.com.forgefit.persistencia.jpa.GuildaMembroId(
+				guildaJpa.id, 
+				guilda.getMestreDaGuilda().getValor()
+			);
+		
+		boolean isUpdate = guildaMembroRepository.existsById(membroId);
+		
+		if (isUpdate) {
+			// É uma edição - mantém o ID existente e usa save()
+			repositorio.save(guildaJpa);
+		} else {
+			// É uma criação - força ID=0 para INSERT com auto-increment
+			guildaJpa.id = 0;
+			GuildaJpa saved = repositorio.save(guildaJpa);
+			
+			// Adiciona o mestre como membro da guilda
+			br.com.forgefit.persistencia.jpa.GuildaMembro mestre = new br.com.forgefit.persistencia.jpa.GuildaMembro();
+			mestre.setId(new br.com.forgefit.persistencia.jpa.GuildaMembroId(saved.id, guilda.getMestreDaGuilda().getValor()));
+			mestre.setDataEntrada(new java.util.Date());
+			guildaMembroRepository.save(mestre);
+		}
 	}
 
 	@Override
@@ -149,5 +182,55 @@ class GuildaRepositorioImpl implements br.com.forgefit.dominio.guilda.GuildaRepo
 	@Override
 	public GuildaResumo buscarResumoPorNome(String nome) {
 		return repositorio.buscarPorNome(nome);
+	}
+	
+	@Override
+	public java.util.Optional<br.com.forgefit.aplicacao.guilda.GuildaDetalhesResumo> buscarDetalhesPorId(Integer guildaId) {
+		return repositorio.findById(guildaId)
+			.map(guilda -> new br.com.forgefit.aplicacao.guilda.GuildaDetalhesResumo() {
+				@Override
+				public Integer getId() { return guilda.id; }
+				
+				@Override
+				public String getNome() { return guilda.nome; }
+				
+				@Override
+				public String getDescricao() { return guilda.descricao; }
+				
+				@Override
+				public String getImagemUrl() { return guilda.imagemURL; }
+				
+				@Override
+				public String getCodigoConvite() { return guilda.codigoConvite; }
+				
+				@Override
+				public String getMestreMatricula() { return guilda.mestreMatricula; }
+				
+				@Override
+				public Integer getPontuacaoTotal() { return guilda.pontuacaoTotal; }
+				
+				@Override
+				public java.util.List<br.com.forgefit.aplicacao.guilda.MembroResumo> getMembros() {
+					return java.util.Collections.emptyList(); // TODO: Implementar busca de membros
+				}
+			});
+	}
+	
+	@Override
+	public java.util.List<br.com.forgefit.aplicacao.guilda.MembroResumo> buscarMembrosPorGuildaId(Integer guildaId) {
+		// TODO: Implementar busca de membros com join em ALUNO para pegar nome, avatar, pontuação
+		return java.util.Collections.emptyList();
+	}
+	
+	@Override
+	public java.util.List<br.com.forgefit.aplicacao.guilda.CheckinResumo> buscarCheckinsPorGuildaId(Integer guildaId) {
+		// TODO: Implementar busca de checkins com joins em ALUNO e contexto
+		return java.util.Collections.emptyList();
+	}
+	
+	@Override
+	public java.util.Optional<Integer> buscarIdGuildaPorMatriculaMestre(String matricula) {
+		return repositorio.findByMestreMatricula(matricula)
+			.map(guilda -> guilda.id);
 	}
 }

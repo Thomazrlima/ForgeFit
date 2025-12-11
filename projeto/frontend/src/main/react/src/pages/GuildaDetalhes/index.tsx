@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect, useMemo } from "react";
 import { Edit, MessageSquare, Trophy, Copy, Check, Plus } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
+import { useParams, useNavigate } from "react-router-dom";
 import { useUser } from "../../contexts/UserContext.tsx";
 import Avatar from "../../components/common/Avatar";
 import { Button } from "../../components/common/Button";
@@ -10,14 +12,37 @@ import RankingPodiumSkeleton from "../../components/ranking/RankingPodium/skelet
 import RankingListSkeleton from "../../components/ranking/RankingList/skeleton";
 import CheckinModal, { type CheckinData } from "../../components/common/CheckinModal";
 import EditGuildModal, { type GuildEditData } from "../../components/common/EditGuildModal";
-import { fetchGuildData, fetchGuildMembers, fetchGuildCheckins, fetchAvailableWorkouts, type GuildData, type GuildMember, type CheckinMessage } from "./mockData.ts";
+import { useGuildaDetalhes } from "../../hooks/useGuildaDetalhes";
 import { Container, Header, HeaderLeft, GuildAvatar, GuildInfo, GuildName, GuildCode, CodeWrapper, CopyButton, Tooltip, HeaderActions, TabsMenu, TabButton, ActiveIndicator, ContentSection, MessagesContainer, MessageWrapper, CheckinCard, CheckinHeader, CheckinUserInfo, CheckinUserName, CheckinTime, CheckinContent, CheckinWorkout, CheckinDescription, CheckinImage, RankingContainer, SkeletonAvatar, SkeletonText } from "./styles.ts";
 import Spinner from "../../components/common/Spinner";
+import { useToast } from "../../contexts/ToastContext";
 
 type SectionType = "messages" | "ranking" | "checkin";
 
+interface GuildMember {
+    id: number;
+    name: string;
+    avatar?: string;
+    score: number;
+}
+
+interface CheckinMessage {
+    id: number;
+    userId: number;
+    userName: string;
+    userAvatar?: string;
+    workoutName: string;
+    description?: string;
+    imageUrl?: string;
+    timestamp: Date;
+}
+
 const GuildaDetalhes = () => {
     const { user } = useUser();
+    const { error: showError } = useToast();
+    const queryClient = useQueryClient();
+    const navigate = useNavigate();
+    const { id } = useParams<{ id: string }>();
     const [activeSection, setActiveSection] = useState<SectionType>("messages");
 
     const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -25,25 +50,58 @@ const GuildaDetalhes = () => {
     const rankingButtonRef = useRef<HTMLButtonElement>(null);
     const [indicatorStyle, setIndicatorStyle] = useState({ x: 0, width: 0 });
 
-    const [guildData, setGuildData] = useState<GuildData | null>(null);
-    const [members, setMembers] = useState<GuildMember[]>([]);
-    const [checkins, setCheckins] = useState<CheckinMessage[]>([]);
-    const [availableWorkouts, setAvailableWorkouts] = useState<{ id: string; name: string }[]>([]);
+    // Usa o ID da URL ou do usuário logado
+    const guildaId = id ? parseInt(id, 10) : user?.guildaId;
 
-    const [isLoadingGuild, setIsLoadingGuild] = useState(true);
-    const [isLoadingMembers, setIsLoadingMembers] = useState(true);
-    const [isLoadingCheckins, setIsLoadingCheckins] = useState(true);
+    // React Query para buscar detalhes da guilda
+    const { data: guildaDetalhes, isLoading: isLoadingGuild, error: guildaError } = useGuildaDetalhes(guildaId);
+    
+    const [availableWorkouts, setAvailableWorkouts] = useState<{ id: string; name: string }[]>([]);
 
     const [copied, setCopied] = useState(false);
     const [isCheckinModalOpen, setIsCheckinModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
+    // Se o usuário não tem guilda e não há ID na URL, redireciona para /guilda
+    useEffect(() => {
+        if (!guildaId && !isLoadingGuild) {
+            showError("Você não está em uma guilda");
+            navigate("/guilda", { replace: true });
+        }
+    }, [guildaId, isLoadingGuild, navigate, showError]);
+
+    // Converte membros para o formato esperado pelo componente
+    const members = useMemo<GuildMember[]>(() => {
+        if (!guildaDetalhes) return [];
+        return guildaDetalhes.membros.map((membro, index) => ({
+            id: index + 1,
+            name: membro.nome,
+            avatar: membro.avatarUrl,
+            score: membro.pontuacao,
+        }));
+    }, [guildaDetalhes]);
+
+    // Converte checkins para o formato esperado pelo componente
+    const checkins = useMemo<CheckinMessage[]>(() => {
+        if (!guildaDetalhes) return [];
+        return guildaDetalhes.checkins.map(checkin => ({
+            id: checkin.id,
+            userId: 0,
+            userName: checkin.alunoNome,
+            userAvatar: checkin.alunoAvatarUrl,
+            workoutName: checkin.nomeContexto,
+            description: checkin.mensagem,
+            imageUrl: checkin.urlImagem,
+            timestamp: new Date(checkin.dataCheckin),
+        }));
+    }, [guildaDetalhes]);
+
     useEffect(() => {
         const updateIndicator = () => {
             const activeButton = activeSection === "messages" ? messagesButtonRef.current : rankingButtonRef.current;
             if (activeButton) {
-                const paddingOffset = 4; // 0.25rem = 4px padding do TabsMenu
-                const borderOffset = 8.5; // 2px border on each side
+                const paddingOffset = 4;
+                const borderOffset = 8.5;
                 setIndicatorStyle({
                     x: activeButton.offsetLeft - paddingOffset,
                     width: activeButton.offsetWidth + borderOffset,
@@ -57,80 +115,33 @@ const GuildaDetalhes = () => {
     }, [activeSection]);
 
     useEffect(() => {
-        const loadGuildData = async () => {
-            setIsLoadingGuild(true);
-            try {
-                const data = await fetchGuildData();
-                setGuildData(data);
-            } catch (error) {
-                console.error("Erro ao carregar dados da guilda:", error);
-            } finally {
-                setIsLoadingGuild(false);
-            }
-        };
-
-        loadGuildData();
+        // TODO: Implementar endpoint para buscar treinos disponíveis
+        setAvailableWorkouts([
+            { id: "1", name: "Peito e Tríceps" },
+            { id: "2", name: "Costas e Bíceps" },
+            { id: "3", name: "Pernas" },
+            { id: "4", name: "Ombros e Abdômen" },
+            { id: "5", name: "Cardio Matinal" },
+            { id: "6", name: "Treino Funcional" },
+        ]);
     }, []);
 
     useEffect(() => {
-        const loadAvailableWorkouts = async () => {
-            try {
-                const data = await fetchAvailableWorkouts();
-                setAvailableWorkouts(data);
-            } catch (error) {
-                console.error("Erro ao carregar treinos disponíveis:", error);
-            }
-        };
-
-        loadAvailableWorkouts();
-    }, []);
-
-    useEffect(() => {
-        const loadMembers = async () => {
-            setIsLoadingMembers(true);
-            try {
-                const data = await fetchGuildMembers();
-                setMembers(data);
-            } catch (error) {
-                console.error("Erro ao carregar membros:", error);
-            } finally {
-                setIsLoadingMembers(false);
-            }
-        };
-
-        if (activeSection === "ranking") {
-            loadMembers();
+        if (guildaError) {
+            showError("Erro ao carregar dados da guilda");
         }
-    }, [activeSection]);
-
-    useEffect(() => {
-        const loadCheckins = async () => {
-            setIsLoadingCheckins(true);
-            try {
-                const data = await fetchGuildCheckins();
-                setCheckins(data);
-            } catch (error) {
-                console.error("Erro ao carregar check-ins:", error);
-            } finally {
-                setIsLoadingCheckins(false);
-            }
-        };
-
-        if (activeSection === "messages") {
-            loadCheckins();
-        }
-    }, [activeSection]);
+    }, [guildaError, showError]);
 
     useLayoutEffect(() => {
-        if (messagesContainerRef.current && !isLoadingCheckins) {
+        if (messagesContainerRef.current && !isLoadingGuild) {
             messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
         }
-    }, [checkins, activeSection, isLoadingCheckins]);
+    }, [checkins, activeSection, isLoadingGuild]);
 
     const handleCopyCode = async () => {
-        if (!guildData) return;
+        if (!guildaDetalhes) return;
         try {
-            await navigator.clipboard.writeText(guildData.code);
+            await navigator.clipboard.writeText(guildaDetalhes.codigoConvite);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch (error) {
@@ -145,9 +156,8 @@ const GuildaDetalhes = () => {
     const handleEditSubmit = async (data: GuildEditData) => {
         console.log("Guilda editada:", data);
         // TODO: Enviar para API
-        // Após sucesso, recarregar dados da guilda
-        const updatedGuildData = await fetchGuildData();
-        setGuildData(updatedGuildData);
+        // Após sucesso, invalidar cache do React Query para recarregar dados
+        queryClient.invalidateQueries({ queryKey: ["guilda", "detalhes", guildaId] });
     };
 
     const handleDeleteGuild = async () => {
@@ -163,9 +173,8 @@ const GuildaDetalhes = () => {
     const handleCheckinSubmit = async (data: CheckinData) => {
         console.log("Check-in realizado:", data);
         // TODO: Enviar para API
-        // Após sucesso, recarregar lista de check-ins
-        const updatedCheckins = await fetchGuildCheckins();
-        setCheckins(updatedCheckins);
+        // Após sucesso, invalidar cache do React Query para recarregar dados
+        queryClient.invalidateQueries({ queryKey: ["guilda", "detalhes", guildaId] });
     };
 
     const formatTimestamp = (date: Date) => {
@@ -212,14 +221,14 @@ const GuildaDetalhes = () => {
                             <SkeletonText width="160px" height="48px" />
                         </HeaderActions>
                     </>
-                ) : guildData ? (
+                ) : guildaDetalhes ? (
                     <>
                         <HeaderLeft>
-                            <GuildAvatar src={guildData.imageUrl} alt={guildData.name} />
+                            <GuildAvatar src={guildaDetalhes.imagemUrl || "https://api.dicebear.com/7.x/identicon/svg?seed=guild"} alt={guildaDetalhes.nome} />
                             <GuildInfo>
-                                <GuildName>{guildData.name}</GuildName>
+                                <GuildName>{guildaDetalhes.nome}</GuildName>
                                 <CodeWrapper>
-                                    <GuildCode>Código: {guildData.code}</GuildCode>
+                                    <GuildCode>Código: {guildaDetalhes.codigoConvite}</GuildCode>
                                     <CopyButton onClick={handleCopyCode} title="Copiar código" $copied={copied}>
                                         {copied ? <Check size={16} /> : <Copy size={16} />}
                                         {copied && <Tooltip>Copiado!</Tooltip>}
@@ -269,11 +278,11 @@ const GuildaDetalhes = () => {
                 <AnimatePresence mode="wait">
                     {activeSection === "messages" && (
                         <MessagesContainer key="messages" initial={{ opacity: 0, x: -20 }} ref={messagesContainerRef} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
-                            {isLoadingCheckins ? (
+                            {isLoadingGuild ? (
                                 <Spinner />
                             ) : (
                                 [...checkins].reverse().map((checkin) => {
-                                    const isCurrentUser = checkin.userId === user?.id;
+                                    const isCurrentUser = checkin.userName === user?.name;
                                     return (
                                         <MessageWrapper key={checkin.id} $isCurrentUser={isCurrentUser}>
                                             <Avatar name={checkin.userName} avatar={checkin.userAvatar} size={36} />
@@ -300,7 +309,7 @@ const GuildaDetalhes = () => {
 
                     {activeSection === "ranking" && (
                         <RankingContainer key="ranking" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
-                            {isLoadingMembers ? (
+                            {isLoadingGuild ? (
                                 <>
                                     <RankingPodiumSkeleton />
                                     <RankingListSkeleton count={4} />
@@ -318,16 +327,16 @@ const GuildaDetalhes = () => {
 
             <CheckinModal isOpen={isCheckinModalOpen} onClose={() => setIsCheckinModalOpen(false)} onSubmit={handleCheckinSubmit} workouts={availableWorkouts} />
 
-            {guildData && (
+            {guildaDetalhes && (
                 <EditGuildModal
                     isOpen={isEditModalOpen}
                     onClose={() => setIsEditModalOpen(false)}
                     onSubmit={handleEditSubmit}
                     onDelete={handleDeleteGuild}
                     guildData={{
-                        name: guildData.name,
-                        description: undefined,
-                        imageUrl: guildData.imageUrl,
+                        name: guildaDetalhes.nome,
+                        description: guildaDetalhes.descricao,
+                        imageUrl: guildaDetalhes.imagemUrl,
                     }}
                 />
             )}

@@ -41,6 +41,7 @@ const Aulas = () => {
     // Mutations
     const inscreverMutation = useInscreverAula();
     const cancelarMutation = useCancelarInscricao();
+
     const sairListaEsperaMutation = useSairDaListaDeEspera();
 
     const [selectedCategory, setSelectedCategory] = useState("Todas");
@@ -127,7 +128,7 @@ const Aulas = () => {
                 handleCloseUnenrollModal();
                 success("Você saiu da lista de espera!");
             } else {
-                // Cancelar reserva confirmada
+                // Cancelar reserva confirmada via mutation
                 const response = await cancelarMutation.mutateAsync({
                     aulaId: classId,
                     matricula: user.matricula,
@@ -135,9 +136,15 @@ const Aulas = () => {
 
                 handleCloseUnenrollModal();
 
-                // Exibir notificação com a mensagem de reembolso vinda do backend
+                // Backend retorna uma string com a mensagem de reembolso
+                // Exibir notificação com a mensagem
                 if (response && typeof response === "string") {
-                    warn(response);
+                    // Verifica se a mensagem indica reembolso (contém "crédito" ou valor em R$)
+                    if (response.toLowerCase().includes("crédito") || response.includes("R$")) {
+                        success(response);
+                    } else {
+                        warn(response);
+                    }
                 } else {
                     success("Cancelamento realizado com sucesso!");
                 }

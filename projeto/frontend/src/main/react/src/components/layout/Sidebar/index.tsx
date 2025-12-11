@@ -13,6 +13,7 @@ interface NavItemType {
 
 const navItems: NavItemType[] = [
     { path: "/aulas", label: "Aulas", icon: <Calendar size={20} /> },
+    { path: "/meu-treino", label: "Meu Treino", icon: <Dumbbell size={20} /> },
     { path: "/treinos", label: "Treinos", icon: <Dumbbell size={20} /> },
     { path: "/guilda", label: "Guilda", icon: <Users size={20} /> },
     { path: "/torneio", label: "Torneio", icon: <Trophy size={20} /> },
@@ -24,7 +25,7 @@ const Sidebar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
-    const { logout } = useUser();
+    const { user, logout } = useUser();
 
     const handleLogout = () => {
         logout();
@@ -57,6 +58,16 @@ const Sidebar = () => {
 
                 <NavList>
                     {navItems.map((item) => {
+                        // Ocultar treinos para não-professores
+                        if (item.path === "/treinos" && user?.role !== "professor") {
+                            return null;
+                        }
+
+                        // Ocultar meu-treino para professores
+                        if (item.path === "/meu-treino" && user?.role !== "student") {
+                            return null;
+                        }
+
                         const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + "/");
                         return (
                             <NavItem key={item.path}>
@@ -68,7 +79,6 @@ const Sidebar = () => {
                         );
                     })}
                 </NavList>
-
                 <LogoutButton onClick={handleLogout}>
                     <LogOut size={20} />
                     <span>Sair</span>

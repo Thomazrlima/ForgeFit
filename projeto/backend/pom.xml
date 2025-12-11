@@ -67,12 +67,11 @@
       <version>${project.version}</version>
     </dependency>
     
-    <!-- Módulo de Infraestrutura (runtime) -->
+    <!-- Módulo de Infraestrutura -->
     <dependency>
       <groupId>br.com.forgefit</groupId>
       <artifactId>forgefit-infraestrutura</artifactId>
       <version>${project.version}</version>
-      <scope>runtime</scope>
     </dependency>
     
     <!-- Spring Boot Test -->

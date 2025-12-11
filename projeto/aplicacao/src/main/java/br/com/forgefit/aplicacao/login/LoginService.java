@@ -51,7 +51,8 @@ public class LoginService {
                         "student",
                         aluno.getMatricula().getValor(),
                         aluno.getPontuacaoTotal(),
-                        aluno.getCreditos()
+                        aluno.getCreditos(),
+                        aluno.getGuildaId() != null ? aluno.getGuildaId().getId() : null
                     ));
                 }
                 break;
@@ -66,6 +67,7 @@ public class LoginService {
                     "professor",
                     null,
                     null,
+                    null,
                     null
                 ));
                 
@@ -75,6 +77,7 @@ public class LoginService {
                     "Manager",
                     usuario.getAvatar(),
                     "admin",
+                    null,
                     null,
                     null,
                     null

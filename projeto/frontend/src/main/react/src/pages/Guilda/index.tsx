@@ -1,19 +1,53 @@
 import { Users, Shield, Plus, LogIn } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Container, WelcomeSection, WelcomeImage, WelcomeContent, Title, Description, ActionsContainer, ActionCard, ActionIcon, ActionTitle, ActionDescription, InputWrapper, GuildInput } from "./styles";
 import { Button } from "../../components/common/Button";
 import CreateGuildModal from "../../components/common/CreateGuildModal";
 import { animationVariants } from "../../hooks/useScrollAnimation";
+import { useCriarGuilda } from "../../hooks/useGuildaDetalhes";
+import { useUser } from "../../contexts/UserContext";
+import { useToast } from "../../contexts/ToastContext";
+import { verificarMembroGuilda } from "../../services/guildaService";
 
 const Guilda = () => {
+    const { user } = useUser();
+    const { success, error } = useToast();
+    const navigate = useNavigate();
     const [guildCode, setGuildCode] = useState("");
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [isCreatingGuild, setIsCreatingGuild] = useState(false);
+    const [isCheckingMembership, setIsCheckingMembership] = useState(true);
+    
+    const { mutate: criarGuilda, isPending: isCreatingGuild } = useCriarGuilda();
+
+    // Verifica se o usuário já está em uma guilda consultando a tabela GUILDA_MEMBROS
+    useEffect(() => {
+        const verificarGuilda = async () => {
+            if (user?.matricula) {
+                try {
+                    setIsCheckingMembership(true);
+                    const resultado = await verificarMembroGuilda(user.matricula);
+                    
+                    if (resultado.temGuilda && resultado.guildaId) {
+                        navigate(`/guilda/${resultado.guildaId}`, { replace: true });
+                    }
+                } catch (err) {
+                    console.error("Erro ao verificar guilda do aluno:", err);
+                } finally {
+                    setIsCheckingMembership(false);
+                }
+            } else {
+                setIsCheckingMembership(false);
+            }
+        };
+
+        verificarGuilda();
+    }, [user?.matricula, navigate]);
 
     const handleJoinGuild = () => {
         if (!guildCode.trim()) {
-            console.log("Digite um código válido");
+            error("Digite um código válido");
             return;
         }
         console.log("Entrar em uma guilda com código:", guildCode);
@@ -25,21 +59,53 @@ const Guilda = () => {
     };
 
     const handleConfirmCreateGuild = async (guildData: { name: string; description: string; imageUrl: string }) => {
-        try {
-            setIsCreatingGuild(true);
-            // Simula delay de criação
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-
-            console.log("Criar guilda:", guildData);
-            // TODO: Implementar lógica de criação da guilda
-
-            setIsCreateModalOpen(false);
-        } catch (error) {
-            console.error("Erro ao criar guilda:", error);
-        } finally {
-            setIsCreatingGuild(false);
+        if (!user?.matricula) {
+            error("Você precisa estar logado para criar uma guilda");
+            return;
         }
+
+        criarGuilda(
+            {
+                nome: guildData.name,
+                descricao: guildData.description,
+                imagemURL: guildData.imageUrl,
+                mestreMatricula: user.matricula,
+            },
+            {
+                onSuccess: (response) => {
+                    console.log("Resposta da criação da guilda:", response);
+                    
+                    if (response.sucesso) {
+                        success(`Guilda criada com sucesso! Código: ${response.codigoConvite}`);
+                        setIsCreateModalOpen(false);
+                        
+                        // Redirecionar para página de detalhes da guilda criada
+                        if (response.guildaId) {
+                            console.log("Redirecionando para guilda:", response.guildaId);
+                            navigate(`/guilda/${response.guildaId}`);
+                        } else {
+                            console.warn("guildaId não retornado na resposta");
+                        }
+                    } else {
+                        error(response.mensagem);
+                    }
+                },
+                onError: (err) => {
+                    console.error("Erro ao criar guilda:", err);
+                    error("Erro ao criar guilda. Tente novamente.");
+                },
+            }
+        );
     };
+
+    // Mostra loading enquanto verifica a guilda
+    if (isCheckingMembership) {
+        return (
+            <Container style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
+                <p>Verificando sua guilda...</p>
+            </Container>
+        );
+    }
 
     return (
         <Container>

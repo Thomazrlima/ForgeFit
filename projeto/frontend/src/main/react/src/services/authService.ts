@@ -13,6 +13,7 @@ export interface UserData {
     matricula?: string;
     pontuacaoTotal?: number;
     creditos?: number;
+    guildaId?: number;
 }
 
 export interface LoginResponse {

@@ -8,12 +8,13 @@ public class UserData {
     private String matricula;
     private Integer pontuacaoTotal;
     private Double creditos;
+    private Integer guildaId;
 
     public UserData() {
     }
 
     public UserData(Integer id, String name, String avatar, String role, 
-                   String matricula, Integer pontuacaoTotal, Double creditos) {
+                   String matricula, Integer pontuacaoTotal, Double creditos, Integer guildaId) {
         this.id = id;
         this.name = name;
         this.avatar = avatar;
@@ -21,6 +22,7 @@ public class UserData {
         this.matricula = matricula;
         this.pontuacaoTotal = pontuacaoTotal;
         this.creditos = creditos;
+        this.guildaId = guildaId;
     }
 
     public Integer getId() {
@@ -77,5 +79,13 @@ public class UserData {
 
     public void setCreditos(Double creditos) {
         this.creditos = creditos;
+    }
+
+    public Integer getGuildaId() {
+        return guildaId;
+    }
+
+    public void setGuildaId(Integer guildaId) {
+        this.guildaId = guildaId;
     }
 }

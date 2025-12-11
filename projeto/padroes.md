@@ -112,3 +112,44 @@ Este documento lista os padrões de projeto adotados no sistema ForgeFit, inclui
   - Usa `CalculoPontuacaoPadraoStrategy` como padrão
 
 ---
+
+## 3. Iterator (Iterador)
+
+**Contexto**: Criação de Aulas e Verificação de Conflitos
+
+**Objetivo**: Fornecer uma forma de percorrer sequencialmente uma coleção de aulas sem expor sua representação interna, facilitando a verificação de conflitos de horário ao criar novas aulas.
+
+**Implementação**:
+
+### Aggregate (Agregado)
+
+- **`AulaCollection`** (`dominio/src/main/java/br/com/forgefit/dominio/aula/AulaCollection.java`)
+  - Encapsula uma lista de aulas
+  - Fornece o método `iterator()` que retorna um iterador para percorrer as aulas
+  - Abstrai a estrutura interna de armazenamento das aulas
+
+### Iterator (Iterador)
+
+- **`AulaIterator`** (`dominio/src/main/java/br/com/forgefit/dominio/aula/AulaIterator.java`)
+  - Implementa a interface `Iterator<Aula>` do Java
+  - Mantém estado da posição atual na iteração
+  - Métodos: `hasNext()`, `next()`, `reset()`
+  - Método adicional `reset()` permite reiniciar a iteração do início
+
+### Client (Cliente)
+
+- **`AulaConflitoChecker`** (`dominio/src/main/java/br/com/forgefit/dominio/aula/AulaConflitoChecker.java`)
+  - Utiliza o iterator para verificar conflitos de horário
+  - Percorre todas as aulas existentes comparando com nova aula
+  - Método: `existeConflito()` - verifica se há sobreposição de horários no mesmo espaço
+  - Isolamento: o cliente não precisa conhecer como as aulas estão armazenadas internamente
+
+### Uso no Sistema
+
+O padrão Iterator é utilizado principalmente durante a **criação de aulas** (tanto únicas quanto recorrentes) para:
+
+1. **Verificar conflitos de horário**: Ao criar uma aula, o sistema itera sobre todas as aulas existentes para garantir que não haja sobreposição de horários no mesmo espaço físico
+2. **Validação de disponibilidade**: Permite verificar se um professor ou espaço está disponível em determinado horário
+3. **Reagendamento**: Ao reagendar aulas, o iterator é usado para validar se o novo horário está disponível
+
+---

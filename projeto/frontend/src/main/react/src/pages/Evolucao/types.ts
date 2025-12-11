@@ -13,7 +13,6 @@ export interface BioimpedanceData {
     dataDaAvaliacao: Date;
     professorResponsavel: string;
     // Campos essenciais
-    pesoKg: number;
     massaGordaPercentual: number;
     massaMuscularEsqueleticaKg: number;
     aguaCorporalTotalPercentual: number;
@@ -40,7 +39,6 @@ export interface BioimpedanceData {
 export interface BioimpedanciaFormData {
     dataDaAvaliacao: string;
     // Campos essenciais (obrigatórios)
-    pesoKg: number;
     massaGordaPercentual: number;
     massaMuscularEsqueleticaKg: number;
     aguaCorporalTotalPercentual: number;
@@ -65,20 +63,19 @@ export interface BioimpedanciaFormData {
 
 // Campos essenciais (obrigatórios)
 export const CAMPOS_ESSENCIAIS = [
-    { key: "pesoKg", label: "Peso (kg)", type: "number", step: "0.1", placeholder: "Ex: 75.5", required: true },
     { key: "massaGordaPercentual", label: "Gordura Corporal (%)", type: "number", step: "0.1", placeholder: "Ex: 18.5", required: true },
-    { key: "massaMuscularEsqueleticaKg", label: "Massa Muscular (kg)", type: "number", step: "0.1", placeholder: "Ex: 35.2", required: true },
+    { key: "massaMuscularEsqueleticaKg", label: "Massa Muscular Esquelética (kg)", type: "number", step: "0.1", placeholder: "Ex: 35.2", required: true },
     { key: "aguaCorporalTotalPercentual", label: "Água Corporal (%)", type: "number", step: "0.1", placeholder: "Ex: 55.0", required: true },
     { key: "gorduraVisceralNivel", label: "Gordura Visceral (nível)", type: "number", step: "1", placeholder: "Ex: 8", required: true },
     { key: "taxaMetabolicaBasalKcal", label: "TMB (kcal)", type: "number", step: "1", placeholder: "Ex: 1650", required: true },
     { key: "indiceDeMassaCorporal", label: "IMC", type: "number", step: "0.1", placeholder: "Ex: 24.5", required: true },
 ] as const;
 
-// Campos de composição corporal (opcionais)
+// Campos de composição corporal (obrigatórios)
 export const CAMPOS_COMPOSICAO = [
-    { key: "massaGordaKg", label: "Massa Gorda (kg)", type: "number", step: "0.1", placeholder: "Ex: 15.2", required: false },
-    { key: "massaMagraKg", label: "Massa Magra (kg)", type: "number", step: "0.1", placeholder: "Ex: 60.0", required: false },
-    { key: "massaOsseaKg", label: "Massa Óssea (kg)", type: "number", step: "0.1", placeholder: "Ex: 3.2", required: false },
+    { key: "massaGordaKg", label: "Massa Gorda (kg)", type: "number", step: "0.1", placeholder: "Ex: 15.2", required: true },
+    { key: "massaMagraKg", label: "Massa Magra (kg)", type: "number", step: "0.1", placeholder: "Ex: 60.0", required: true },
+    { key: "massaOsseaKg", label: "Massa Óssea (kg)", type: "number", step: "0.1", placeholder: "Ex: 3.2", required: true },
 ] as const;
 
 // Campos de medidas corporais (opcionais)

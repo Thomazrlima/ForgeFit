@@ -739,7 +739,7 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 	java.util.Optional<br.com.forgefit.aplicacao.aula.AulaResumoExpandido> buscarResumoExpandido(
 			@org.springframework.data.repository.query.Param("id") Integer id);
 
-	@org.springframework.data.jpa.repository.Query("""
+	@org.springframework.data.jpa.repository.Query(value = """
 			SELECT a.id as id,
 			       a.modalidade as modalidade,
 			       a.espaco as espaco,
@@ -747,16 +747,18 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 			       a.fim as fim,
 			       a.capacidade as capacidade,
 			       a.status as status,
-			       a.professor.id as professorId,
-			       a.professor.nome as professorNome,
-			       SIZE(a.reservas) as vagasOcupadas,
-			       (a.capacidade - SIZE(a.reservas)) as vagasDisponiveis,
-			       SIZE(a.listaDeEspera) as tamanhoListaEspera
-			FROM Aula a
-			WHERE a.professor.id = :professorId
-			  AND a.status = 'ATIVA'
-			ORDER BY a.inicio ASC
-			""")
+			       a.professor_id as professorId,
+			       p.nome as professorNome,
+			       COALESCE(COUNT(DISTINCT r.id), 0) as vagasOcupadas,
+			       a.capacidade - COALESCE(COUNT(DISTINCT r.id), 0) as vagasDisponiveis,
+			       (SELECT COUNT(*) FROM lista_de_espera WHERE aula_id = a.id) as tamanhoListaEspera
+			FROM aula a
+			JOIN professor p ON p.id = a.professor_id
+			LEFT JOIN reserva r ON r.aula_id = a.id AND r.status = 'CONFIRMADA'
+			WHERE a.professor_id = :professorId
+			GROUP BY a.id, a.modalidade, a.espaco, a.inicio, a.fim, a.capacidade, a.status, a.professor_id, p.nome
+			ORDER BY a.inicio DESC
+			""", nativeQuery = true)
 	List<br.com.forgefit.aplicacao.aula.AulaResumo> pesquisarPorProfessor(
 			@org.springframework.data.repository.query.Param("professorId") Integer professorId);
 
@@ -799,16 +801,21 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 			       a.status as status,
 			       a.professor.id as professorId,
 			       a.professor.nome as professorNome,
-			       SIZE(a.reservas) as vagasOcupadas,
-			       (a.capacidade - SIZE(a.reservas)) as vagasDisponiveis,
+			       (SELECT COUNT(r) FROM br.com.forgefit.persistencia.jpa.Aula$Reserva r WHERE r.aula = a AND r.status = 'CONFIRMADA') as vagasOcupadas,
+			       (a.capacidade - (SELECT COUNT(r) FROM br.com.forgefit.persistencia.jpa.Aula$Reserva r WHERE r.aula = a AND r.status = 'CONFIRMADA')) as vagasDisponiveis,
 			       SIZE(a.listaDeEspera) as tamanhoListaEspera
 			FROM Aula a
 			JOIN a.reservas r
 			WHERE r.alunoMatricula = :matricula
 			  AND r.status = 'CONFIRMADA'
-			  AND a.status = 'ATIVA'
 			  AND a.inicio >= CURRENT_TIMESTAMP
 			  AND a.inicio <= FUNCTION('TIMESTAMPADD', DAY, 7, CURRENT_TIMESTAMP)
+			  AND NOT EXISTS (
+			      SELECT 1 FROM br.com.forgefit.persistencia.jpa.Avaliacao av
+			      WHERE av.alunoMatricula = :matricula
+			        AND av.aulaId = a.id
+			        AND av.dataOcorrenciaAula = CAST(a.inicio AS date)
+			  )
 			ORDER BY a.inicio ASC
 			""")
 	List<br.com.forgefit.aplicacao.aula.AulaResumo> buscarAulasPorMatriculaAluno(
@@ -824,8 +831,8 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 			       a.status as status,
 			       a.professor.id as professorId,
 			       a.professor.nome as professorNome,
-			       SIZE(a.reservas) as vagasOcupadas,
-			       (a.capacidade - SIZE(a.reservas)) as vagasDisponiveis,
+			       (SELECT COUNT(r) FROM br.com.forgefit.persistencia.jpa.Aula$Reserva r WHERE r.aula = a AND r.status = 'CONFIRMADA') as vagasOcupadas,
+			       (a.capacidade - (SELECT COUNT(r) FROM br.com.forgefit.persistencia.jpa.Aula$Reserva r WHERE r.aula = a AND r.status = 'CONFIRMADA')) as vagasDisponiveis,
 			       SIZE(a.listaDeEspera) as tamanhoListaEspera
 			FROM Aula a
 			JOIN a.listaDeEspera le
@@ -865,6 +872,11 @@ class AulaRepositorioImpl implements br.com.forgefit.dominio.aula.AulaRepositori
 		
 		if (aulaComReservasOpt.isPresent()) {
 			Aula aulaExistente = aulaComReservasOpt.get();
+			
+			// Atualizar campos básicos da aula
+			aulaExistente.setStatus(StatusAula.valueOf(aula.getStatus().name()));
+			aulaExistente.setInicio(java.util.Date.from(aula.getInicio().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+			aulaExistente.setFim(java.util.Date.from(aula.getFim().atZone(java.time.ZoneId.systemDefault()).toInstant()));
 			
 			// Criar map das reservas existentes no banco por matrícula
 			java.util.Map<String, Aula.Reserva> reservasExistentes = new java.util.HashMap<>();

@@ -68,7 +68,7 @@ export const calcularReembolso = async (aulaId: number): Promise<ReembolsoPrevie
         return {
             elegivel: false,
             valor: 0,
-            motivo: "Erro ao calcular reembolso"
+            motivo: "Erro ao calcular reembolso",
         };
     }
 };

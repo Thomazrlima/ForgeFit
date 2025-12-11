@@ -26,25 +26,22 @@ type EnrollmentStatus = AulaFrontend["enrollmentStatus"];
 const Aulas = () => {
     const { user } = useUser();
     const { success, error: showError, warn } = useToast();
-    
+
     // React Query: buscar aulas com status de inscrição
-    const { aulas, aulasInscritas, isLoading, error } = useAulasComInscricao(
-        user?.matricula,
-        user?.role === "student"
-    );
-    
+    const { aulas, aulasInscritas, isLoading, error } = useAulasComInscricao(user?.matricula, user?.role === "student");
+
     // Debug: verificar o que está sendo retornado
-    console.log("Debug Aulas:", { 
-        aulas: aulas?.length, 
+    console.log("Debug Aulas:", {
+        aulas: aulas?.length,
         aulasInscritas: aulasInscritas?.length,
         matricula: user?.matricula,
-        isStudent: user?.role === "student"
+        isStudent: user?.role === "student",
     });
-    
+
     // Mutations
     const inscreverMutation = useInscreverAula();
     const cancelarMutation = useCancelarInscricao();
-    
+
     const [selectedCategory, setSelectedCategory] = useState("Todas");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedClass, setSelectedClass] = useState<Class | null>(null);
@@ -58,8 +55,8 @@ const Aulas = () => {
     const [ratingLoading, setRatingLoading] = useState(false);
 
     // Extrair categorias únicas das aulas
-    const categories = ["Todas", ...new Set(aulas.map(a => a.category))];
-    
+    const categories = ["Todas", ...new Set(aulas.map((a) => a.category))];
+
     // Converter error para string se existir
     const errorMessage = error ? "Erro ao carregar dados. Tente novamente." : null;
 
@@ -91,7 +88,7 @@ const Aulas = () => {
                 aulaId: classId,
                 matricula: user.matricula,
             });
-            
+
             handleCloseModal();
 
             const selectedClassData = aulas.find((c) => c.id === classId);
@@ -124,7 +121,7 @@ const Aulas = () => {
             });
 
             handleCloseUnenrollModal();
-            
+
             // Exibir notificação com a mensagem de reembolso vinda do backend
             if (response.sucesso && response.mensagemReembolso) {
                 warn(response.mensagemReembolso);

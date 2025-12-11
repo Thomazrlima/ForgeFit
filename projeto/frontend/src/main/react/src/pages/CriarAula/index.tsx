@@ -28,7 +28,7 @@ const CriarAula = () => {
             setLoading(true);
             // Buscar aulas do professor do backend
             const aulasDoProfessor = await aulaService.listarAulasDoProfessor();
-            
+
             // Converter para o formato esperado pelo componente
             const classesFormatted: Class[] = aulasDoProfessor.map((aula: any) => ({
                 id: aula.id,
@@ -44,7 +44,7 @@ const CriarAula = () => {
                 waitingList: 0, // TODO: buscar do backend
                 classDate: new Date(aula.inicio).toISOString().split("T")[0],
             }));
-            
+
             setClasses(classesFormatted);
         } catch (err) {
             console.error("Erro ao carregar aulas:", err);
@@ -149,8 +149,6 @@ const CriarAula = () => {
     const handleDeleteClass = async (classId: number) => {
         try {
             setIsDeleting(true);
-
-
 
             // Chamar API para deletar aula
             await aulaService.deletarAula(classId);

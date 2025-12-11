@@ -15,7 +15,7 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-        
+
         // Adicionar ID do professor do usuário logado
         const userStr = localStorage.getItem("@forgefit:user");
         if (userStr) {
@@ -29,7 +29,7 @@ api.interceptors.request.use(
                 console.error("Erro ao parsear usuário do localStorage:", e);
             }
         }
-        
+
         return config;
     },
     (error) => {

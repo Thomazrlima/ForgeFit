@@ -31,12 +31,8 @@ export const useAulasDoAluno = (matricula: string | undefined) => {
  */
 export const useAulasComInscricao = (matricula: string | undefined, isStudent: boolean) => {
     // Para alunos, busca aulas disponíveis (excluindo as já inscritas) e aulas inscritas separadamente
-    const { data: todasAulas, isLoading: loadingTodas, error: errorTodas } = useTodasAulas(
-        isStudent ? matricula : undefined
-    );
-    const { data: aulasInscritas, isLoading: loadingInscritas, error: errorInscritas } = useAulasDoAluno(
-        isStudent ? matricula : undefined
-    );
+    const { data: todasAulas, isLoading: loadingTodas, error: errorTodas } = useTodasAulas(isStudent ? matricula : undefined);
+    const { data: aulasInscritas, isLoading: loadingInscritas, error: errorInscritas } = useAulasDoAluno(isStudent ? matricula : undefined);
 
     // Como o backend já filtra aulas inscritas, não precisamos mais combinar
     // Apenas retornamos as aulas disponíveis (que já excluem as inscritas)
@@ -80,7 +76,7 @@ export const useCancelarInscricao = () => {
         mutationFn: async ({ aulaId, matricula }: { aulaId: number; matricula: string }) => {
             const response = await api.post(`/reservas/cancelar`, {
                 alunoMatricula: matricula,
-                aulaId: aulaId
+                aulaId: aulaId,
             });
             return response.data;
         },

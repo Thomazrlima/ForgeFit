@@ -9,6 +9,8 @@ import Evolucao from "../pages/Evolucao";
 import Guilda from "../pages/Guilda";
 import GuildaDetalhes from "../pages/GuildaDetalhes";
 import TorneiosDetalhes from "../pages/Torneio";
+import Treinos from "../pages/Treinos";
+import MeuTreino from "../pages/MeuTreino";
 import FullWidthLayout from "../components/layout/FullWidthLayout";
 
 interface ProtectedRouteProps {
@@ -35,6 +37,20 @@ const PublicRoute = ({ children }: ProtectedRouteProps) => {
     return user ? <Navigate to="/aulas" replace /> : <>{children}</>;
 };
 
+const ProfessorRoute = ({ children }: ProtectedRouteProps) => {
+    const { user, loading } = useUser();
+
+    if (loading) {
+        return <LoadingScreen />;
+    }
+
+    if (!user) {
+        return <Navigate to="/login" replace />;
+    }
+
+    return user.role === "professor" ? <>{children}</> : <Navigate to="/aulas" replace />;
+};
+
 const AppRouter = () => {
     return (
         <Router>
@@ -57,12 +73,23 @@ const AppRouter = () => {
                     }
                 >
                     <Route path="/aulas" element={<Aulas />} />
-                    <Route path="/treinos" element={<div style={{ padding: "2rem", color: "white" }}>Treinos em construção</div>} />
+                    <Route path="/meu-treino" element={<MeuTreino />} />
                     <Route path="/torneio/" element={<TorneiosDetalhes />} />
                     <Route path="/ranking" element={<Ranking />} />
                     <Route path="/evolucao" element={<Evolucao />} />
                     <Route path="/guilda" element={<Guilda />} />
                     <Route path="/guilda/:id" element={<GuildaDetalhes />} />
+                </Route>
+
+                <Route
+                    path="/treinos"
+                    element={
+                        <ProfessorRoute>
+                            <FullWidthLayout />
+                        </ProfessorRoute>
+                    }
+                >
+                    <Route index element={<Treinos />} />
                 </Route>
             </Routes>
         </Router>

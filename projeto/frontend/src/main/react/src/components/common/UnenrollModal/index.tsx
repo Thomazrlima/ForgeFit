@@ -29,15 +29,15 @@ const UnenrollModal = ({ isOpen, onClose, classData, onConfirm, isLoading = fals
                     setRefundInfo({
                         isEligible: preview.elegivel,
                         amount: preview.valor,
-                        reason: preview.motivo
+                        reason: preview.motivo,
                     });
                 })
                 .catch((error) => {
-                    console.error('Erro ao calcular reembolso:', error);
+                    console.error("Erro ao calcular reembolso:", error);
                     setRefundInfo({
                         isEligible: false,
                         amount: 0,
-                        reason: 'Erro ao calcular reembolso'
+                        reason: "Erro ao calcular reembolso",
                     });
                 })
                 .finally(() => {
@@ -58,7 +58,9 @@ const UnenrollModal = ({ isOpen, onClose, classData, onConfirm, isLoading = fals
                 <FooterRefundSection>
                     <h4>Informações de Reembolso</h4>
                     {loadingRefund ? (
-                        <p><small>Calculando reembolso...</small></p>
+                        <p>
+                            <small>Calculando reembolso...</small>
+                        </p>
                     ) : refundInfo?.isEligible ? (
                         <p>
                             <span className="refund-amount">Valor do reembolso: R$ {refundInfo.amount.toFixed(2)}</span>
@@ -70,7 +72,9 @@ const UnenrollModal = ({ isOpen, onClose, classData, onConfirm, isLoading = fals
                             <span className="no-refund">{refundInfo.reason}</span>
                         </p>
                     ) : (
-                        <p><small>Informação não disponível</small></p>
+                        <p>
+                            <small>Informação não disponível</small>
+                        </p>
                     )}
                 </FooterRefundSection>
             )}

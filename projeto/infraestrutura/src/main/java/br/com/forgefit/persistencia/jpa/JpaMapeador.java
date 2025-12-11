@@ -159,19 +159,47 @@ class JpaMapeador extends ModelMapper {
                     }
                 }
 
+                // Mapear lista de espera
+                if (source.getListaDeEspera() != null) {
+                    for (br.com.forgefit.persistencia.jpa.Aula.PosicaoListaDeEspera posicaoJpa : source.getListaDeEspera()) {
+                        Matricula matricula = new Matricula(posicaoJpa.getAlunoMatricula());
+                        LocalDateTime timestampDeEntrada = posicaoJpa.getTimestampEntrada().toInstant()
+                            .atZone(ZoneId.systemDefault()).toLocalDateTime();
+                        
+                        br.com.forgefit.dominio.aula.PosicaoListaDeEspera posicaoDominio = 
+                            new br.com.forgefit.dominio.aula.PosicaoListaDeEspera(matricula, timestampDeEntrada);
+                        
+                        try {
+                            aula.adicionarNaListaDeEspera(posicaoDominio);
+                        } catch (Exception e) {
+                            // Ignora se já existe
+                        }
+                    }
+                }
+
                 return aula;
             }
         });
 
-        // Custom mapping para Aula Domain -> JPA (para garantir que Reservas tenham referência à Aula)
+        // Custom mapping para Aula Domain -> JPA (para garantir que Reservas e ListaDeEspera tenham referência à Aula)
         typeMap(br.com.forgefit.dominio.aula.Aula.class, br.com.forgefit.persistencia.jpa.Aula.class)
             .setPostConverter(context -> {
                 br.com.forgefit.persistencia.jpa.Aula aulaJpa = context.getDestination();
-                if (aulaJpa != null && aulaJpa.getReservas() != null) {
+                if (aulaJpa != null) {
                     // Setar referência bidirecional nas reservas
-                    for (br.com.forgefit.persistencia.jpa.Aula.Reserva reserva : aulaJpa.getReservas()) {
-                        if (reserva != null) {
-                            reserva.setAula(aulaJpa);
+                    if (aulaJpa.getReservas() != null) {
+                        for (br.com.forgefit.persistencia.jpa.Aula.Reserva reserva : aulaJpa.getReservas()) {
+                            if (reserva != null) {
+                                reserva.setAula(aulaJpa);
+                            }
+                        }
+                    }
+                    // Setar referência bidirecional na lista de espera
+                    if (aulaJpa.getListaDeEspera() != null) {
+                        for (br.com.forgefit.persistencia.jpa.Aula.PosicaoListaDeEspera posicao : aulaJpa.getListaDeEspera()) {
+                            if (posicao != null) {
+                                posicao.setAula(aulaJpa);
+                            }
                         }
                     }
                 }

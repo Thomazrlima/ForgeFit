@@ -119,6 +119,16 @@ public class AulaServicoAplicacao {
     }
 
     /**
+     * Lista aulas na lista de espera de um aluno.
+     * @param matricula Matrícula do aluno
+     * @return Lista de resumos de aulas na lista de espera
+     */
+    public List<AulaResumo> listarAulasNaListaDeEspera(String matricula) {
+        notNull(matricula, "A matrícula do aluno não pode ser nula");
+        return repositorio.buscarAulasListaEsperaPorMatriculaAluno(matricula);
+    }
+
+    /**
      * Classe auxiliar para encapsular filtros de pesquisa.
      */
     public static class FiltrosAula {

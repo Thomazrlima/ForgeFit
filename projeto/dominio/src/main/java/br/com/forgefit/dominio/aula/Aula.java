@@ -246,4 +246,14 @@ public class Aula {
         }
         return -1;
     }
+
+    /**
+     * Remove um aluno da lista de espera.
+     * @param matricula Matrícula do aluno a remover
+     * @return true se o aluno foi removido, false se não estava na lista
+     */
+    public boolean removerDaListaDeEspera(Matricula matricula) {
+        notNull(matricula, "A matrícula não pode ser nula");
+        return listaDeEspera.removeIf(p -> p.getAlunoMatricula().equals(matricula));
+    }
 }

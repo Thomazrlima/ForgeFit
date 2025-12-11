@@ -17,7 +17,7 @@ import { submitCancelamento, buildCancelamentoRequest } from "../../services/can
 import CriarAula from "../CriarAula";
 import { getModalidadeImage } from "../../utils/modalidadeImages";
 import aulaService, { type AulaFrontend } from "../../services/aulaService";
-import { useAulasComInscricao, useInscreverAula, useCancelarInscricao } from "../../hooks/useAulas";
+import { useAulasComInscricao, useInscreverAula, useCancelarInscricao, useSairDaListaDeEspera } from "../../hooks/useAulas";
 
 // Type alias para manter compatibilidade
 type Class = AulaFrontend;
@@ -26,25 +26,23 @@ type EnrollmentStatus = AulaFrontend["enrollmentStatus"];
 const Aulas = () => {
     const { user } = useUser();
     const { success, error: showError, warn } = useToast();
-    
+
     // React Query: buscar aulas com status de inscrição
-    const { aulas, aulasInscritas, isLoading, error } = useAulasComInscricao(
-        user?.matricula,
-        user?.role === "student"
-    );
-    
+    const { aulas, aulasInscritas, isLoading, error } = useAulasComInscricao(user?.matricula, user?.role === "student");
+
     // Debug: verificar o que está sendo retornado
-    console.log("Debug Aulas:", { 
-        aulas: aulas?.length, 
+    console.log("Debug Aulas:", {
+        aulas: aulas?.length,
         aulasInscritas: aulasInscritas?.length,
         matricula: user?.matricula,
-        isStudent: user?.role === "student"
+        isStudent: user?.role === "student",
     });
-    
+
     // Mutations
     const inscreverMutation = useInscreverAula();
     const cancelarMutation = useCancelarInscricao();
-    
+    const sairListaEsperaMutation = useSairDaListaDeEspera();
+
     const [selectedCategory, setSelectedCategory] = useState("Todas");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedClass, setSelectedClass] = useState<Class | null>(null);
@@ -58,8 +56,8 @@ const Aulas = () => {
     const [ratingLoading, setRatingLoading] = useState(false);
 
     // Extrair categorias únicas das aulas
-    const categories = ["Todas", ...new Set(aulas.map(a => a.category))];
-    
+    const categories = ["Todas", ...new Set(aulas.map((a) => a.category))];
+
     // Converter error para string se existir
     const errorMessage = error ? "Erro ao carregar dados. Tente novamente." : null;
 
@@ -91,7 +89,7 @@ const Aulas = () => {
                 aulaId: classId,
                 matricula: user.matricula,
             });
-            
+
             handleCloseModal();
 
             const selectedClassData = aulas.find((c) => c.id === classId);
@@ -117,23 +115,36 @@ const Aulas = () => {
         try {
             setUnenrollmentLoading(true);
 
-            // Cancelar via mutation
-            const response = await cancelarMutation.mutateAsync({
-                aulaId: classId,
-                matricula: user.matricula,
-            });
+            // Verificar se é lista de espera ou reserva confirmada
+            const isWaitingList = selectedClassToUnenroll?.enrollmentStatus === "waiting_list";
 
-            handleCloseUnenrollModal();
-            
-            // Exibir notificação com a mensagem de reembolso vinda do backend
-            if (response.sucesso && response.mensagemReembolso) {
-                warn(response.mensagemReembolso);
+            if (isWaitingList) {
+                // Sair da lista de espera
+                await sairListaEsperaMutation.mutateAsync({
+                    aulaId: classId,
+                    matricula: user.matricula,
+                });
+                handleCloseUnenrollModal();
+                success("Você saiu da lista de espera!");
             } else {
-                success("Cancelamento realizado com sucesso!");
+                // Cancelar reserva confirmada
+                const response = await cancelarMutation.mutateAsync({
+                    aulaId: classId,
+                    matricula: user.matricula,
+                });
+
+                handleCloseUnenrollModal();
+
+                // Exibir notificação com a mensagem de reembolso vinda do backend
+                if (response && typeof response === "string") {
+                    warn(response);
+                } else {
+                    success("Cancelamento realizado com sucesso!");
+                }
             }
         } catch (err: any) {
-            console.error("Erro ao cancelar inscrição:", err);
-            showError(err?.response?.data || "Erro ao processar cancelamento");
+            console.error("Erro ao processar operação:", err);
+            showError(err?.response?.data || err?.message || "Erro ao processar operação");
         } finally {
             setUnenrollmentLoading(false);
         }

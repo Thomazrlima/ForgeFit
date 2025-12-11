@@ -83,9 +83,16 @@ public interface AulaRepositorioAplicacao {
     );
     
     /**
-     * Busca aulas em que um aluno específico está inscrito.
+     * Busca aulas em que um aluno específico está inscrito (reserva confirmada).
      * @param matricula Matrícula do aluno
      * @return Lista de resumos de aulas do aluno
      */
     List<AulaResumo> buscarAulasPorMatriculaAluno(String matricula);
+
+    /**
+     * Busca aulas em que um aluno específico está na lista de espera.
+     * @param matricula Matrícula do aluno
+     * @return Lista de resumos de aulas na lista de espera
+     */
+    List<AulaResumo> buscarAulasListaEsperaPorMatriculaAluno(String matricula);
 }

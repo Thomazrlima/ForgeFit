@@ -95,4 +95,30 @@ public class ReservaService {
         return aulaRepositorio.obterPorId(aulaId)
             .orElseThrow(() -> new IllegalArgumentException("Aula não encontrada"));
     }
+
+    /**
+     * Remove um aluno da lista de espera de uma aula.
+     * @param alunoMatricula Matrícula do aluno
+     * @param aulaId ID da aula
+     * @return Mensagem de confirmação
+     */
+    public String sairDaListaDeEspera(Matricula alunoMatricula, AulaId aulaId) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
+        notNull(aulaId, "O id da aula não pode ser nulo");
+
+        Aula aula = obterAula(aulaId);
+
+        if (!aula.alunoJaEstaEmEspera(alunoMatricula)) {
+            throw new IllegalArgumentException("Aluno não está na lista de espera desta aula");
+        }
+
+        boolean removido = aula.removerDaListaDeEspera(alunoMatricula);
+        
+        if (removido) {
+            aulaRepositorio.salvar(aula);
+            return "Você saiu da lista de espera com sucesso.";
+        }
+        
+        throw new IllegalStateException("Não foi possível remover o aluno da lista de espera");
+    }
 }

@@ -94,6 +94,18 @@ class AulaControlador {
     }
 
     /**
+     * Lista aulas em que o aluno está na lista de espera.
+     * GET /api/aulas/aluno/{matricula}/lista-espera
+     * 
+     * @param matricula Matrícula do aluno
+     * @return Lista de aulas na lista de espera
+     */
+    @RequestMapping(method = GET, path = "/aluno/{matricula}/lista-espera")
+    List<AulaResumo> listarAulasNaListaDeEspera(@PathVariable String matricula) {
+        return aulaServicoAplicacao.listarAulasNaListaDeEspera(matricula);
+    }
+
+    /**
      * Inscreve um aluno em uma aula.
      * POST /api/aulas/{aulaId}/inscrever
      * 
@@ -138,6 +150,30 @@ class AulaControlador {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Erro ao cancelar inscrição: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Remove um aluno da lista de espera de uma aula.
+     * POST /api/aulas/{aulaId}/sair-lista-espera
+     * 
+     * @param aulaId    ID da aula
+     * @param matricula Matrícula do aluno
+     * @return Resposta HTTP indicando sucesso ou erro
+     */
+    @RequestMapping(method = POST, path = "/{aulaId}/sair-lista-espera")
+    ResponseEntity<String> sairDaListaDeEspera(@PathVariable Integer aulaId, @RequestBody String matricula) {
+        try {
+            AulaId id = new AulaId(aulaId);
+            Matricula mat = new Matricula(matricula);
+
+            String resultado = reservaService.sairDaListaDeEspera(mat, id);
+
+            return ResponseEntity.ok(resultado);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Erro ao sair da lista de espera: " + e.getMessage());
         }
     }
 

@@ -27,26 +27,39 @@ export const useAulasDoAluno = (matricula: string | undefined) => {
 };
 
 /**
+ * Hook para buscar aulas na lista de espera de um aluno
+ */
+export const useAulasNaListaDeEspera = (matricula: string | undefined) => {
+    return useQuery({
+        queryKey: ["aulas", "lista-espera", matricula],
+        queryFn: () => aulaService.buscarAulasNaListaDeEspera(matricula!),
+        enabled: !!matricula, // Só executa se matricula existir
+        staleTime: 1000 * 60 * 2, // 2 minutos
+        retry: false, // Não tenta novamente se falhar (endpoint pode não existir ainda)
+    });
+};
+
+/**
  * Hook para combinar todas as aulas com status de inscrição do aluno
  */
 export const useAulasComInscricao = (matricula: string | undefined, isStudent: boolean) => {
     // Para alunos, busca aulas disponíveis (excluindo as já inscritas) e aulas inscritas separadamente
-    const { data: todasAulas, isLoading: loadingTodas, error: errorTodas } = useTodasAulas(
-        isStudent ? matricula : undefined
-    );
-    const { data: aulasInscritas, isLoading: loadingInscritas, error: errorInscritas } = useAulasDoAluno(
-        isStudent ? matricula : undefined
-    );
+    const { data: todasAulas, isLoading: loadingTodas, error: errorTodas } = useTodasAulas(isStudent ? matricula : undefined);
+    const { data: aulasInscritas, isLoading: loadingInscritas, error: errorInscritas } = useAulasDoAluno(isStudent ? matricula : undefined);
+    const { data: aulasListaEspera, isLoading: loadingListaEspera, error: errorListaEspera } = useAulasNaListaDeEspera(isStudent ? matricula : undefined);
 
     // Como o backend já filtra aulas inscritas, não precisamos mais combinar
     // Apenas retornamos as aulas disponíveis (que já excluem as inscritas)
     const aulasComStatus: AulaFrontend[] = todasAulas || [];
 
+    // Combinar aulas inscritas com aulas na lista de espera para a seção "Minhas Aulas"
+    const todasAulasDoAluno: AulaFrontend[] = [...(aulasInscritas || []), ...(aulasListaEspera || [])];
+
     return {
         aulas: aulasComStatus,
-        aulasInscritas: aulasInscritas || [],
-        isLoading: loadingTodas || (isStudent && loadingInscritas),
-        error: errorTodas || errorInscritas,
+        aulasInscritas: todasAulasDoAluno,
+        isLoading: loadingTodas || (isStudent && (loadingInscritas || loadingListaEspera)),
+        error: errorTodas || errorInscritas || errorListaEspera,
     };
 };
 
@@ -78,14 +91,33 @@ export const useCancelarInscricao = () => {
 
     return useMutation({
         mutationFn: async ({ aulaId, matricula }: { aulaId: number; matricula: string }) => {
-            const response = await api.post(`/reservas/cancelar`, {
-                alunoMatricula: matricula,
-                aulaId: aulaId
+            const response = await api.post(`/aulas/${aulaId}/cancelar`, matricula, {
+                headers: { "Content-Type": "text/plain" },
             });
             return response.data;
         },
         onSuccess: () => {
             // Invalidar cache após cancelamento
+            queryClient.invalidateQueries({ queryKey: ["aulas"] });
+        },
+    });
+};
+
+/**
+ * Mutation para sair da lista de espera
+ */
+export const useSairDaListaDeEspera = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ aulaId, matricula }: { aulaId: number; matricula: string }) => {
+            const response = await api.post(`/aulas/${aulaId}/sair-lista-espera`, matricula, {
+                headers: { "Content-Type": "text/plain" },
+            });
+            return response.data;
+        },
+        onSuccess: () => {
+            // Invalidar cache após sair da lista
             queryClient.invalidateQueries({ queryKey: ["aulas"] });
         },
     });

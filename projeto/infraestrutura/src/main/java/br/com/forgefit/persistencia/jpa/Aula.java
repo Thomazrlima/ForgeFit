@@ -533,6 +533,11 @@ class AulaRepositorioAplicacaoImpl implements br.com.forgefit.aplicacao.aula.Aul
 	public List<br.com.forgefit.aplicacao.aula.AulaResumo> buscarAulasPorMatriculaAluno(String matricula) {
 		return repositorio.buscarAulasPorMatriculaAluno(matricula);
 	}
+
+	@Override
+	public List<br.com.forgefit.aplicacao.aula.AulaResumo> buscarAulasListaEsperaPorMatriculaAluno(String matricula) {
+		return repositorio.buscarAulasListaEsperaPorMatriculaAluno(matricula);
+	}
 }
 
 // Interfaces e classes que estavam em AlunoRepositorioJpa.java - movidas para
@@ -545,11 +550,18 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 	Integer findMaxId();
 
 	@org.springframework.data.jpa.repository.Query("""
-			SELECT a FROM Aula a
+			SELECT DISTINCT a FROM Aula a
 			LEFT JOIN FETCH a.reservas
 			WHERE a.id = :id
 			""")
 	java.util.Optional<Aula> findByIdWithReservas(@org.springframework.data.repository.query.Param("id") Integer id);
+
+	@org.springframework.data.jpa.repository.Query("""
+			SELECT DISTINCT a FROM Aula a
+			LEFT JOIN FETCH a.listaDeEspera
+			WHERE a.id = :id
+			""")
+	java.util.Optional<Aula> findByIdWithListaEspera(@org.springframework.data.repository.query.Param("id") Integer id);
 
 	@org.springframework.data.jpa.repository.Query("""
 			select a
@@ -801,6 +813,30 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 			""")
 	List<br.com.forgefit.aplicacao.aula.AulaResumo> buscarAulasPorMatriculaAluno(
 			@org.springframework.data.repository.query.Param("matricula") String matricula);
+
+	@org.springframework.data.jpa.repository.Query("""
+			SELECT a.id as id,
+			       a.modalidade as modalidade,
+			       a.espaco as espaco,
+			       a.inicio as inicio,
+			       a.fim as fim,
+			       a.capacidade as capacidade,
+			       a.status as status,
+			       a.professor.id as professorId,
+			       a.professor.nome as professorNome,
+			       SIZE(a.reservas) as vagasOcupadas,
+			       (a.capacidade - SIZE(a.reservas)) as vagasDisponiveis,
+			       SIZE(a.listaDeEspera) as tamanhoListaEspera
+			FROM Aula a
+			JOIN a.listaDeEspera le
+			WHERE le.alunoMatricula = :matricula
+			  AND a.status = 'ATIVA'
+			  AND a.inicio >= CURRENT_TIMESTAMP
+			  AND a.inicio <= FUNCTION('TIMESTAMPADD', DAY, 7, CURRENT_TIMESTAMP)
+			ORDER BY a.inicio ASC
+			""")
+	List<br.com.forgefit.aplicacao.aula.AulaResumo> buscarAulasListaEsperaPorMatriculaAluno(
+			@org.springframework.data.repository.query.Param("matricula") String matricula);
 }
 
 @org.springframework.stereotype.Repository("aulaRepositorio")
@@ -823,10 +859,12 @@ class AulaRepositorioImpl implements br.com.forgefit.dominio.aula.AulaRepositori
 			return;
 		}
 		
-		// Se já existe, buscar a entidade existente e sincronizar as reservas
-		java.util.Optional<Aula> aulaExistenteOpt = repositorio.findByIdWithReservas(idOriginal);
-		if (aulaExistenteOpt.isPresent()) {
-			Aula aulaExistente = aulaExistenteOpt.get();
+		// Se já existe, buscar a entidade existente e sincronizar (duas queries para evitar MultipleBagFetchException)
+		java.util.Optional<Aula> aulaComReservasOpt = repositorio.findByIdWithReservas(idOriginal);
+		repositorio.findByIdWithListaEspera(idOriginal); // Carrega lista de espera na sessão
+		
+		if (aulaComReservasOpt.isPresent()) {
+			Aula aulaExistente = aulaComReservasOpt.get();
 			
 			// Criar map das reservas existentes no banco por matrícula
 			java.util.Map<String, Aula.Reserva> reservasExistentes = new java.util.HashMap<>();
@@ -865,9 +903,47 @@ class AulaRepositorioImpl implements br.com.forgefit.dominio.aula.AulaRepositori
 				}
 			}
 			
-			// Aplicar mudanças
+			// Aplicar mudanças de reservas
 			aulaExistente.getReservas().removeAll(reservasParaRemover);
 			aulaExistente.getReservas().addAll(reservasParaAdicionar);
+			
+			// === SINCRONIZAR LISTA DE ESPERA ===
+			// Criar map das posições existentes na lista de espera por matrícula
+			java.util.Map<String, Aula.PosicaoListaDeEspera> listaEsperaExistente = new java.util.HashMap<>();
+			for (Aula.PosicaoListaDeEspera posicaoJpa : aulaExistente.getListaDeEspera()) {
+				listaEsperaExistente.put(posicaoJpa.getAlunoMatricula(), posicaoJpa);
+			}
+			
+			// Coletar posições a adicionar e matrículas presentes no domínio
+			java.util.Set<String> matriculasNoDoinio = new java.util.HashSet<>();
+			java.util.List<Aula.PosicaoListaDeEspera> posicoesParaAdicionar = new java.util.ArrayList<>();
+			
+			for (br.com.forgefit.dominio.aula.PosicaoListaDeEspera posicaoDominio : aula.getListaDeEspera()) {
+				String matricula = posicaoDominio.getAlunoMatricula().getValor();
+				matriculasNoDoinio.add(matricula);
+				
+				if (!listaEsperaExistente.containsKey(matricula)) {
+					// Nova posição - criar
+					Aula.PosicaoListaDeEspera novaPosicao = new Aula.PosicaoListaDeEspera();
+					novaPosicao.setAula(aulaExistente);
+					novaPosicao.setAlunoMatricula(matricula);
+					novaPosicao.setTimestampEntrada(java.util.Date.from(
+						posicaoDominio.getTimestampDeEntrada().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+					posicoesParaAdicionar.add(novaPosicao);
+				}
+			}
+			
+			// Posições a remover (estão no banco mas não estão mais no domínio)
+			java.util.List<Aula.PosicaoListaDeEspera> posicoesParaRemover = new java.util.ArrayList<>();
+			for (Aula.PosicaoListaDeEspera posicaoJpa : aulaExistente.getListaDeEspera()) {
+				if (!matriculasNoDoinio.contains(posicaoJpa.getAlunoMatricula())) {
+					posicoesParaRemover.add(posicaoJpa);
+				}
+			}
+			
+			// Aplicar mudanças da lista de espera
+			aulaExistente.getListaDeEspera().removeAll(posicoesParaRemover);
+			aulaExistente.getListaDeEspera().addAll(posicoesParaAdicionar);
 			
 			// Salvar
 			repositorio.save(aulaExistente);
@@ -877,8 +953,12 @@ class AulaRepositorioImpl implements br.com.forgefit.dominio.aula.AulaRepositori
 	@Override
 	public java.util.Optional<br.com.forgefit.dominio.aula.Aula> obterPorId(
 			br.com.forgefit.dominio.aula.AulaId aulaId) {
-		return repositorio.findByIdWithReservas(aulaId.getId())
-				.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aula.Aula.class));
+		// Duas queries separadas para evitar MultipleBagFetchException
+		java.util.Optional<Aula> aulaOpt = repositorio.findByIdWithReservas(aulaId.getId());
+		if (aulaOpt.isPresent()) {
+			repositorio.findByIdWithListaEspera(aulaId.getId()); // Carrega lista de espera na sessão
+		}
+		return aulaOpt.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.aula.Aula.class));
 	}
 
 	@Override

@@ -68,7 +68,7 @@ export const calcularReembolso = async (aulaId: number): Promise<ReembolsoPrevie
         return {
             elegivel: false,
             valor: 0,
-            motivo: "Erro ao calcular reembolso"
+            motivo: "Erro ao calcular reembolso",
         };
     }
 };
@@ -81,4 +81,21 @@ export const buildCancelamentoRequest = (aulaId: number, alunoMatricula: string)
         alunoMatricula,
         aulaId,
     };
+};
+
+/**
+ * Remove aluno da lista de espera de uma aula.
+ */
+export const sairDaListaDeEspera = async (aulaId: number, matricula: string): Promise<string> => {
+    try {
+        const response = await axios.post<string>(`${API_BASE_URL}/aulas/${aulaId}/sair-lista-espera`, matricula, {
+            headers: { "Content-Type": "text/plain" },
+        });
+        return response.data;
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            throw new Error(error.response.data);
+        }
+        throw new Error("Erro ao sair da lista de espera. Tente novamente.");
+    }
 };

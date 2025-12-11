@@ -154,10 +154,32 @@ const GuildaDetalhes = () => {
     };
 
     const handleEditSubmit = async (data: GuildEditData) => {
-        console.log("Guilda editada:", data);
-        // TODO: Enviar para API
-        // Após sucesso, invalidar cache do React Query para recarregar dados
-        queryClient.invalidateQueries({ queryKey: ["guilda", "detalhes", guildaId] });
+        if (!guildaId || !user?.matricula) {
+            showError("Não foi possível identificar a guilda ou usuário");
+            return;
+        }
+
+        try {
+            const { editarGuilda } = await import("../../services/guildaService");
+            
+            const response = await editarGuilda(guildaId, {
+                nome: data.name,
+                descricao: data.description,
+                imagemURL: data.imageUrl,
+                mestreMatricula: user.matricula,
+            });
+
+            if (response.sucesso) {
+                // Após sucesso, invalidar cache do React Query para recarregar dados
+                queryClient.invalidateQueries({ queryKey: ["guilda", "detalhes", guildaId] });
+                setIsEditModalOpen(false);
+            } else {
+                showError(response.mensagem || "Erro ao editar guilda");
+            }
+        } catch (error) {
+            console.error("Erro ao editar guilda:", error);
+            showError("Erro ao editar guilda. Tente novamente.");
+        }
     };
 
     const handleDeleteGuild = async () => {

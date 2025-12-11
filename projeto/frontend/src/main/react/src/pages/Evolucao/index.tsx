@@ -3,7 +3,8 @@ import { TrendingDown, TrendingUp, Activity, History, Scale, Droplets, Flame, Du
 import Avatar from "../../components/common/Avatar";
 import { useUser } from "../../contexts/UserContext";
 import { Container, Header, HeaderContent, Title, ContentWrapper, StatsGrid, StatCard, StatHeader, StatTitle, StatValue, StatChange, HistorySection, SectionTitle, HistoryList, HistoryCard, HistoryHeader, HistoryDate, HistoryProfessor, HistoryGrid, HistoryItem, HistoryItemLabel, HistoryItemValue, EmptyState, SkeletonCard, SkeletonText, SkeletonHistoryCard } from "./styles";
-import { fetchBioimpedanceHistory, type BioimpedanceData } from "./mockData";
+import { type BioimpedanceData } from "./mockData";
+import { buscarHistoricoAluno } from "../../services/avaliacaoFisicaService";
 import ProfessorEvolucaoView from "./ProfessorView";
 
 function Evolucao() {
@@ -18,13 +19,33 @@ function Evolucao() {
 
     useEffect(() => {
         const loadData = async () => {
-            setLoading(true);
-            const data = await fetchBioimpedanceHistory();
-            setHistory(data);
-            setLoading(false);
+            if (!user?.matricula) {
+                setLoading(false);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                const response = await buscarHistoricoAluno(user.matricula);
+                
+                if (response.sucesso && response.dados) {
+                    setHistory(response.dados);
+                } else {
+                    console.error("Erro ao buscar histórico:", response.mensagem);
+                    setHistory([]);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar histórico:", error);
+                setHistory([]);
+            } finally {
+                setLoading(false);
+            }
         };
-        loadData();
-    }, []);
+        
+        if (user) {
+            loadData();
+        }
+    }, [user]);
 
     const latestData = history[0];
     const previousData = history[1];
@@ -45,9 +66,9 @@ function Evolucao() {
         };
     };
 
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString("pt-BR", {
+    const formatDate = (date: Date | string) => {
+        const dateObj = date instanceof Date ? date : new Date(date);
+        return dateObj.toLocaleDateString("pt-BR", {
             day: "2-digit",
             month: "long",
             year: "numeric",
@@ -200,7 +221,7 @@ function Evolucao() {
                         {history.map((assessment, index) => (
                             <HistoryCard key={assessment.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: index * 0.1 }}>
                                 <HistoryHeader>
-                                    <HistoryDate>{formatDate(assessment.dataDaAvaliacao.toString())}</HistoryDate>
+                                    <HistoryDate>{formatDate(assessment.dataDaAvaliacao)}</HistoryDate>
                                     <HistoryProfessor>Professor: {assessment.professorResponsavel}</HistoryProfessor>
                                 </HistoryHeader>
                                 <HistoryGrid>

@@ -5,7 +5,7 @@ import Spinner from "../../components/common/Spinner";
 
 import { useToast } from "../../contexts/ToastContext";
 import { useUser } from "../../contexts/UserContext";
-import { fetchAlunos, fetchBioimpedanciasPorAluno, adicionarBioimpedancia } from "./professorMockData";
+import { buscarAlunos, buscarHistoricoAluno, cadastrarAvaliacaoFisica } from "../../services/avaliacaoFisicaService";
 import type { Aluno, BioimpedanceData, BioimpedanciaFormData } from "./types";
 import {
     Container,
@@ -66,8 +66,12 @@ function ProfessorEvolucaoView() {
         const loadAlunos = async () => {
             setLoadingAlunos(true);
             try {
-                const data = await fetchAlunos();
-                setAlunos(data);
+                const response = await buscarAlunos();
+                if (response.sucesso && response.dados) {
+                    setAlunos(response.dados);
+                } else {
+                    showError(response.mensagem || "Erro ao carregar lista de alunos");
+                }
             } catch {
                 showError("Erro ao carregar lista de alunos");
             } finally {
@@ -87,8 +91,12 @@ function ProfessorEvolucaoView() {
         const loadHistorico = async () => {
             setLoadingHistorico(true);
             try {
-                const data = await fetchBioimpedanciasPorAluno(alunoSelecionado.id);
-                setHistorico(data);
+                const response = await buscarHistoricoAluno(alunoSelecionado.matricula);
+                if (response.sucesso && response.dados) {
+                    setHistorico(response.dados);
+                } else {
+                    showError(response.mensagem || "Erro ao carregar histórico do aluno");
+                }
             } catch {
                 showError("Erro ao carregar histórico do aluno");
             } finally {
@@ -107,11 +115,25 @@ function ProfessorEvolucaoView() {
 
     // Formata data para exibição
     const formatDate = (date: Date) => {
-        return new Date(date).toLocaleDateString("pt-BR", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
-        });
+        try {
+            // Se date já for um objeto Date, usa diretamente
+            // Se for string, converte para Date
+            const dateObj = date instanceof Date ? date : new Date(date);
+            
+            if (isNaN(dateObj.getTime())) {
+                console.error("Data inválida:", date);
+                return "Data inválida";
+            }
+            
+            return dateObj.toLocaleDateString("pt-BR", {
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+            });
+        } catch (error) {
+            console.error("Erro ao formatar data:", error, date);
+            return "Data inválida";
+        }
     };
 
     // Cálculo de evolução entre avaliações
@@ -125,24 +147,22 @@ function ProfessorEvolucaoView() {
 
     // Handler para salvar nova bioimpedância
     const handleSaveBioimpedancia = async (dados: BioimpedanciaFormData) => {
-        if (!alunoSelecionado || !user) return;
-
+        if (!alunoSelecionado) return;
+        
         try {
-            // Monta o objeto completo usando todos os dados do formulário
-            const novaBioimpedancia: Omit<BioimpedanceData, "id"> = {
-                dataDaAvaliacao: new Date(dados.dataDaAvaliacao),
-                professorResponsavel: user.name,
-                pesoKg: dados.pesoKg,
+            const response = await cadastrarAvaliacaoFisica({
+                alunoMatricula: alunoSelecionado.matricula,
+                dataDaAvaliacao: dados.dataDaAvaliacao,
+                professorResponsavelId: user.id,
                 massaGordaPercentual: dados.massaGordaPercentual,
-                massaGordaKg: dados.massaGordaKg || (dados.pesoKg * dados.massaGordaPercentual) / 100,
-                massaMagraKg: dados.massaMagraKg || dados.pesoKg - (dados.pesoKg * dados.massaGordaPercentual) / 100,
+                massaGordaKg: dados.massaGordaKg,
+                massaMagraKg: dados.massaMagraKg,
                 massaMuscularEsqueleticaKg: dados.massaMuscularEsqueleticaKg,
                 aguaCorporalTotalPercentual: dados.aguaCorporalTotalPercentual,
                 gorduraVisceralNivel: dados.gorduraVisceralNivel,
                 taxaMetabolicaBasalKcal: dados.taxaMetabolicaBasalKcal,
                 massaOsseaKg: dados.massaOsseaKg,
                 indiceDeMassaCorporal: dados.indiceDeMassaCorporal,
-                // Medidas corporais
                 bracoRelaxadoCm: dados.bracoRelaxadoCm,
                 bracoContraidoCm: dados.bracoContraidoCm,
                 antebracoCm: dados.antebracoCm,
@@ -152,12 +172,19 @@ function ProfessorEvolucaoView() {
                 quadrilCm: dados.quadrilCm,
                 coxaCm: dados.coxaCm,
                 panturrilhaCm: dados.panturrilhaCm,
-            };
+            });
 
-            const resultado = await adicionarBioimpedancia(alunoSelecionado.id, novaBioimpedancia);
-            setHistorico((prev) => [resultado, ...prev]);
-            success(`Avaliação cadastrada para ${alunoSelecionado.nome}`);
-            setIsModalOpen(false);
+            if (response.sucesso) {
+                success(response.mensagem || `Avaliação cadastrada para ${alunoSelecionado.nome}`);
+                setIsModalOpen(false);
+                // Recarrega o histórico
+                const historicoResponse = await buscarHistoricoAluno(alunoSelecionado.matricula);
+                if (historicoResponse.sucesso && historicoResponse.dados) {
+                    setHistorico(historicoResponse.dados);
+                }
+            } else {
+                showError(response.mensagem || "Erro ao salvar avaliação");
+            }
         } catch {
             showError("Erro ao salvar avaliação");
         }
@@ -440,10 +467,6 @@ function ProfessorEvolucaoView() {
                                                     </HistoricoProfessor>
                                                 </HistoricoCardHeader>
                                                 <HistoricoGrid>
-                                                    <HistoricoItem>
-                                                        <HistoricoItemLabel>Peso</HistoricoItemLabel>
-                                                        <HistoricoItemValue>{avaliacao.pesoKg} kg</HistoricoItemValue>
-                                                    </HistoricoItem>
                                                     <HistoricoItem>
                                                         <HistoricoItemLabel>Gordura Corporal</HistoricoItemLabel>
                                                         <HistoricoItemValue>

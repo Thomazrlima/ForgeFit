@@ -1,6 +1,5 @@
 package br.com.forgefit.persistencia.jpa;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,17 +9,13 @@ import org.springframework.data.repository.query.Param;
 import br.com.forgefit.aplicacao.guilda.GuildaRepositorioAplicacao;
 import br.com.forgefit.aplicacao.guilda.GuildaResumo;
 import br.com.forgefit.persistencia.jpa.enums.StatusGuilda;
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
 @Entity
@@ -50,12 +45,6 @@ class GuildaJpa {
 	@Column(name = "MESTRE_MATRICULA", nullable = false, length = 50)
 	String mestreMatricula;
 
-	@ElementCollection
-	@CollectionTable(name = "GME_GUILDA_MEMBROS", joinColumns = @JoinColumn(name = "GUI_ID"))
-	@Column(name = "ALUNO_MATRICULA", length = 50)
-	@OrderColumn(name = "POSICAO")
-	List<String> membrosMatriculas = new ArrayList<>();
-
 	@Column(name = "PONTUACAO_TOTAL")
 	Integer pontuacaoTotal = 0;
 
@@ -78,7 +67,7 @@ interface GuildaJpaRepository extends JpaRepository<GuildaJpa, Integer> {
 			   g.descricao as descricao,
 			   g.imagemURL as imagemURL,
 			   g.pontuacaoTotal as pontuacaoTotal,
-			   SIZE(g.membrosMatriculas) as numeroMembros
+			   (SELECT COUNT(m) FROM GuildaMembro m WHERE m.id.guildaId = g.id) as numeroMembros
 		FROM GuildaJpa g
 		WHERE g.status = 'ATIVA'
 		ORDER BY g.pontuacaoTotal DESC, g.nome ASC
@@ -91,7 +80,7 @@ interface GuildaJpaRepository extends JpaRepository<GuildaJpa, Integer> {
 			   g.descricao as descricao,
 			   g.imagemURL as imagemURL,
 			   g.pontuacaoTotal as pontuacaoTotal,
-			   SIZE(g.membrosMatriculas) as numeroMembros
+			   (SELECT COUNT(m) FROM GuildaMembro m WHERE m.id.guildaId = g.id) as numeroMembros
 		FROM GuildaJpa g
 		WHERE g.nome = :nome
 		""")
@@ -149,13 +138,46 @@ class GuildaRepositorioImpl implements br.com.forgefit.dominio.guilda.GuildaRepo
 	@Override
 	public java.util.Optional<br.com.forgefit.dominio.guilda.Guilda> obterPorId(br.com.forgefit.dominio.guilda.GuildaId id) {
 		return repositorio.findById(id.getId())
-			.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.guilda.Guilda.class));
+			.map(jpa -> {
+				// Cria a instância de Guilda manualmente
+				br.com.forgefit.dominio.guilda.GuildaId guildaId = new br.com.forgefit.dominio.guilda.GuildaId(jpa.id);
+				br.com.forgefit.dominio.guilda.CodigoConvite codigoConvite = 
+					new br.com.forgefit.dominio.guilda.CodigoConvite(jpa.codigoConvite);
+				br.com.forgefit.dominio.aluno.Matricula mestreMatricula = 
+					new br.com.forgefit.dominio.aluno.Matricula(jpa.mestreMatricula);
+				
+				br.com.forgefit.dominio.guilda.Guilda guilda = new br.com.forgefit.dominio.guilda.Guilda(
+					guildaId,
+					jpa.nome,
+					jpa.descricao,
+					jpa.imagemURL,
+					codigoConvite,
+					mestreMatricula
+				);
+				
+				return guilda;
+			});
 	}
 
 	@Override
 	public List<br.com.forgefit.dominio.guilda.Guilda> listarGuildas() {
 		return repositorio.findAll().stream()
-			.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.guilda.Guilda.class))
+			.map(jpa -> {
+				br.com.forgefit.dominio.guilda.GuildaId guildaId = new br.com.forgefit.dominio.guilda.GuildaId(jpa.id);
+				br.com.forgefit.dominio.guilda.CodigoConvite codigoConvite = 
+					new br.com.forgefit.dominio.guilda.CodigoConvite(jpa.codigoConvite);
+				br.com.forgefit.dominio.aluno.Matricula mestreMatricula = 
+					new br.com.forgefit.dominio.aluno.Matricula(jpa.mestreMatricula);
+				
+				return new br.com.forgefit.dominio.guilda.Guilda(
+					guildaId,
+					jpa.nome,
+					jpa.descricao,
+					jpa.imagemURL,
+					codigoConvite,
+					mestreMatricula
+				);
+			})
 			.toList();
 	}
 

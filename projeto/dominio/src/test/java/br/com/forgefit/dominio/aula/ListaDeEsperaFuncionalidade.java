@@ -117,6 +117,8 @@ public class ListaDeEsperaFuncionalidade {
         
         if (status.equals("CANCELADA")) {
             contexto.aulaService.cancelarAulaDefinitivamente(aulaCriada.getId());
+        } else if (status.equals("CONCLUIDA")) {
+            contexto.aulaService.concluirAula(aulaCriada.getId());
         }
         
         aulaCriada = contexto.aulaService.obter(aulaCriada.getId());
@@ -142,6 +144,14 @@ public class ListaDeEsperaFuncionalidade {
         if (contexto.excecao != null) {
             String mensagem = contexto.excecao.getMessage().toLowerCase();
             assertTrue(mensagem.contains("cancelada") || mensagem.contains("cancel"));
+        }
+    }
+
+    @And("o aluno é informado de que a aula está concluída")
+    public void o_aluno_e_informado_de_que_a_aula_esta_concluida() {
+        if (contexto.excecao != null) {
+            String mensagem = contexto.excecao.getMessage().toLowerCase();
+            assertTrue(mensagem.contains("concluída") || mensagem.contains("concluida"));
         }
     }
 

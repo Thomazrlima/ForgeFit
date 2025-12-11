@@ -316,6 +316,32 @@ class AulaControlador {
     }
 
     /**
+     * Conclui uma aula (marca como concluída).
+     * PUT /api/aulas/{aulaId}/concluir
+     * 
+     * @param aulaId ID da aula
+     * @return Resposta com resultado da operação
+     */
+    @RequestMapping(method = PUT, path = "/{aulaId}/concluir")
+    ResponseEntity<?> concluirAula(
+        @PathVariable Integer aulaId
+    ) {
+        try {
+            AulaId id = new AulaId(aulaId);
+            String mensagem = aulaService.concluirAulaComMensagem(id);
+
+            if (mensagem.contains("sucesso")) {
+                return ResponseEntity.ok(mensagem);
+            } else {
+                return ResponseEntity.badRequest().body(mensagem);
+            }
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Erro ao concluir aula: " + e.getMessage());
+        }
+    }
+
+    /**
      * Lista as aulas do professor autenticado.
      * GET /api/aulas/professor
      * 

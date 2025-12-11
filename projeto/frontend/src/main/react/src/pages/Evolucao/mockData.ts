@@ -8,7 +8,6 @@ export interface BioimpedanceData {
     id: number;
     dataDaAvaliacao: Date;
     professorResponsavel: string;
-    pesoKg: number;
     massaGordaPercentual: number;
     massaGordaKg: number;
     massaMagraKg: number;
@@ -34,7 +33,6 @@ const bioimpedanceHistory: BioimpedanceData[] = [
         id: 1,
         dataDaAvaliacao: new Date("2024-09-15"),
         professorResponsavel: "Prof. João Silva",
-        pesoKg: 82.0,
         massaGordaPercentual: 22.5,
         massaGordaKg: 18.5,
         massaMagraKg: 63.5,
@@ -58,7 +56,6 @@ const bioimpedanceHistory: BioimpedanceData[] = [
         id: 2,
         dataDaAvaliacao: new Date("2024-10-20"),
         professorResponsavel: "Prof. João Silva",
-        pesoKg: 83.0,
         massaGordaPercentual: 20.8,
         massaGordaKg: 17.2,
         massaMagraKg: 65.8,
@@ -82,7 +79,6 @@ const bioimpedanceHistory: BioimpedanceData[] = [
         id: 3,
         dataDaAvaliacao: new Date("2024-11-14"),
         professorResponsavel: "Prof. Maria Santos",
-        pesoKg: 84.0,
         massaGordaPercentual: 19.2,
         massaGordaKg: 16.1,
         massaMagraKg: 67.9,

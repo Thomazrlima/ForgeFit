@@ -34,7 +34,6 @@ interface CreateBioimpedanciaModalProps {
 const initialFormState: BioimpedanciaFormData = {
     dataDaAvaliacao: new Date().toISOString().split("T")[0],
     // Campos essenciais
-    pesoKg: 0,
     massaGordaPercentual: 0,
     massaMuscularEsqueleticaKg: 0,
     aguaCorporalTotalPercentual: 0,
@@ -78,10 +77,6 @@ function CreateBioimpedanciaModal({ isOpen, onClose, onSave, alunoNome }: Create
 
         if (!formData.dataDaAvaliacao) {
             newErrors.dataDaAvaliacao = "Data obrigatória";
-        }
-
-        if (formData.pesoKg <= 0) {
-            newErrors.pesoKg = "Peso deve ser maior que 0";
         }
 
         if (formData.massaGordaPercentual < 0 || formData.massaGordaPercentual > 100) {

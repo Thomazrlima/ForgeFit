@@ -10,6 +10,8 @@ import br.com.forgefit.aplicacao.aula.AulaRepositorioAplicacao;
 import br.com.forgefit.aplicacao.aula.AulaServicoAplicacao;
 import br.com.forgefit.aplicacao.aula.ReservaRepositorioAplicacao;
 import br.com.forgefit.aplicacao.aula.ReservaServicoAplicacao;
+import br.com.forgefit.aplicacao.avaliacaoFisica.AvaliacaoFisicaRepositorioAplicacao;
+import br.com.forgefit.aplicacao.avaliacaoFisica.AvaliacaoFisicaServicoAplicacao;
 import br.com.forgefit.aplicacao.guilda.GuildaRepositorioAplicacao;
 import br.com.forgefit.aplicacao.guilda.GuildaServicoAplicacao;
 import br.com.forgefit.aplicacao.ranking.RankingRepositorioAplicacao;
@@ -22,6 +24,7 @@ import br.com.forgefit.dominio.aula.ReembolsoService;
 import br.com.forgefit.dominio.aula.ReservaService;
 import br.com.forgefit.dominio.aluno.AlunoRepositorio;
 import br.com.forgefit.dominio.aluno.AlunoService;
+import br.com.forgefit.dominio.aluno.AvaliacaoFisicaService;
 import br.com.forgefit.dominio.checkin.CheckinRepositorio;
 import br.com.forgefit.dominio.checkin.CheckinService;
 import br.com.forgefit.dominio.guilda.GuildaRepositorio;
@@ -105,6 +108,19 @@ public class BackendAplicacao {
     @Bean
     public RankingServicoAplicacao rankingServicoAplicacao(RankingRepositorioAplicacao repositorio) {
         return new RankingServicoAplicacao(repositorio);
+    }
+
+    @Bean
+    public AvaliacaoFisicaService avaliacaoFisicaService(AlunoRepositorio alunoRepositorio) {
+        return new AvaliacaoFisicaService(alunoRepositorio);
+    }
+
+    @Bean
+    public AvaliacaoFisicaServicoAplicacao avaliacaoFisicaServicoAplicacao(
+        AvaliacaoFisicaRepositorioAplicacao repositorio,
+        AvaliacaoFisicaService avaliacaoFisicaService
+    ) {
+        return new AvaliacaoFisicaServicoAplicacao(repositorio, avaliacaoFisicaService);
     }
 
     public static void main(String[] args) {

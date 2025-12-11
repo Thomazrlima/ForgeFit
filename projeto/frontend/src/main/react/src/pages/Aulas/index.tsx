@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Calendar, Users, MapPin, Filter, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
 import { Container, ClassesGrid, ClassCard, ClassImage, ClassInfo, ClassTitle, ClassDetail, ClassFooter, EmptyState, SkeletonCard, SkeletonCardImage, SkeletonCardContent, SkeletonFilterButton, SkeletonSearchSection, EnrolledSection, SectionTitle, EnrolledClassCard, WaitingListClassCard, UnenrollButton, LeaveWaitingListButton, NoEnrolledClasses, SearchSection, ToEvaluateClassCard, EvaluateButton } from "./styles.ts";
 import { type ClassRating } from "./mockData.ts";
 import SearchAndFilterBar from "../../components/common/SearchAndFilterBar";
@@ -26,6 +27,7 @@ type EnrollmentStatus = AulaFrontend["enrollmentStatus"];
 const Aulas = () => {
     const { user } = useUser();
     const { success, error: showError, warn } = useToast();
+    const queryClient = useQueryClient();
 
     // React Query: buscar aulas com status de inscrição
     const { aulas, aulasInscritas, isLoading, error } = useAulasComInscricao(user?.matricula, user?.role === "student");
@@ -188,8 +190,11 @@ const Aulas = () => {
                 return;
             }
 
-            // Buscar dados da aula
-            const classData = aulas.find((c) => c.id === classId);
+            // Buscar dados da aula - procurar tanto em aulas disponíveis quanto em inscritas
+            const classData = [...aulas, ...aulasInscritas].find((c) => c.id === classId);
+            console.log("DEBUG classData encontrada:", classData);
+            console.log("DEBUG instructorId:", classData?.instructorId, "classDate:", classData?.classDate);
+            
             if (!classData || !classData.instructorId || !classData.classDate) {
                 console.error("Dados da aula incompletos", classData);
                 showError("Erro: dados da aula incompletos");
@@ -198,6 +203,7 @@ const Aulas = () => {
 
             // Construir requisição
             const request = buildRatingRequest(classId, rating, user.matricula, classData.instructorId, classData.classDate);
+            console.log("DEBUG request para avaliação:", request);
 
             // Enviar para o backend
             const response = await submitRating(request);
@@ -205,18 +211,8 @@ const Aulas = () => {
             if (response.sucesso) {
                 console.log("Avaliação enviada com sucesso:", response.mensagem);
 
-                // Remove a aula da lista de "Minhas Aulas" após avaliação
-                setClasses((prevClasses) =>
-                    prevClasses.map((classItem) =>
-                        classItem.id === classId
-                            ? {
-                                  ...classItem,
-                                  enrollmentStatus: "not_enrolled" as EnrollmentStatus,
-                                  userRating: rating,
-                              }
-                            : classItem,
-                    ),
-                );
+                // Invalidar as queries para recarregar as aulas
+                queryClient.invalidateQueries({ queryKey: ["aulas"] });
 
                 handleCloseRatingModal();
                 success("Avaliação realizada com sucesso!");

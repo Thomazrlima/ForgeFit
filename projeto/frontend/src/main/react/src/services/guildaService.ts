@@ -71,6 +71,24 @@ export interface VerificarMembroResponse {
 }
 
 /**
+ * Interface para editar uma guilda.
+ */
+export interface AlterarGuildaRequest {
+    nome: string;
+    descricao?: string;
+    imagemURL?: string;
+    mestreMatricula: string;
+}
+
+/**
+ * Interface da resposta ao editar uma guilda.
+ */
+export interface AlterarGuildaResponse {
+    sucesso: boolean;
+    mensagem: string;
+}
+
+/**
  * Cria uma nova guilda.
  * POST /api/guildas
  *
@@ -132,9 +150,40 @@ export const verificarMembroGuilda = async (matricula: string): Promise<Verifica
     }
 };
 
+/**
+ * Edita uma guilda existente.
+ * PUT /api/guildas/{id}
+ *
+ * @param guildaId ID da guilda a ser editada
+ * @param dados Dados atualizados da guilda
+ * @returns Resposta com sucesso/erro
+ */
+export const editarGuilda = async (guildaId: number, dados: AlterarGuildaRequest): Promise<AlterarGuildaResponse> => {
+    try {
+        console.log("Enviando requisição para editar guilda:", guildaId, dados);
+        const response = await api.put<AlterarGuildaResponse>(`/guildas/${guildaId}`, dados);
+        console.log("Resposta do backend:", response.data);
+        return response.data;
+    } catch (error: unknown) {
+        console.error("Erro ao editar guilda:", error);
+        
+        // Trata erro do backend
+        if (error && typeof error === "object" && "response" in error) {
+            const axiosError = error as { response?: { data?: AlterarGuildaResponse } };
+            if (axiosError.response?.data) {
+                return axiosError.response.data;
+            }
+        }
+        
+        throw new Error("Erro ao editar guilda. Tente novamente.");
+    }
+};
+
 export const guildaService = {
     criarGuilda,
     buscarDetalhesGuilda,
+    verificarMembroGuilda,
+    editarGuilda,
 };
 
 export default guildaService;

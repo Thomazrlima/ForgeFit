@@ -12,6 +12,12 @@ Feature: Reserva de Aula com Lista de Espera e Promoção Automática
     When um aluno tentar reservar essa aula
     Then o sistema recusa a reserva
     And o aluno é informado de que a aula está cancelada
+
+  Scenario: Aula concluída não pode ser reservada
+    Given que exista uma aula com status "CONCLUIDA" marcada para "16/10/2025" às "14h00"
+    When um aluno tentar reservar essa aula
+    Then o sistema recusa a reserva
+    And o aluno é informado de que a aula está concluída
   # Regra de negócio: Garantia e duplicidade de reservas
 
   Scenario: Reserva efetivada enquanto há vagas

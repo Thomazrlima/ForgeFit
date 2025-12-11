@@ -204,27 +204,51 @@ export const CardActions = styled.div`
     align-items: center;
 `;
 
-export const ActionButton = styled.button<{ variant?: "danger" }>`
+export const ActionButton = styled.button<{ variant?: "danger" | "success" }>`
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0.5rem;
     border: 2px solid;
-    border-image: ${({ variant, theme }) => (variant === "danger" ? `linear-gradient(135deg, #ef4444, #dc2626) 1` : `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary}) 1`)};
+    border-image: ${({ variant, theme }) => 
+        variant === "danger" 
+            ? `linear-gradient(135deg, #ef4444, #dc2626) 1` 
+            : variant === "success"
+            ? `linear-gradient(135deg, #10b981, #059669) 1`
+            : `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary}) 1`
+    };
     border-radius: 0.5rem;
     background: transparent;
-    color: ${({ variant }) => (variant === "danger" ? "#ef4444" : "inherit")};
+    color: ${({ variant }) => 
+        variant === "danger" 
+            ? "#ef4444" 
+            : variant === "success" 
+            ? "#10b981" 
+            : "inherit"
+    };
     cursor: pointer;
     transition: all 0.2s ease;
     width: 2.5rem;
     height: 2.5rem;
 
     &:hover {
-        background: ${({ variant }) => (variant === "danger" ? "#ef444410" : "rgba(239, 68, 68, 0.1)")};
+        background: ${({ variant }) => 
+            variant === "danger" 
+                ? "#ef444410" 
+                : variant === "success"
+                ? "#10b98110"
+                : "rgba(239, 68, 68, 0.1)"
+        };
     }
 
     svg {
-        color: ${({ variant }) => (variant === "danger" ? "#ef4444" : "inherit")};
+        color: ${({ variant }) => 
+            variant === "danger" 
+                ? "#ef4444" 
+                : variant === "success"
+                ? "#10b981"
+                : "inherit"
+        };
     }
 `;
 

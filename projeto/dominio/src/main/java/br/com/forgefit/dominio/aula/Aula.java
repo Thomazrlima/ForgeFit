@@ -164,11 +164,30 @@ public class Aula {
         listaDeEspera.clear();
     }
 
+    public void concluir() {
+        if (status == StatusAula.CANCELADA) {
+            throw new IllegalStateException("Não é possível concluir uma aula cancelada");
+        }
+        
+        if (status == StatusAula.CONCLUIDA) {
+            throw new IllegalStateException("A aula já está concluída");
+        }
+        
+        this.status = StatusAula.CONCLUIDA;
+        
+        // Limpa a lista de espera após conclusão
+        listaDeEspera.clear();
+    }
+
     public void adicionarReserva(Reserva reserva) {
         notNull(reserva, "A reserva não pode ser nula");
 
         if (status == StatusAula.CANCELADA) {
             throw new IllegalStateException("Não é possível reservar vaga em aula cancelada");
+        }
+
+        if (status == StatusAula.CONCLUIDA) {
+            throw new IllegalStateException("Não é possível reservar vaga em aula concluída");
         }
 
         if (alunoJaPossuiReserva(reserva.getAlunoMatricula())) {
@@ -188,6 +207,14 @@ public class Aula {
 
     public void adicionarNaListaDeEspera(PosicaoListaDeEspera posicao) {
         notNull(posicao, "A posição não pode ser nula");
+
+        if (status == StatusAula.CANCELADA) {
+            throw new IllegalStateException("Não é possível entrar na lista de espera de uma aula cancelada");
+        }
+
+        if (status == StatusAula.CONCLUIDA) {
+            throw new IllegalStateException("Não é possível entrar na lista de espera de uma aula concluída");
+        }
 
         if (alunoJaPossuiReserva(posicao.getAlunoMatricula())) {
             throw new IllegalStateException("O aluno já possui reserva confirmada para esta aula");

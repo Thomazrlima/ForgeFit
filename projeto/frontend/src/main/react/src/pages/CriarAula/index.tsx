@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Calendar, MapPin, BookOpen, Tag, Edit, Trash2 } from "lucide-react";
+import { Plus, Calendar, MapPin, BookOpen, Tag, Edit, Trash2, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useUser } from "../../contexts/UserContext";
 import { useToast } from "../../contexts/ToastContext";
@@ -22,6 +22,8 @@ const CriarAula = () => {
     const [editingClass, setEditingClass] = useState<Class | null>(null);
     const [deletingClass, setDeletingClass] = useState<Class | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [concludingClass, setConcludingClass] = useState<Class | null>(null);
+    const [isConcluding, setIsConcluding] = useState(false);
 
     const loadClasses = async () => {
         try {
@@ -40,7 +42,7 @@ const CriarAula = () => {
                 enrolled: 0, // TODO: buscar do backend
                 location: espacoLabels[aula.espaco as Espaco] || aula.espaco,
                 image: getModalidadeImage(aula.modalidade),
-                enrollmentStatus: "not_enrolled" as const,
+                enrollmentStatus: aula.status === "CONCLUIDA" ? "to_evaluate" as const : "not_enrolled" as const,
                 waitingList: 0, // TODO: buscar do backend
                 classDate: new Date(aula.inicio).toISOString().split("T")[0],
             }));
@@ -163,6 +165,32 @@ const CriarAula = () => {
         }
     };
 
+    const handleConcludeClass = async (classId: number) => {
+        try {
+            setIsConcluding(true);
+
+            // Chamar API para concluir aula
+            await aulaService.concluirAula(classId);
+            
+            // Atualizar o status da aula localmente
+            setClasses((prev) =>
+                prev.map((c) =>
+                    c.id === classId
+                        ? { ...c, enrollmentStatus: "to_evaluate" as const }
+                        : c
+                )
+            );
+            
+            success("Aula concluída com sucesso! Os alunos já podem avaliar.");
+            setConcludingClass(null);
+        } catch (err) {
+            console.error("Erro ao concluir aula:", err);
+            error("Erro ao concluir aula. Tente novamente.");
+        } finally {
+            setIsConcluding(false);
+        }
+    };
+
     if (loading) {
         return (
             <Container>
@@ -193,6 +221,19 @@ const CriarAula = () => {
                                     <ClassTitle>
                                         <Tag size={20} />
                                         {classItem.category}
+                                        {classItem.enrollmentStatus === "to_evaluate" && (
+                                            <span style={{ 
+                                                marginLeft: "0.5rem", 
+                                                fontSize: "0.75rem", 
+                                                padding: "0.25rem 0.5rem", 
+                                                background: "#10b981", 
+                                                color: "white", 
+                                                borderRadius: "0.25rem",
+                                                fontWeight: "500"
+                                            }}>
+                                                Concluída
+                                            </span>
+                                        )}
                                     </ClassTitle>
                                     <ClassDetail>
                                         <Calendar size={18} />
@@ -207,6 +248,11 @@ const CriarAula = () => {
                                             {classItem.enrolled}/{classItem.capacity} alunos
                                         </span>
                                         <CardActions>
+                                            {classItem.enrollmentStatus !== "to_evaluate" && (
+                                                <ActionButton onClick={() => setConcludingClass(classItem)} title="Concluir aula" variant="success">
+                                                    <CheckCircle size={18} />
+                                                </ActionButton>
+                                            )}
                                             <ActionButton onClick={() => handleEditClass(classItem)} title="Editar aula">
                                                 <Edit size={18} />
                                             </ActionButton>
@@ -260,6 +306,31 @@ const CriarAula = () => {
                     <DeleteConfirmModal>
                         <p>Tem certeza que deseja excluir esta aula?</p>
                         <p style={{ fontSize: "0.9rem", opacity: 0.7, marginTop: "0.5rem" }}>Esta ação não pode ser desfeita.</p>
+                    </DeleteConfirmModal>
+                </Modal>
+            )}
+
+            {concludingClass && (
+                <Modal
+                    isOpen={!!concludingClass}
+                    onClose={() => setConcludingClass(null)}
+                    title="Concluir Aula"
+                    footer={
+                        <>
+                            <ModalAction variant="secondary" onClick={() => setConcludingClass(null)} disabled={isConcluding}>
+                                Cancelar
+                            </ModalAction>
+                            <ModalAction variant="primary" onClick={() => concludingClass && handleConcludeClass(concludingClass.id)} disabled={isConcluding}>
+                                {isConcluding ? "Concluindo..." : "Confirmar"}
+                            </ModalAction>
+                        </>
+                    }
+                >
+                    <DeleteConfirmModal>
+                        <p>Tem certeza que deseja concluir esta aula?</p>
+                        <p style={{ fontSize: "0.9rem", opacity: 0.7, marginTop: "0.5rem" }}>
+                            Após a conclusão, os alunos poderão avaliar a aula e o professor.
+                        </p>
                     </DeleteConfirmModal>
                 </Modal>
             )}

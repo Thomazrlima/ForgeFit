@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import br.com.forgefit.aplicacao.avaliacao.AvaliacaoResumo;
 import br.com.forgefit.dominio.avaliacao.AvaliacaoService;
 import br.com.forgefit.dominio.avaliacao.Notas;
 import br.com.forgefit.dominio.aluno.Matricula;
@@ -30,37 +29,42 @@ public class AvaliacaoControlador {
     private AvaliacaoService avaliacaoService;
 
     @RequestMapping(method = POST)
-    public ResponseEntity<AvaliacaoResponse> criarAvaliacao(@RequestBody AvaliacaoResumo resumo) {
+    public ResponseEntity<AvaliacaoResponse> criarAvaliacao(@RequestBody CriarAvaliacaoDTO dto) {
         try {
             logger.info("Recebendo avaliação: alunoMatricula={}, professorId={}, aulaId={}", 
-                resumo.getAlunoMatricula(), resumo.getProfessorId(), resumo.getAulaId());
+                dto.alunoMatricula(), dto.professorId(), dto.aulaId());
             
-            if (!resumo.isValid()) {
+            // Validações
+            if (dto.alunoMatricula() == null || dto.alunoMatricula().isEmpty() ||
+                dto.professorId() == null || dto.aulaId() == null || dto.dataOcorrenciaAula() == null ||
+                dto.notaPontualidade() == null || dto.notaDidatica() == null || dto.notaAtencao() == null) {
                 return ResponseEntity.badRequest()
                     .body(new AvaliacaoResponse(false, "Todos os campos obrigatórios devem ser preenchidos"));
             }
             
-            if (!resumo.hasValidRatings()) {
+            if (dto.notaPontualidade() < 1 || dto.notaPontualidade() > 5 ||
+                dto.notaDidatica() < 1 || dto.notaDidatica() > 5 ||
+                dto.notaAtencao() < 1 || dto.notaAtencao() > 5) {
                 return ResponseEntity.badRequest()
                     .body(new AvaliacaoResponse(false, "As notas devem estar entre 1 e 5"));
             }
 
-            Matricula matricula = new Matricula(resumo.getAlunoMatriculaTrimmed());
-            ProfessorId professorId = new ProfessorId(resumo.getProfessorId());
-            AulaId aulaId = new AulaId(resumo.getAulaId());
+            Matricula matricula = new Matricula(dto.alunoMatricula().trim());
+            ProfessorId professorId = new ProfessorId(dto.professorId());
+            AulaId aulaId = new AulaId(dto.aulaId());
             Notas notas = new Notas(
-                resumo.getNotaPontualidade(),
-                resumo.getNotaDidatica(),
-                resumo.getNotaAtencao()
+                dto.notaPontualidade(),
+                dto.notaDidatica(),
+                dto.notaAtencao()
             );
             
             String mensagem = avaliacaoService.criarAvaliacaoComMensagem(
                 matricula,
                 professorId,
                 aulaId,
-                resumo.getDataOcorrenciaAula(),
+                dto.dataOcorrenciaAula(),
                 notas,
-                resumo.getComentarioTrimmed()
+                dto.comentario() != null ? dto.comentario().trim() : null
             );
             
             logger.info("Avaliação criada com sucesso: {}", mensagem);
@@ -68,10 +72,22 @@ public class AvaliacaoControlador {
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new AvaliacaoResponse(true, mensagem));
             
+        } catch (IllegalStateException e) {
+            // Erro de negócio (ex: avaliação duplicada)
+            logger.warn("Erro de validação: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                .body(new AvaliacaoResponse(false, e.getMessage()));
         } catch (Exception e) {
             logger.error("Erro ao criar avaliação", e);
+            
+            // Verificar se é erro de constraint de duplicidade
+            if (e.getMessage() != null && e.getMessage().contains("uk_avaliacao_unica")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new AvaliacaoResponse(false, "Esta aula já foi avaliada por você"));
+            }
+            
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new AvaliacaoResponse(false, "Erro ao processar avaliação: " + e.getMessage()));
+                .body(new AvaliacaoResponse(false, "Erro ao processar avaliação. Tente novamente."));
         }
     }
 }
@@ -79,4 +95,15 @@ public class AvaliacaoControlador {
 record AvaliacaoResponse(
     boolean sucesso,
     String mensagem
+) {}
+
+record CriarAvaliacaoDTO(
+    String alunoMatricula,
+    Integer professorId,
+    Integer aulaId,
+    LocalDate dataOcorrenciaAula,
+    Integer notaPontualidade,
+    Integer notaDidatica,
+    Integer notaAtencao,
+    String comentario
 ) {}

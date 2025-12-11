@@ -141,6 +141,12 @@ public class AulaService {
         aulaRepositorio.salvar(aula);
     }
 
+    public void concluirAula(AulaId aulaId) {
+        Aula aula = obterAula(aulaId);
+        aula.concluir();
+        aulaRepositorio.salvar(aula);
+    }
+
     public Aula obter(AulaId aulaId) {
         return aulaRepositorio.obterPorId(aulaId)
             .orElseThrow(() -> new IllegalArgumentException("Aula não encontrada"));
@@ -232,6 +238,17 @@ public class AulaService {
             return "Aula cancelada com sucesso";
         } catch (Exception e) {
             return "Erro ao cancelar aula";
+        }
+    }
+
+    public String concluirAulaComMensagem(AulaId aulaId) {
+        try {
+            concluirAula(aulaId);
+            return "Aula concluída com sucesso";
+        } catch (IllegalStateException e) {
+            return e.getMessage();
+        } catch (Exception e) {
+            return "Erro ao concluir aula";
         }
     }
 

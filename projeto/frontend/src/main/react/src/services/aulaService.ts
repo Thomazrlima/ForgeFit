@@ -145,6 +145,19 @@ class AulaService {
     }
 
     /**
+     * Conclui uma aula (marca como concluída)
+     * @param aulaId ID da aula a concluir
+     */
+    async concluirAula(aulaId: number): Promise<void> {
+        try {
+            await api.put(`/aulas/${aulaId}/concluir`);
+        } catch (error: any) {
+            const mensagemErro = error.response?.data?.message || "Erro ao concluir aula";
+            throw new Error(mensagemErro);
+        }
+    }
+
+    /**
      * Lista aulas do professor autenticado
      * @returns Lista de aulas
      */
@@ -228,7 +241,15 @@ class AulaService {
     async buscarAulasDoAluno(matricula: string): Promise<AulaFrontend[]> {
         try {
             const response = await api.get<MinhaAulaResponse[]>(`/aulas/aluno/${matricula}`);
-            return response.data.map((aula) => this.converterParaAulaFrontend(aula, "enrolled"));
+            console.log("DEBUG buscarAulasDoAluno - resposta do backend:", response.data);
+            return response.data.map((aula) => {
+                console.log("DEBUG mapeando aula:", aula.id, "professorId:", aula.professorId, "inicio:", aula.inicio);
+                // Se a aula está concluída, marcar como "to_evaluate"
+                const status = aula.status === "CONCLUIDA" ? "to_evaluate" : "enrolled";
+                const converted = this.converterParaAulaFrontend(aula, status);
+                console.log("DEBUG aula convertida:", converted.id, "instructorId:", converted.instructorId, "classDate:", converted.classDate);
+                return converted;
+            });
         } catch (error) {
             console.error("Erro ao buscar aulas do aluno:", error);
             throw error;

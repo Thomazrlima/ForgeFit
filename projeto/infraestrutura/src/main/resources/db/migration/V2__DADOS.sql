@@ -31,8 +31,10 @@ INSERT INTO ALUNO(MATRICULA, CPF, NOME, DATA_NASCIMENTO, USER_ID, CREDITOS, PONT
 -- ============================================
 
 INSERT INTO GUILDA(NOME, DESCRICAO, IMAGEM_URL, STATUS, CODIGO_CONVITE, MESTRE_MATRICULA, PONTUACAO_TOTAL) VALUES 
-    ('Guerreiros do Treino', 'Guilda focada em superação e disciplina', 'https://exemplo.com/guerreiros.png', 'ATIVA', 'GUERR2025', 'ALU001', 500),
-    ('Força e Equilíbrio', 'União entre força física e mental', 'https://exemplo.com/forca.png', 'ATIVA', 'FORCA2025', 'ALU002', 450);
+    ('Taverna', 'Guilda focada em superação e disciplina', 'https://github.com/taverna-hub.png', 'ATIVA',
+     'GUERR2025', 'ALU001', 500),
+    ('P.E.N.T.E.S', 'União entre força física e mental', 'https://github.com/P-E-N-T-E-S.png', 'ATIVA', 'FORCA2025',
+     'ALU002', 450);
 
 -- Atualizar alunos com suas guildas
 UPDATE ALUNO SET GUILDA_ID = 1 WHERE MATRICULA IN ('ALU001', 'ALU003');
@@ -230,24 +232,29 @@ VALUES
 -- TORNEIOS
 -- ============================================
 
+-- Todos os torneios são finalizados (datas no passado)
 INSERT INTO TORNEIO(NOME, STATUS, DATA_INICIO, DATA_FIM, 
     PREMIO_PRIMEIRO_LUGAR_NOME, PREMIO_PRIMEIRO_LUGAR_URL_IMAGEM,
     PREMIO_SEGUNDO_LUGAR_NOME, PREMIO_SEGUNDO_LUGAR_URL_IMAGEM,
     PREMIO_TERCEIRO_LUGAR_NOME, PREMIO_TERCEIRO_LUGAR_URL_IMAGEM) 
 VALUES 
-    ('Desafio de Janeiro', 'ATIVO', '2025-01-01', '2025-01-31',
+    ('Desafio de Janeiro', 'FINALIZADO', '2024-11-01', '2024-11-30',
      'Kit Suplementos Premium', 'https://exemplo.com/premio1.png',
      'Mochila Esportiva', 'https://exemplo.com/premio2.png',
      'Garrafa Térmica', 'https://exemplo.com/premio3.png'),
-    ('Campeonato Trimestral', 'PLANEJADO', '2025-04-01', '2025-06-30',
+    ('Campeonato Trimestral', 'FINALIZADO', '2024-08-01', '2024-10-31',
      'Personal Trainer (3 meses)', 'https://exemplo.com/premio_pt.png',
      'Avaliação Física Completa', 'https://exemplo.com/premio_av.png',
      'Camiseta Premium', 'https://exemplo.com/premio_cam.png');
 
--- Ranking final do torneio ativo
+-- Ranking final dos torneios finalizados
 INSERT INTO TORNEIO_RANKING_FINAL(TORNEIO_ID, POSICAO, GUILDA_ID, PONTUACAO_NO_TORNEIO) VALUES 
+    -- Ranking do Desafio de Janeiro (torneio 1)
     (1, 1, 1, 850),
-    (1, 2, 2, 720);
+    (1, 2, 2, 720),
+    -- Ranking do Campeonato Trimestral (torneio 2)
+    (2, 1, 2, 1200),
+    (2, 2, 1, 980);
 
 -- ============================================
 -- FIM DOS DADOS INICIAIS

@@ -16,6 +16,8 @@ interface RankingPodiumProps {
 }
 
 const RankingPodium = ({ topThree, formatScore, animated = true }: RankingPodiumProps) => {
+    console.log("RankingPodium recebeu topThree:", topThree);
+    
     const getMedalEmoji = (position: number) => {
         switch (position) {
             case 1:
@@ -34,7 +36,10 @@ const RankingPodium = ({ topThree, formatScore, animated = true }: RankingPodium
         animate: { opacity: 1, y: 0 },
     };
 
-    if (topThree.length < 3) return null;
+    if (topThree.length === 0) {
+        console.log("RankingPodium: topThree está vazio, retornando null");
+        return null;
+    }
 
     return (
         <PodiumSection>

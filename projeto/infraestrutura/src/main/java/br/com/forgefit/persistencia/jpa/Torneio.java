@@ -24,24 +24,24 @@ class Torneio {
 
 	@Embedded
 	@AttributeOverrides({
-		@AttributeOverride(name = "nome", column = @Column(name = "PREMIO_1_NOME", length = 255)),
-		@AttributeOverride(name = "urlImagem", column = @Column(name = "PREMIO_1_URL_IMAGEM", length = 500))
+		@AttributeOverride(name = "nome", column = @Column(name = "PREMIO_PRIMEIRO_LUGAR_NOME", length = 255)),
+		@AttributeOverride(name = "urlImagem", column = @Column(name = "PREMIO_PRIMEIRO_LUGAR_URL_IMAGEM", length = 500))
 	})
-	private Premio premioPrimeiroLugar;
+	private PremioJpa premioPrimeiroLugar;
 
 	@Embedded
 	@AttributeOverrides({
-		@AttributeOverride(name = "nome", column = @Column(name = "PREMIO_2_NOME", length = 255)),
-		@AttributeOverride(name = "urlImagem", column = @Column(name = "PREMIO_2_URL_IMAGEM", length = 500))
+		@AttributeOverride(name = "nome", column = @Column(name = "PREMIO_SEGUNDO_LUGAR_NOME", length = 255)),
+		@AttributeOverride(name = "urlImagem", column = @Column(name = "PREMIO_SEGUNDO_LUGAR_URL_IMAGEM", length = 500))
 	})
-	private Premio premioSegundoLugar;
+	private PremioJpa premioSegundoLugar;
 
 	@Embedded
 	@AttributeOverrides({
-		@AttributeOverride(name = "nome", column = @Column(name = "PREMIO_3_NOME", length = 255)),
-		@AttributeOverride(name = "urlImagem", column = @Column(name = "PREMIO_3_URL_IMAGEM", length = 500))
+		@AttributeOverride(name = "nome", column = @Column(name = "PREMIO_TERCEIRO_LUGAR_NOME", length = 255)),
+		@AttributeOverride(name = "urlImagem", column = @Column(name = "PREMIO_TERCEIRO_LUGAR_URL_IMAGEM", length = 500))
 	})
-	private Premio premioTerceiroLugar;
+	private PremioJpa premioTerceiroLugar;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "STATUS", nullable = false)
@@ -57,7 +57,7 @@ class Torneio {
 
 	@OneToMany(mappedBy = "torneio", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderColumn(name = "POSICAO")
-	private List<PosicaoRanking> rankingFinal = new ArrayList<>();
+	private List<br.com.forgefit.persistencia.jpa.PosicaoRankingJpa> rankingFinal = new ArrayList<>();
 
 	public Integer getId() {
 		return id;
@@ -75,27 +75,27 @@ class Torneio {
 		this.nome = nome;
 	}
 
-	public Premio getPremioPrimeiroLugar() {
+	public PremioJpa getPremioPrimeiroLugar() {
 		return premioPrimeiroLugar;
 	}
 
-	public void setPremioPrimeiroLugar(Premio premioPrimeiroLugar) {
+	public void setPremioPrimeiroLugar(PremioJpa premioPrimeiroLugar) {
 		this.premioPrimeiroLugar = premioPrimeiroLugar;
 	}
 
-	public Premio getPremioSegundoLugar() {
+	public PremioJpa getPremioSegundoLugar() {
 		return premioSegundoLugar;
 	}
 
-	public void setPremioSegundoLugar(Premio premioSegundoLugar) {
+	public void setPremioSegundoLugar(PremioJpa premioSegundoLugar) {
 		this.premioSegundoLugar = premioSegundoLugar;
 	}
 
-	public Premio getPremioTerceiroLugar() {
+	public PremioJpa getPremioTerceiroLugar() {
 		return premioTerceiroLugar;
 	}
 
-	public void setPremioTerceiroLugar(Premio premioTerceiroLugar) {
+	public void setPremioTerceiroLugar(PremioJpa premioTerceiroLugar) {
 		this.premioTerceiroLugar = premioTerceiroLugar;
 	}
 
@@ -123,107 +123,12 @@ class Torneio {
 		this.dataFim = dataFim;
 	}
 
-	public List<PosicaoRanking> getRankingFinal() {
+	public List<PosicaoRankingJpa> getRankingFinal() {
 		return rankingFinal;
 	}
 
-	public void setRankingFinal(List<PosicaoRanking> rankingFinal) {
+	public void setRankingFinal(List<PosicaoRankingJpa> rankingFinal) {
 		this.rankingFinal = rankingFinal;
-	}
-}
-
-@Entity
-@Table(name = "PRK_POSICAO_RANKING")
-class PosicaoRanking {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "ID")
-	private Integer id;
-
-	@ManyToOne
-	@JoinColumn(name = "TOR_ID", nullable = false)
-	private Torneio torneio;
-
-	@Column(name = "POSICAO", nullable = false)
-	private Integer posicao;
-
-	@Column(name = "GUILDA_ID", nullable = false)
-	private Integer guildaId;
-
-	@Column(name = "PONTUACAO", nullable = false)
-	private Integer pontuacaoNoTorneio = 0;
-
-	public Integer getId() {
-		return id;
-	}
-
-	public void setId(Integer id) {
-		this.id = id;
-	}
-
-	public Torneio getTorneio() {
-		return torneio;
-	}
-
-	public void setTorneio(Torneio torneio) {
-		this.torneio = torneio;
-	}
-
-	public Integer getPosicao() {
-		return posicao;
-	}
-
-	public void setPosicao(Integer posicao) {
-		this.posicao = posicao;
-	}
-
-	public Integer getGuildaId() {
-		return guildaId;
-	}
-
-	public void setGuildaId(Integer guildaId) {
-		this.guildaId = guildaId;
-	}
-
-	public Integer getPontuacaoNoTorneio() {
-		return pontuacaoNoTorneio;
-	}
-
-	public void setPontuacaoNoTorneio(Integer pontuacaoNoTorneio) {
-		this.pontuacaoNoTorneio = pontuacaoNoTorneio;
-	}
-}
-
-@Embeddable
-class Premio {
-
-	private String nome;
-
-	private String urlImagem;
-
-	public Premio() {
-	}
-
-	public Premio(String nome, String urlImagem) {
-		this.nome = nome;
-		this.urlImagem = urlImagem;
-	}
-
-	public String getNome() {
-		return nome;
-	}
-
-	public void setNome(String nome) {
-		this.nome = nome;
-	}
-
-	public String getUrlImagem() {
-		return urlImagem;
-	}
-
-	public void setUrlImagem(String urlImagem) {
-		this.urlImagem = urlImagem;
 	}
 }
 
@@ -266,6 +171,85 @@ interface TorneioJpaRepository extends JpaRepository<Torneio, Integer> {
 		ORDER BY t.dataFim DESC
 		""")
 	List<TorneioResumo> listarTorneiosFinalizados();
+
+	@org.springframework.data.jpa.repository.Query(value = """
+		SELECT t.id as id,
+			   t.nome as nome,
+			   t.data_inicio as dataInicio,
+			   t.data_fim as dataFim,
+			   CASE 
+				   WHEN t.status = 'ATIVO' AND :dataAtual between t.data_inicio and t.data_fim THEN 'ATIVO'
+				   WHEN t.status = 'PLANEJADO' AND :dataAtual >= t.data_inicio AND :dataAtual <= t.data_fim THEN 'ATIVO'
+				   WHEN t.status = 'PLANEJADO' THEN 'PLANEJADO'
+				   ELSE t.status
+			   END as status,
+			   t.premio_primeiro_lugar_nome as premioPrimeiroLugarNome,
+			   t.premio_primeiro_lugar_url_imagem as premioPrimeiroLugarUrlImagem,
+			   t.premio_segundo_lugar_nome as premioSegundoLugarNome,
+			   t.premio_segundo_lugar_url_imagem as premioSegundoLugarUrlImagem,
+			   t.premio_terceiro_lugar_nome as premioTerceiroLugarNome,
+			   t.premio_terceiro_lugar_url_imagem as premioTerceiroLugarUrlImagem
+		FROM TORNEIO t
+		WHERE (t.status = 'PLANEJADO' OR t.status = 'ATIVO')
+		  AND :dataAtual <= t.data_fim
+		ORDER BY t.data_inicio ASC
+		LIMIT 1
+		""", nativeQuery = true)
+	br.com.forgefit.aplicacao.torneio.TorneioAtualResumo buscarTorneioAtual(@org.springframework.data.repository.query.Param("dataAtual") Date dataAtual);
+
+	@org.springframework.data.jpa.repository.Query(value = """
+		SELECT pr.guilda_id as guildaId,
+			   g.nome as guildaNome,
+			   g.imagem_url as guildaImagemUrl,
+			   pr.pontuacao_no_torneio as pontuacaoNoTorneio,
+			   (SELECT COUNT(*) FROM GUILDA_MEMBROS gm WHERE gm.guilda_id = g.id) as numeroMembros
+		FROM TORNEIO_RANKING_FINAL pr
+		JOIN GUILDA g ON g.id = pr.guilda_id
+		WHERE pr.torneio_id = :torneioId
+		ORDER BY pr.posicao ASC
+		""", nativeQuery = true)
+	List<br.com.forgefit.aplicacao.torneio.RankingGuildaNoTorneioResumo> buscarRankingPorTorneioFinalizado(@org.springframework.data.repository.query.Param("torneioId") Integer torneioId);
+
+	@org.springframework.data.jpa.repository.Query(value = """
+		SELECT pr.guilda_id as guildaId,
+			   g.nome as guildaNome,
+			   g.imagem_url as guildaImagemUrl,
+			   pr.pontuacao_no_torneio as pontuacaoNoTorneio,
+			   (SELECT COUNT(*) FROM GUILDA_MEMBROS gm WHERE gm.guilda_id = g.id) as numeroMembros
+		FROM TORNEIO_RANKING_FINAL pr
+		JOIN GUILDA g ON g.id = pr.guilda_id
+		WHERE pr.torneio_id = (
+			SELECT t.id FROM TORNEIO t WHERE t.status = 'FINALIZADO' ORDER BY t.data_fim DESC LIMIT 1
+		)
+		AND EXISTS (
+			SELECT 1 FROM TORNEIO t WHERE t.status = 'FINALIZADO' ORDER BY t.data_fim DESC LIMIT 1
+		)
+		ORDER BY pr.posicao ASC
+		LIMIT 3
+		""", nativeQuery = true)
+	List<br.com.forgefit.aplicacao.torneio.RankingGuildaNoTorneioResumo> buscarUltimoPodio();
+
+	@org.springframework.data.jpa.repository.Query(value = """
+		SELECT g.id as guildaId,
+			   g.nome as guildaNome,
+			   g.imagem_url as guildaImagemUrl,
+			   COALESCE(SUM(c.pontuacao_total), 0) as pontuacaoNoTorneio,
+			   (SELECT COUNT(*) FROM GUILDA_MEMBROS gm WHERE gm.guilda_id = g.id) as numeroMembros
+		FROM GUILDA g
+		LEFT JOIN CHECKIN c ON c.guilda_id = g.id
+			AND c.data_checkin >= :dataInicio
+			AND c.data_checkin <= :dataFim
+		WHERE EXISTS (
+			SELECT 1 FROM GUILDA_MEMBROS gm WHERE gm.guilda_id = g.id
+		)
+		GROUP BY g.id, g.nome, g.imagem_url
+		HAVING COALESCE(SUM(c.pontuacao_total), 0) > 0
+		ORDER BY pontuacaoNoTorneio DESC
+		""", nativeQuery = true)
+	List<br.com.forgefit.aplicacao.torneio.RankingGuildaNoTorneioResumo> buscarRankingPorTorneioAtivo(
+		@org.springframework.data.repository.query.Param("dataInicio") java.sql.Timestamp dataInicio,
+		@org.springframework.data.repository.query.Param("dataFim") java.sql.Timestamp dataFim
+	);
 }
 
 @org.springframework.stereotype.Repository("torneioRepositorio")
@@ -278,9 +262,11 @@ class TorneioRepositorioImpl implements br.com.forgefit.dominio.torneio.TorneioR
 
 	// Métodos do TorneioRepositorio (domínio)
 	@Override
-	public void salvar(br.com.forgefit.dominio.torneio.Torneio torneio) {
+	public br.com.forgefit.dominio.torneio.Torneio salvar(br.com.forgefit.dominio.torneio.Torneio torneio) {
 		Torneio torneioJpa = mapeador.map(torneio, Torneio.class);
-		repositorio.save(torneioJpa);
+		Torneio torneioSalvo = repositorio.save(torneioJpa);
+		// Retorna o Torneio de domínio mapeado do JPA salvo (com ID gerado)
+		return mapeador.map(torneioSalvo, br.com.forgefit.dominio.torneio.Torneio.class);
 	}
 
 	@Override
@@ -313,5 +299,61 @@ class TorneioRepositorioImpl implements br.com.forgefit.dominio.torneio.TorneioR
 	@Override
 	public List<TorneioResumo> listarTorneiosFinalizados() {
 		return repositorio.listarTorneiosFinalizados();
+	}
+
+	@Override
+	public java.util.Optional<br.com.forgefit.aplicacao.torneio.TorneioAtualResumo> buscarTorneioAtual(java.time.LocalDate hoje) {
+		Date dataDate = br.com.forgefit.persistencia.jpa.DateTimeConverter.toDate(hoje);
+		br.com.forgefit.aplicacao.torneio.TorneioAtualResumo resumo = repositorio.buscarTorneioAtual(dataDate);
+		return java.util.Optional.ofNullable(resumo);
+	}
+
+	@Override
+	public List<br.com.forgefit.aplicacao.torneio.RankingGuildaNoTorneioResumo> buscarRankingPorTorneio(Integer torneioId) {
+		// Busca o torneio para verificar o status
+		java.util.Optional<Torneio> torneioOpt = repositorio.findById(torneioId);
+		if (torneioOpt.isEmpty()) {
+			return java.util.Collections.emptyList();
+		}
+		
+		Torneio torneio = torneioOpt.get();
+		// Se o torneio está finalizado, busca o ranking final
+		if (torneio.getStatus() == br.com.forgefit.persistencia.jpa.enums.StatusTorneio.FINALIZADO) {
+			return repositorio.buscarRankingPorTorneioFinalizado(torneioId);
+		}
+		
+		// Para torneios ativos, calcula o ranking baseado nos check-ins do período
+		if (torneio.getStatus() == br.com.forgefit.persistencia.jpa.enums.StatusTorneio.ATIVO || 
+			torneio.getStatus() == br.com.forgefit.persistencia.jpa.enums.StatusTorneio.PLANEJADO) {
+			// Converte Date para LocalDate - trata tanto java.util.Date quanto java.sql.Date
+			Date dataInicioDate = torneio.getDataInicio();
+			Date dataFimDate = torneio.getDataFim();
+			
+			// Se for java.sql.Date, converte para java.util.Date primeiro
+			if (dataInicioDate instanceof java.sql.Date) {
+				dataInicioDate = new Date(dataInicioDate.getTime());
+			}
+			if (dataFimDate instanceof java.sql.Date) {
+				dataFimDate = new Date(dataFimDate.getTime());
+			}
+			
+			java.time.LocalDate dataInicioLocal = br.com.forgefit.persistencia.jpa.DateTimeConverter.toLocalDate(dataInicioDate);
+			java.time.LocalDate dataFimLocal = br.com.forgefit.persistencia.jpa.DateTimeConverter.toLocalDate(dataFimDate);
+			
+			java.time.LocalDateTime inicioDateTime = java.time.LocalDateTime.of(dataInicioLocal, java.time.LocalTime.MIN);
+			java.time.LocalDateTime fimDateTime = java.time.LocalDateTime.of(dataFimLocal, java.time.LocalTime.MAX);
+			
+			java.sql.Timestamp dataInicio = java.sql.Timestamp.valueOf(inicioDateTime);
+			java.sql.Timestamp dataFim = java.sql.Timestamp.valueOf(fimDateTime);
+			
+			return repositorio.buscarRankingPorTorneioAtivo(dataInicio, dataFim);
+		}
+		
+		return java.util.Collections.emptyList();
+	}
+
+	@Override
+	public List<br.com.forgefit.aplicacao.torneio.RankingGuildaNoTorneioResumo> buscarUltimoPodio() {
+		return repositorio.buscarUltimoPodio();
 	}
 }

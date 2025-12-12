@@ -29,6 +29,180 @@ export const Container = styled.div`
     }
 `;
 
+export const HeaderActions = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+`;
+
+export const ActionButton = styled.button`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: ${({ theme }) => theme.colors.background};
+    border: 2px solid ${({ theme }) => theme.colors.primary}40;
+    border-radius: 0.75rem;
+    color: ${({ theme }) => theme.colors.primary};
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: ${({ theme }) => theme.colors.primary}15;
+        border-color: ${({ theme }) => theme.colors.primary};
+        transform: translateY(-2px);
+    }
+
+    svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    @media (max-width: 48rem) {
+        width: 38px;
+        height: 38px;
+
+        svg {
+            width: 18px;
+            height: 18px;
+        }
+    }
+`;
+
+export const CreateTournamentContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 2rem;
+    padding: 2rem;
+`;
+
+export const CreateTournamentTitle = styled.h1`
+    font-size: 2rem;
+    text-align: center;
+    background: linear-gradient(135deg, ${({ theme }) => theme.colors.primary}, ${({ theme }) => theme.colors.secondary});
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+
+    @media (max-width: 48rem) {
+        font-size: 1.5rem;
+    }
+`;
+
+export const CreateTournamentDescription = styled.p`
+    font-size: 1.1rem;
+    color: ${({ theme }) => theme.colors.text};
+    opacity: 0.8;
+    text-align: center;
+    margin: 0;
+    max-width: 500px;
+
+    @media (max-width: 48rem) {
+        font-size: 1rem;
+    }
+`;
+
+export const CreateTournamentForm = styled.form`
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 500px;
+    padding: 2rem;
+    background: ${({ theme }) => theme.colors.background};
+    border: 2px solid;
+    border-image: linear-gradient(135deg, ${({ theme }) => theme.colors.primary}, ${({ theme }) => theme.colors.secondary}) 1;
+    border-radius: 0.75rem;
+
+    @media (max-width: 48rem) {
+        padding: 1.5rem;
+        gap: 1.25rem;
+    }
+`;
+
+export const FormGroup = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+`;
+
+export const FormLabel = styled.label`
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: ${({ theme }) => theme.colors.text};
+
+    svg {
+        color: ${({ theme }) => theme.colors.primary};
+    }
+`;
+
+export const FormInput = styled.input`
+    width: 100%;
+    padding: 0.875rem 1rem;
+    background: ${({ theme }) => theme.colors.background};
+    border: 2px solid ${({ theme }) => theme.colors.primary}33;
+    border-radius: 0.5rem;
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+
+    &:focus {
+        outline: none;
+        border-color: ${({ theme }) => theme.colors.primary};
+        box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.primary}20;
+    }
+
+    &::placeholder {
+        color: ${({ theme }) => theme.colors.text}66;
+    }
+
+    &::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+    }
+`;
+
+export const CreateButton = styled.button`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, ${({ theme }) => theme.colors.primary}, ${({ theme }) => theme.colors.secondary});
+    border: none;
+    border-radius: 0.5rem;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
+    width: 100%;
+    min-height: 48px;
+    white-space: nowrap;
+    box-sizing: border-box;
+
+    &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(171, 37, 34, 0.4);
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+`;
+
 export const Header = styled.header`
     display: flex;
     justify-content: space-between;

@@ -8,7 +8,7 @@ public class TorneioId {
     private final int id;
 
     public TorneioId(int id) {
-        isTrue(id > 0, "O id deve ser positivo");
+        isTrue(id >= 0, "O id não pode ser negativo");
         this.id = id;
     }
 

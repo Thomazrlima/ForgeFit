@@ -58,6 +58,13 @@ const Sidebar = () => {
 
                 <NavList>
                     {navItems.map((item) => {
+                        // Para gerentes/admin, mostrar apenas Torneio e Ranking
+                        if (user?.role === "admin") {
+                            if (item.path !== "/torneio" && item.path !== "/ranking") {
+                                return null;
+                            }
+                        }
+
                         // Ocultar treinos para não-professores
                         if (item.path === "/treinos" && user?.role !== "professor") {
                             return null;

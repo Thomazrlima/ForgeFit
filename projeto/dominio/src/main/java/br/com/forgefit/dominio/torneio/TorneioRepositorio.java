@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TorneioRepositorio {
-    void salvar(Torneio torneio);
+    Torneio salvar(Torneio torneio);
     Optional<Torneio> obterPorId(TorneioId id);
     Optional<Torneio> buscarTorneioAtivo(LocalDate dataAtual);
     List<Torneio> listarTorneios();

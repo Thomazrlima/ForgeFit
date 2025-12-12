@@ -2,7 +2,9 @@ package br.com.forgefit.aplicacao.torneio;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public class TorneioServicoAplicacao {
     private final TorneioRepositorioAplicacao repositorio;
@@ -18,5 +20,18 @@ public class TorneioServicoAplicacao {
 
     public List<TorneioResumo> listarTorneiosFinalizados() {
         return repositorio.listarTorneiosFinalizados();
+    }
+
+    public Optional<TorneioAtualResumo> buscarTorneioAtual() {
+        return repositorio.buscarTorneioAtual(LocalDate.now());
+    }
+
+    public List<RankingGuildaNoTorneioResumo> buscarRankingPorTorneio(Integer torneioId) {
+        notNull(torneioId, "O id do torneio não pode ser nulo");
+        return repositorio.buscarRankingPorTorneio(torneioId);
+    }
+
+    public List<RankingGuildaNoTorneioResumo> buscarUltimoPodio() {
+        return repositorio.buscarUltimoPodio();
     }
 }

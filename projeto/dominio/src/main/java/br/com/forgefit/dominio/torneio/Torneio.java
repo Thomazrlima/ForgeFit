@@ -92,12 +92,16 @@ public class Torneio {
         this.dataFim = dataFim;
     }
 
+    public void atualizarDatas(LocalDate novaDataInicio, LocalDate novaDataFim) {
+        setDatas(novaDataInicio, novaDataFim);
+    }
+
     public void definirPremioDoPodio(PosicaoDoPodio posicao, Premio premio) {
         notNull(posicao, "A posição do pódio não pode ser nula");
         notNull(premio, "O prêmio não pode ser nulo");
 
-        if (status != StatusTorneio.PLANEJADO) {
-            throw new IllegalStateException("Não é possível alterar os prêmios de um torneio ativo");
+        if (status == StatusTorneio.FINALIZADO || status == StatusTorneio.CANCELADO) {
+            throw new IllegalStateException("Não é possível alterar os prêmios de um torneio finalizado ou cancelado");
         }
 
         switch (posicao) {
@@ -143,13 +147,15 @@ public class Torneio {
         }
 
         // Calcula o ranking baseado nas pontuações
-        rankingFinal = pontuacoesPorGuilda.entrySet().stream()
+        List<java.util.Map.Entry<GuildaId, Integer>> entradasOrdenadas = pontuacoesPorGuilda.entrySet().stream()
             .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
-            .map(entry -> {
-                int posicao = rankingFinal.size() + 1;
-                return new PosicaoRanking(posicao, entry.getKey(), entry.getValue());
-            })
             .collect(Collectors.toList());
+        
+        rankingFinal = new ArrayList<>();
+        int posicao = 1;
+        for (java.util.Map.Entry<GuildaId, Integer> entry : entradasOrdenadas) {
+            rankingFinal.add(new PosicaoRanking(posicao++, entry.getKey(), entry.getValue()));
+        }
 
         this.status = StatusTorneio.FINALIZADO;
     }

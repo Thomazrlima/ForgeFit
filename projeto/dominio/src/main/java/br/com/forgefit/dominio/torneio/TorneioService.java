@@ -8,7 +8,6 @@ import br.com.forgefit.dominio.torneio.enums.PosicaoDoPodio;
 
 public class TorneioService {
     private final TorneioRepositorio torneioRepositorio;
-    private int proximoId = 1;
 
     public TorneioService(TorneioRepositorio torneioRepositorio) {
         notNull(torneioRepositorio, "O repositório de torneios não pode ser nulo");
@@ -21,7 +20,8 @@ public class TorneioService {
         notNull(dataInicio, "A data de início não pode ser nula");
         notNull(dataFim, "A data de fim não pode ser nula");
 
-        var torneioId = new TorneioId(proximoId++);
+        // Usa id=0 para novos torneios, o JPA gerará o ID real
+        var torneioId = new TorneioId(0);
         var torneio = new Torneio(torneioId, nome, dataInicio, dataFim);
 
         if (p1 != null) {
@@ -34,11 +34,11 @@ public class TorneioService {
             torneio.definirPremioDoPodio(PosicaoDoPodio.TERCEIRO_LUGAR, p3);
         }
 
-        torneioRepositorio.salvar(torneio);
-        return torneio;
+        // O repositório retornará o torneio com o ID gerado pelo banco
+        return torneioRepositorio.salvar(torneio);
     }
 
-    public void editarTorneio(TorneioId torneioId, String novoNome, LocalDate novaDataInicio, 
+    public Torneio editarTorneio(TorneioId torneioId, String novoNome, LocalDate novaDataInicio, 
                              LocalDate novaDataFim, Premio novoP1, Premio novoP2, Premio novoP3) {
         notNull(torneioId, "O id do torneio não pode ser nulo");
 
@@ -48,8 +48,20 @@ public class TorneioService {
         if (novoNome != null) {
             torneio.setNome(novoNome);
         }
+        if (novaDataInicio != null && novaDataFim != null) {
+            torneio.atualizarDatas(novaDataInicio, novaDataFim);
+        }
+        if (novoP1 != null) {
+            torneio.definirPremioDoPodio(PosicaoDoPodio.PRIMEIRO_LUGAR, novoP1);
+        }
+        if (novoP2 != null) {
+            torneio.definirPremioDoPodio(PosicaoDoPodio.SEGUNDO_LUGAR, novoP2);
+        }
+        if (novoP3 != null) {
+            torneio.definirPremioDoPodio(PosicaoDoPodio.TERCEIRO_LUGAR, novoP3);
+        }
 
-        torneioRepositorio.salvar(torneio);
+        return torneioRepositorio.salvar(torneio);
     }
 
     public void cancelarTorneio(TorneioId torneioId) {

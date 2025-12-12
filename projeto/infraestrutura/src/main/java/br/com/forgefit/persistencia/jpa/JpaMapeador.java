@@ -20,6 +20,10 @@ import br.com.forgefit.dominio.treino.enums.LetraDoTreino;
 import br.com.forgefit.dominio.treino.enums.TipoDoTreino;
 import br.com.forgefit.dominio.treino.enums.Exercicio;
 import br.com.forgefit.dominio.treino.Repeticao;
+import br.com.forgefit.dominio.torneio.TorneioId;
+import br.com.forgefit.dominio.torneio.Premio;
+import br.com.forgefit.dominio.torneio.enums.StatusTorneio;
+import br.com.forgefit.dominio.guilda.GuildaId;
 import java.time.LocalDateTime;
 
 @Component
@@ -415,6 +419,185 @@ class JpaMapeador extends ModelMapper {
                     }
                 }
                 return aulaJpa;
+            });
+
+        // Conversores para TorneioId
+        addConverter(new AbstractConverter<Integer, TorneioId>() {
+            @Override
+            protected TorneioId convert(Integer source) {
+                return source != null ? new TorneioId(source) : null;
+            }
+        });
+
+        addConverter(new AbstractConverter<TorneioId, Integer>() {
+            @Override
+            protected Integer convert(TorneioId source) {
+                return source != null ? source.getId() : null;
+            }
+        });
+
+        // Conversores para Premio (JPA <-> Domínio)
+        addConverter(new AbstractConverter<br.com.forgefit.persistencia.jpa.PremioJpa, Premio>() {
+            @Override
+            protected Premio convert(br.com.forgefit.persistencia.jpa.PremioJpa source) {
+                if (source == null || source.getNome() == null) return null;
+                return new Premio(source.getNome(), source.getUrlImagem());
+            }
+        });
+
+        addConverter(new AbstractConverter<Premio, br.com.forgefit.persistencia.jpa.PremioJpa>() {
+            @Override
+            protected br.com.forgefit.persistencia.jpa.PremioJpa convert(Premio source) {
+                if (source == null) return null;
+                return new br.com.forgefit.persistencia.jpa.PremioJpa(source.getNome(), source.getUrlImagem());
+            }
+        });
+
+        // Conversores para StatusTorneio (JPA enum <-> Domínio enum)
+        addConverter(new AbstractConverter<br.com.forgefit.persistencia.jpa.enums.StatusTorneio, br.com.forgefit.dominio.torneio.enums.StatusTorneio>() {
+            @Override
+            protected br.com.forgefit.dominio.torneio.enums.StatusTorneio convert(br.com.forgefit.persistencia.jpa.enums.StatusTorneio source) {
+                if (source == null) return null;
+                return br.com.forgefit.dominio.torneio.enums.StatusTorneio.valueOf(source.name());
+            }
+        });
+
+        addConverter(new AbstractConverter<br.com.forgefit.dominio.torneio.enums.StatusTorneio, br.com.forgefit.persistencia.jpa.enums.StatusTorneio>() {
+            @Override
+            protected br.com.forgefit.persistencia.jpa.enums.StatusTorneio convert(br.com.forgefit.dominio.torneio.enums.StatusTorneio source) {
+                if (source == null) return null;
+                return br.com.forgefit.persistencia.jpa.enums.StatusTorneio.valueOf(source.name());
+            }
+        });
+
+        // Conversor para PosicaoRanking (JPA -> Domínio)
+        addConverter(new AbstractConverter<br.com.forgefit.persistencia.jpa.PosicaoRankingJpa, br.com.forgefit.dominio.torneio.PosicaoRanking>() {
+            @Override
+            protected br.com.forgefit.dominio.torneio.PosicaoRanking convert(br.com.forgefit.persistencia.jpa.PosicaoRankingJpa source) {
+                if (source == null) return null;
+                GuildaId guildaId = new GuildaId(source.getGuildaId());
+                return new br.com.forgefit.dominio.torneio.PosicaoRanking(
+                    source.getPosicao(), 
+                    guildaId, 
+                    source.getPontuacaoNoTorneio()
+                );
+            }
+        });
+
+        // Conversor customizado para Torneio JPA -> Domínio
+        addConverter(new AbstractConverter<br.com.forgefit.persistencia.jpa.Torneio, br.com.forgefit.dominio.torneio.Torneio>() {
+            @Override
+            protected br.com.forgefit.dominio.torneio.Torneio convert(br.com.forgefit.persistencia.jpa.Torneio source) {
+                if (source == null) return null;
+
+                TorneioId id = new TorneioId(source.getId());
+                LocalDate dataInicio = map(source.getDataInicio(), LocalDate.class);
+                LocalDate dataFim = map(source.getDataFim(), LocalDate.class);
+                
+                br.com.forgefit.dominio.torneio.Torneio torneio = new br.com.forgefit.dominio.torneio.Torneio(
+                    id, source.getNome(), dataInicio, dataFim
+                );
+
+                // Mapear prêmios
+                if (source.getPremioPrimeiroLugar() != null) {
+                    Premio p1 = map(source.getPremioPrimeiroLugar(), Premio.class);
+                    torneio.definirPremioDoPodio(br.com.forgefit.dominio.torneio.enums.PosicaoDoPodio.PRIMEIRO_LUGAR, p1);
+                }
+                if (source.getPremioSegundoLugar() != null) {
+                    Premio p2 = map(source.getPremioSegundoLugar(), Premio.class);
+                    torneio.definirPremioDoPodio(br.com.forgefit.dominio.torneio.enums.PosicaoDoPodio.SEGUNDO_LUGAR, p2);
+                }
+                if (source.getPremioTerceiroLugar() != null) {
+                    Premio p3 = map(source.getPremioTerceiroLugar(), Premio.class);
+                    torneio.definirPremioDoPodio(br.com.forgefit.dominio.torneio.enums.PosicaoDoPodio.TERCEIRO_LUGAR, p3);
+                }
+
+                // Mapear status
+                br.com.forgefit.dominio.torneio.enums.StatusTorneio status = map(source.getStatus(), br.com.forgefit.dominio.torneio.enums.StatusTorneio.class);
+                if (status == br.com.forgefit.dominio.torneio.enums.StatusTorneio.ATIVO && torneio.getStatus() != br.com.forgefit.dominio.torneio.enums.StatusTorneio.ATIVO) {
+                    torneio.ativar();
+                } else if (status == br.com.forgefit.dominio.torneio.enums.StatusTorneio.CANCELADO && torneio.getStatus() != br.com.forgefit.dominio.torneio.enums.StatusTorneio.CANCELADO) {
+                    torneio.cancelar();
+                } else if (status == br.com.forgefit.dominio.torneio.enums.StatusTorneio.FINALIZADO && torneio.getStatus() != br.com.forgefit.dominio.torneio.enums.StatusTorneio.FINALIZADO) {
+                    // Para finalizar, precisamos primeiro ativar e depois finalizar
+                    if (torneio.getStatus() == br.com.forgefit.dominio.torneio.enums.StatusTorneio.PLANEJADO) {
+                        torneio.ativar();
+                    }
+                    torneio.finalizar();
+                }
+
+                // Mapear ranking final
+                if (source.getRankingFinal() != null) {
+                    for (br.com.forgefit.persistencia.jpa.PosicaoRankingJpa posicaoJpa : source.getRankingFinal()) {
+                        br.com.forgefit.dominio.torneio.PosicaoRanking posicaoDominio = map(posicaoJpa, br.com.forgefit.dominio.torneio.PosicaoRanking.class);
+                        // O ranking final é calculado na finalização, então não precisamos adicionar manualmente
+                    }
+                }
+
+                return torneio;
+            }
+        });
+
+        // Conversor customizado para Torneio Domínio -> JPA
+        addConverter(new AbstractConverter<br.com.forgefit.dominio.torneio.Torneio, br.com.forgefit.persistencia.jpa.Torneio>() {
+            @Override
+            protected br.com.forgefit.persistencia.jpa.Torneio convert(br.com.forgefit.dominio.torneio.Torneio source) {
+                if (source == null) return null;
+
+                br.com.forgefit.persistencia.jpa.Torneio torneioJpa = new br.com.forgefit.persistencia.jpa.Torneio();
+                
+                // Se o ID for 0, não setar (para novos torneios, o JPA gerará)
+                if (source.getId().getId() > 0) {
+                    torneioJpa.setId(source.getId().getId());
+                }
+                
+                torneioJpa.setNome(source.getNome());
+                torneioJpa.setDataInicio(map(source.getDataInicio(), Date.class));
+                torneioJpa.setDataFim(map(source.getDataFim(), Date.class));
+                torneioJpa.setStatus(map(source.getStatus(), br.com.forgefit.persistencia.jpa.enums.StatusTorneio.class));
+                
+                // Mapear prêmios
+                if (source.getPremioPrimeiroLugar() != null) {
+                    torneioJpa.setPremioPrimeiroLugar(map(source.getPremioPrimeiroLugar(), br.com.forgefit.persistencia.jpa.PremioJpa.class));
+                }
+                if (source.getPremioSegundoLugar() != null) {
+                    torneioJpa.setPremioSegundoLugar(map(source.getPremioSegundoLugar(), br.com.forgefit.persistencia.jpa.PremioJpa.class));
+                }
+                if (source.getPremioTerceiroLugar() != null) {
+                    torneioJpa.setPremioTerceiroLugar(map(source.getPremioTerceiroLugar(), br.com.forgefit.persistencia.jpa.PremioJpa.class));
+                }
+
+                // Mapear ranking final
+                if (source.getRankingFinal() != null && !source.getRankingFinal().isEmpty()) {
+                    java.util.List<br.com.forgefit.persistencia.jpa.PosicaoRankingJpa> rankingJpa = new java.util.ArrayList<>();
+                    for (br.com.forgefit.dominio.torneio.PosicaoRanking posicaoDominio : source.getRankingFinal()) {
+                        br.com.forgefit.persistencia.jpa.PosicaoRankingJpa posicaoJpa = new br.com.forgefit.persistencia.jpa.PosicaoRankingJpa();
+                        posicaoJpa.setTorneio(torneioJpa);
+                        posicaoJpa.setPosicao(posicaoDominio.getPosicao());
+                        posicaoJpa.setGuildaId(posicaoDominio.getGuildaId().getId());
+                        posicaoJpa.setPontuacaoNoTorneio(posicaoDominio.getPontuacaoNoTorneio());
+                        rankingJpa.add(posicaoJpa);
+                    }
+                    torneioJpa.setRankingFinal(rankingJpa);
+                }
+
+                return torneioJpa;
+            }
+        });
+
+        // Configurar referências bidirecionais ao mapear Torneio Domínio -> JPA
+        typeMap(br.com.forgefit.dominio.torneio.Torneio.class, br.com.forgefit.persistencia.jpa.Torneio.class)
+            .setPostConverter(context -> {
+                br.com.forgefit.persistencia.jpa.Torneio torneioJpa = context.getDestination();
+                if (torneioJpa != null && torneioJpa.getRankingFinal() != null) {
+                    // Configurar referência bidirecional no ranking
+                    for (br.com.forgefit.persistencia.jpa.PosicaoRankingJpa posicao : torneioJpa.getRankingFinal()) {
+                        if (posicao != null) {
+                            posicao.setTorneio(torneioJpa);
+                        }
+                    }
+                }
+                return torneioJpa;
             });
     }
 

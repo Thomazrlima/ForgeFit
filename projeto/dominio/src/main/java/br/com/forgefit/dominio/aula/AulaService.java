@@ -188,23 +188,25 @@ public class AulaService {
     }
 
     private void verificarConflitoHorario(Espaco espaco, ProfessorId professorId, LocalDateTime inicio, LocalDateTime fim, AulaId aulaIdExcluir) {
+        // Busca aulas no espaço e período usando o repositório
         List<Aula> aulasNoEspaco = aulaRepositorio.buscarPorEspacoEPeriodo(espaco, inicio, fim);
-        boolean conflitoEspaco = aulasNoEspaco.stream()
-            .filter(a -> a.getStatus() == StatusAula.ATIVA)
-            .filter(a -> aulaIdExcluir == null || !a.getId().equals(aulaIdExcluir))
-            .anyMatch(a -> (inicio.isBefore(a.getFim()) && fim.isAfter(a.getInicio())));
         
-        if (conflitoEspaco) {
+        // Cria a coleção para usar o Iterator Pattern
+        AulaCollection collectionEspaco = new AulaCollection(aulasNoEspaco);
+        
+        // Usa o AulaConflitoChecker com Iterator para verificar conflito de espaço
+        if (AulaConflitoChecker.existeConflitoEspaco(collectionEspaco, inicio, fim, espaco, aulaIdExcluir)) {
             throw new IllegalStateException("Conflito de horário: O espaço já está ocupado.");
         }
 
+        // Busca aulas do professor no período
         List<Aula> aulasDoProfessor = aulaRepositorio.buscarPorProfessorEPeriodo(professorId, inicio, fim);
-        boolean conflitoProfessor = aulasDoProfessor.stream()
-            .filter(a -> a.getStatus() == StatusAula.ATIVA)
-            .filter(a -> aulaIdExcluir == null || !a.getId().equals(aulaIdExcluir))
-            .anyMatch(a -> (inicio.isBefore(a.getFim()) && fim.isAfter(a.getInicio())));
-            
-        if (conflitoProfessor) {
+        
+        // Cria a coleção para usar o Iterator Pattern
+        AulaCollection collectionProfessor = new AulaCollection(aulasDoProfessor);
+        
+        // Usa o AulaConflitoChecker com Iterator para verificar conflito de professor
+        if (AulaConflitoChecker.existeConflitoProfessor(collectionProfessor, inicio, fim, professorId, aulaIdExcluir)) {
             throw new IllegalStateException("Conflito de horário: O professor já está alocado em outra aula.");
         }
     }

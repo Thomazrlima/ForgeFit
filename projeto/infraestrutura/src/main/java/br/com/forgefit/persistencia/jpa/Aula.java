@@ -854,15 +854,55 @@ class AulaRepositorioImpl implements br.com.forgefit.dominio.aula.AulaRepositori
 	@org.springframework.beans.factory.annotation.Autowired
 	JpaMapeador mapeador;
 
+	@org.springframework.beans.factory.annotation.Autowired
+	ProfessorJpaRepository professorRepository;
+
 	@Override
 	public void salvar(br.com.forgefit.dominio.aula.Aula aula) {
 		Integer idOriginal = aula.getId().getId();
 		
-		// Se o ID não existe no banco, criar nova aula
+		// Se o ID não existe no banco, criar nova aula MANUALMENTE
 		if (!repositorio.existsById(idOriginal)) {
-			Aula aulaJpa = mapeador.map(aula, Aula.class);
-			aulaJpa.setId(null);
-			repositorio.save(aulaJpa);
+			// Criar manualmente a entidade JPA para garantir conversão correta
+			Aula aulaJpa = new Aula();
+			aulaJpa.setId(null); // Deixar o banco gerar o ID
+			
+			// Buscar o professor pelo ID
+			ProfessorJpa professor = professorRepository.findById(aula.getProfessorId().getId())
+				.orElseThrow(() -> new IllegalArgumentException("Professor não encontrado: " + aula.getProfessorId().getId()));
+			aulaJpa.setProfessor(professor);
+			
+			// Converter enums manualmente
+			aulaJpa.setModalidade(Modalidade.valueOf(aula.getModalidade().name()));
+			aulaJpa.setEspaco(Espaco.valueOf(aula.getEspaco().name()));
+			aulaJpa.setStatus(StatusAula.valueOf(aula.getStatus().name()));
+			
+			// Converter campos simples
+			aulaJpa.setCapacidade(aula.getCapacidade());
+			aulaJpa.setInicio(java.util.Date.from(aula.getInicio().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+			aulaJpa.setFim(java.util.Date.from(aula.getFim().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+			
+			// Salvar a aula PRIMEIRO (sem recorrência) para obter o ID
+			Aula aulaSalva = repositorio.save(aulaJpa);
+			
+			// Agora converter recorrência se existir (com a aula já salva e com ID)
+			if (aula.getRecorrencia().isPresent()) {
+				br.com.forgefit.dominio.aula.Recorrencia recDominio = aula.getRecorrencia().get();
+				Aula.Recorrencia recJpa = new Aula.Recorrencia();
+				recJpa.setAula(aulaSalva); // Usar a aula JÁ SALVA com ID
+				recJpa.setTipo(TipoRecorrencia.valueOf(recDominio.getTipo().name()));
+				recJpa.setDataFimRecorrencia(java.util.Date.from(recDominio.getDataFimRecorrencia().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()));
+				
+				// Converter dias da semana
+				java.util.List<DiaDaSemana> diasJpa = new java.util.ArrayList<>();
+				for (br.com.forgefit.dominio.aula.enums.DiaDaSemana diaDominio : recDominio.getDiasDaSemana()) {
+					diasJpa.add(DiaDaSemana.valueOf(diaDominio.name()));
+				}
+				recJpa.setDiasDaSemana(diasJpa);
+				
+				aulaSalva.setRecorrencia(recJpa);
+				repositorio.save(aulaSalva); // Salvar novamente com a recorrência
+			}
 			return;
 		}
 		

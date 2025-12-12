@@ -222,6 +222,22 @@ class AulaControlador {
                 // Criar aula recorrente
                 TipoRecorrencia tipoRecorrencia = TipoRecorrencia.valueOf(requestDto.getTipoAula());
                 List<DiaDaSemana> dias = converterDiasSemana(requestDto.getDiasDaSemana());
+                
+                System.out.println("TipoRecorrencia: " + tipoRecorrencia);
+                System.out.println("DiasDaSemana recebidos: " + java.util.Arrays.toString(requestDto.getDiasDaSemana()));
+                System.out.println("DiasDaSemana convertidos: " + dias);
+                System.out.println("DataFim: " + requestDto.getDataFim());
+                
+                // Validar que dataFim foi informada para aulas recorrentes
+                if (requestDto.getDataFim() == null || requestDto.getDataFim().isEmpty()) {
+                    return ResponseEntity.badRequest().body("Data de fim da recorrência é obrigatória para aulas recorrentes");
+                }
+                
+                // Validar que dias da semana foram informados
+                if (dias.isEmpty()) {
+                    return ResponseEntity.badRequest().body("Dias da semana são obrigatórios para aulas recorrentes");
+                }
+                
                 LocalDate dataFim = LocalDate.parse(requestDto.getDataFim());
 
                 mensagem = aulaService.criarAulaRecorrenteComMensagem(
@@ -235,8 +251,10 @@ class AulaControlador {
                     dias,
                     dataFim
                 );
+                System.out.println("Mensagem retornada do serviço: " + mensagem);
             }
 
+            System.out.println("=== RESULTADO CRIAÇÃO AULA: " + mensagem + " ===");
             if (mensagem.contains("sucesso")) {
                 return ResponseEntity.ok(mensagem);
             } else {

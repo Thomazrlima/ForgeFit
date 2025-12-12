@@ -250,8 +250,8 @@ const CreateClassModal = ({ isOpen, onClose, onConfirm, isLoading = false, editi
             }
         } else {
             // Validação para aulas recorrentes
-            if (!formData.modalidade || !formData.time || !formData.espaco || !formData.startDate || !formData.selectedDays || formData.selectedDays.length === 0) {
-                warn("Por favor, preencha todos os campos obrigatórios e selecione pelo menos um dia da semana.");
+            if (!formData.modalidade || !formData.time || !formData.espaco || !formData.startDate || !formData.endDate || !formData.selectedDays || formData.selectedDays.length === 0) {
+                warn("Por favor, preencha todos os campos obrigatórios (incluindo data de fim) e selecione pelo menos um dia da semana.");
                 return;
             }
         }
@@ -399,9 +399,9 @@ const CreateClassModal = ({ isOpen, onClose, onConfirm, isLoading = false, editi
                                 <FormGroup>
                                     <Label>
                                         <Calendar size={18} />
-                                        Data de Fim (opcional)
+                                        Data de Fim *
                                     </Label>
-                                    <Input type="date" value={formData.endDate || ""} onChange={(e) => handleInputChange("endDate", e.target.value)} min={formData.startDate || new Date().toISOString().split("T")[0]} />
+                                    <Input type="date" value={formData.endDate || ""} onChange={(e) => handleInputChange("endDate", e.target.value)} min={formData.startDate || new Date().toISOString().split("T")[0]} required />
                                 </FormGroup>
                             </TwoColumnRow>
                         )}

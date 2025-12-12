@@ -6,6 +6,8 @@ Este documento lista os padrões de projeto adotados no sistema ForgeFit, inclui
 
 ## 1. Observer (Observador)
 
+**Autor**: Thomaz Lima ([@Thomazrlima](https://github.com/Thomazrlima)) - 📧 trl@cesar.school
+
 **Contexto**: Controle de Frequência
 
 **Objetivo**: Notificar múltiplos componentes do sistema (logs, emails, notificações push) quando ocorrem mudanças no status de frequência dos alunos (bloqueios, advertências, desbloqueios).
@@ -65,6 +67,8 @@ Este documento lista os padrões de projeto adotados no sistema ForgeFit, inclui
 
 ## 2. Strategy (Estratégia)
 
+**Autor**: Vinícius de Andrade ([@viniciusdandrade](https://github.com/viniciusdandrade)) - 📧 vaj@cesar.school
+
 **Contexto**: Sistema de Ranking de Alunos
 
 **Objetivo**: Permitir diferentes algoritmos de cálculo de pontuação no ranking, podendo variar conforme o contexto (período normal, torneio, bônus por engajamento) sem modificar o código cliente.
@@ -115,6 +119,8 @@ Este documento lista os padrões de projeto adotados no sistema ForgeFit, inclui
 
 ## 3. Iterator (Iterador)
 
+**Autor**: Leonardo Matos ([@LeoGutzeitt](https://github.com/LeoGutzeitt)) - 📧 lgbm@cesar.school
+
 **Contexto**: Criação de Aulas e Verificação de Conflitos
 
 **Objetivo**: Fornecer uma forma de percorrer sequencialmente uma coleção de aulas sem expor sua representação interna, facilitando a verificação de conflitos de horário ao criar novas aulas.
@@ -151,5 +157,55 @@ O padrão Iterator é utilizado principalmente durante a **criação de aulas** 
 1. **Verificar conflitos de horário**: Ao criar uma aula, o sistema itera sobre todas as aulas existentes para garantir que não haja sobreposição de horários no mesmo espaço físico
 2. **Validação de disponibilidade**: Permite verificar se um professor ou espaço está disponível em determinado horário
 3. **Reagendamento**: Ao reagendar aulas, o iterator é usado para validar se o novo horário está disponível
+
+---
+
+## 4. Template Method (Método Template)
+
+**Autor**: Gustavo Mourato ([@gustavoyoq](https://github.com/gustavoyoq)) - 📧 gmam@cesar.school
+
+**Contexto**: Avaliação de Bioimpedância
+
+**Objetivo**: Definir o esqueleto do algoritmo de registro de avaliações físicas, permitindo que subclasses implementem etapas específicas (como validação de regras de negócio) sem alterar a estrutura geral do fluxo.
+
+**Implementação**:
+
+### Abstract Class (Classe Abstrata)
+
+- **`AvaliacaoFisicaTemplateMethod`** (`aplicacao/src/main/java/br/com/forgefit/aplicacao/avaliacaoFisica/AvaliacaoFisicaTemplateMethod.java`)
+  - Define o método template `registrarAvaliacao()` como `final`
+  - Métodos abstratos: `validarRegrasNegocio()`
+  - Hook methods: `prepararDadosEspecificos()`, `executarAcoesPosRegistro()`, `gerarMensagemSucesso()`
+  - Sequência do algoritmo:
+    1. Validar dados de entrada
+    2. Criar objeto Matrícula
+    3. Validar regras de negócio específicas
+    4. Preparar dados específicos (hook)
+    5. Persistir avaliação no repositório
+    6. Executar ações pós-registro (hook)
+    7. Gerar mensagem de sucesso
+
+### Concrete Class (Classe Concreta)
+
+#### 1. AvaliacaoFisicaServicoAplicacao
+
+- **Arquivo**: `aplicacao/src/main/java/br/com/forgefit/aplicacao/avaliacaoFisica/AvaliacaoFisicaServicoAplicacao.java`
+- **Responsabilidade**: Implementação específica para avaliações de bioimpedância
+- **Comportamento**:
+  - Implementa `validarRegrasNegocio()` com validações específicas:
+    - Percentual de gordura entre 0 e 100
+    - Massa magra maior que zero
+    - Massa gorda não negativa
+    - Percentual de água corporal entre 0 e 100
+    - Nível de gordura visceral mínimo 1
+  - Métodos adicionais: `buscarHistoricoAluno()`, `listarAlunos()`
+
+### Uso no Sistema
+
+O padrão Template Method é utilizado no **registro de avaliações físicas** para:
+
+1. **Garantir fluxo consistente**: Todas as avaliações seguem a mesma sequência de passos
+2. **Permitir extensibilidade**: Novas implementações podem sobrescrever hooks para comportamentos específicos
+3. **Centralizar persistência**: O salvamento no repositório é feito no template, garantindo que todas as avaliações sejam persistidas
 
 ---

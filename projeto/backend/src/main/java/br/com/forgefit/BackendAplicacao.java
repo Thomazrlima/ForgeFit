@@ -24,7 +24,6 @@ import br.com.forgefit.dominio.aula.ReembolsoService;
 import br.com.forgefit.dominio.aula.ReservaService;
 import br.com.forgefit.dominio.aluno.AlunoRepositorio;
 import br.com.forgefit.dominio.aluno.AlunoService;
-import br.com.forgefit.dominio.aluno.AvaliacaoFisicaService;
 import br.com.forgefit.dominio.checkin.CheckinRepositorio;
 import br.com.forgefit.dominio.checkin.CheckinService;
 import br.com.forgefit.dominio.guilda.GuildaRepositorio;
@@ -111,16 +110,10 @@ public class BackendAplicacao {
     }
 
     @Bean
-    public AvaliacaoFisicaService avaliacaoFisicaService(AlunoRepositorio alunoRepositorio) {
-        return new AvaliacaoFisicaService(alunoRepositorio);
-    }
-
-    @Bean
     public AvaliacaoFisicaServicoAplicacao avaliacaoFisicaServicoAplicacao(
-        AvaliacaoFisicaRepositorioAplicacao repositorio,
-        AvaliacaoFisicaService avaliacaoFisicaService
+        AvaliacaoFisicaRepositorioAplicacao repositorio
     ) {
-        return new AvaliacaoFisicaServicoAplicacao(repositorio, avaliacaoFisicaService);
+        return new AvaliacaoFisicaServicoAplicacao(repositorio);
     }
 
     public static void main(String[] args) {

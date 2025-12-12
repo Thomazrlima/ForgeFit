@@ -1,7 +1,6 @@
 package br.com.forgefit.aplicacao.avaliacaoFisica;
 
 import br.com.forgefit.dominio.aluno.AvaliacaoFisica;
-import br.com.forgefit.dominio.aluno.AvaliacaoFisicaService;
 import br.com.forgefit.dominio.aluno.Matricula;
 
 /**
@@ -11,10 +10,10 @@ import br.com.forgefit.dominio.aluno.Matricula;
  */
 public abstract class AvaliacaoFisicaTemplateMethod {
     
-    private final AvaliacaoFisicaService avaliacaoFisicaService;
+    private final AvaliacaoFisicaRepositorioAplicacao repositorio;
     
-    protected AvaliacaoFisicaTemplateMethod(AvaliacaoFisicaService avaliacaoFisicaService) {
-        this.avaliacaoFisicaService = avaliacaoFisicaService;
+    protected AvaliacaoFisicaTemplateMethod(AvaliacaoFisicaRepositorioAplicacao repositorio) {
+        this.repositorio = repositorio;
     }
     
     /**
@@ -22,25 +21,12 @@ public abstract class AvaliacaoFisicaTemplateMethod {
      * Este método não deve ser sobrescrito pelas subclasses.
      */
     public final String registrarAvaliacao(String matriculaStr, AvaliacaoFisica avaliacaoFisica) {
-        // Passo 1: Validar dados de entrada
         validarDadosEntrada(matriculaStr, avaliacaoFisica);
-        
-        // Passo 2: Criar matrícula
         Matricula matricula = new Matricula(matriculaStr);
-        
-        // Passo 3: Validar regras de negócio específicas do tipo de avaliação
         validarRegrasNegocio(avaliacaoFisica);
-        
-        // Passo 4: Preparar dados específicos (hook method - opcional)
         prepararDadosEspecificos(avaliacaoFisica);
-        
-        // Passo 5: Registrar avaliação usando o serviço de domínio
-        String mensagem = avaliacaoFisicaService.registrarAvaliacaoFisica(matricula, avaliacaoFisica);
-        
-        // Passo 6: Executar ações pós-registro (hook method - opcional)
+        repositorio.salvar(matricula, avaliacaoFisica);
         executarAcoesPosRegistro(matriculaStr, avaliacaoFisica);
-        
-        // Passo 7: Gerar mensagem de sucesso personalizada
         return gerarMensagemSucesso(matriculaStr, avaliacaoFisica);
     }
     

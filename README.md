@@ -110,11 +110,6 @@ O **MailHog** é um servidor SMTP de teste que captura emails enviados durante o
    ./MailHog_linux_amd64
    ```
 
-4. **Docker (alternativa multiplataforma):**
-   ```bash
-   docker run -d -p 1025:1025 -p 8025:8025 mailhog/mailhog
-   ```
-
 **Portas utilizadas:**
 - **SMTP Server:** `localhost:1025` (onde a aplicação envia emails)
 - **Web Interface:** `http://localhost:8025` (para visualizar emails capturados)

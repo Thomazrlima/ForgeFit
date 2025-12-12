@@ -32,20 +32,33 @@ const CriarAula = () => {
             const aulasDoProfessor = await aulaService.listarAulasDoProfessor();
 
             // Converter para o formato esperado pelo componente
-            const classesFormatted: Class[] = aulasDoProfessor.map((aula: any) => ({
-                id: aula.id,
-                instructor: user?.name || "Professor",
-                instructorId: user?.id || 0,
-                category: modalidadeLabels[aula.modalidade as Modalidade] || aula.modalidade,
-                schedule: `${new Date(aula.inicio).toLocaleDateString("pt-BR")} - ${new Date(aula.inicio).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`,
-                capacity: aula.capacidade,
-                enrolled: 0, // TODO: buscar do backend
-                location: espacoLabels[aula.espaco as Espaco] || aula.espaco,
-                image: getModalidadeImage(aula.modalidade),
-                enrollmentStatus: aula.status === "CONCLUIDA" ? "to_evaluate" as const : "not_enrolled" as const,
-                waitingList: 0, // TODO: buscar do backend
-                classDate: new Date(aula.inicio).toISOString().split("T")[0],
-            }));
+            const classesFormatted: Class[] = aulasDoProfessor.map((aula: any) => {
+                // Extrair data e hora diretamente da string ISO para evitar conversão de timezone
+                // O backend retorna no formato "2024-12-11T19:00:00"
+                const inicioStr = aula.inicio || "";
+                const [dataParte, horaParte] = inicioStr.split("T");
+                const horaFormatada = horaParte ? horaParte.substring(0, 5) : "00:00"; // "HH:mm"
+                
+                // Formatar a data para exibição (dd/mm/yyyy)
+                const [ano, mes, dia] = (dataParte || "").split("-");
+                const dataFormatada = dataParte ? `${dia}/${mes}/${ano}` : "";
+
+                return {
+                    id: aula.id,
+                    instructor: aula.professorNome || user?.name || "Professor",
+                    instructorId: aula.professorId || user?.id || 0,
+                    category: modalidadeLabels[aula.modalidade as Modalidade] || aula.modalidade,
+                    schedule: `${dataFormatada} - ${horaFormatada}`,
+                    capacity: aula.capacidade,
+                    enrolled: aula.vagasOcupadas || 0,
+                    location: espacoLabels[aula.espaco as Espaco] || aula.espaco,
+                    image: getModalidadeImage(aula.modalidade),
+                    enrollmentStatus: aula.status === "CONCLUIDA" ? "to_evaluate" as const : "not_enrolled" as const,
+                    waitingList: aula.tamanhoListaEspera || 0,
+                    classDate: dataParte, // Manter no formato yyyy-MM-dd
+                    classTime: horaFormatada, // Adicionar o horário original
+                };
+            });
 
             setClasses(classesFormatted);
         } catch (err) {
@@ -253,9 +266,11 @@ const CriarAula = () => {
                                                     <CheckCircle size={18} />
                                                 </ActionButton>
                                             )}
-                                            <ActionButton onClick={() => handleEditClass(classItem)} title="Editar aula">
+                                            {classItem.enrollmentStatus !== "to_evaluate" && (
+                                                <ActionButton onClick={() => handleEditClass(classItem)} title="Editar aula">
                                                 <Edit size={18} />
                                             </ActionButton>
+                                            )}
                                             <ActionButton onClick={() => setDeletingClass(classItem)} title="Excluir aula" variant="danger">
                                                 <Trash2 size={18} />
                                             </ActionButton>

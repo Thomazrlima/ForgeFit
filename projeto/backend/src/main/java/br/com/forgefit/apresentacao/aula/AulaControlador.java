@@ -268,12 +268,27 @@ class AulaControlador {
         @RequestBody CriarAulaResumo requestDto
     ) {
         try {
+            System.out.println("=== ATUALIZAR AULA ===");
+            System.out.println("AulaId: " + aulaId);
+            System.out.println("Modalidade: " + requestDto.getModalidade());
+            System.out.println("Espaco: " + requestDto.getEspaco());
+            System.out.println("TipoAula: " + requestDto.getTipoAula());
+            System.out.println("Capacidade: " + requestDto.getCapacidade());
+            System.out.println("HorarioInicio: " + requestDto.getHorarioInicio());
+            System.out.println("HorarioFim: " + requestDto.getHorarioFim());
 
             LocalDateTime novoInicio = parseDateTime(requestDto.getHorarioInicio());
             LocalDateTime novoFim = parseDateTime(requestDto.getHorarioFim());
             AulaId id = new AulaId(aulaId);
 
-            String mensagem = aulaService.alterarHorarioPrincipalComMensagem(id, novoInicio, novoFim);
+            // Atualizar todos os campos da aula
+            Modalidade modalidade = Modalidade.valueOf(requestDto.getModalidade());
+            Espaco espaco = Espaco.valueOf(requestDto.getEspaco());
+            int capacidade = requestDto.getCapacidade();
+
+            String mensagem = aulaService.alterarAulaCompletaComMensagem(
+                id, modalidade, espaco, capacidade, novoInicio, novoFim
+            );
 
             if (mensagem.contains("sucesso")) {
                 return ResponseEntity.ok(mensagem);

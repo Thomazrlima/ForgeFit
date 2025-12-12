@@ -15,6 +15,11 @@ import br.com.forgefit.dominio.professor.Professor;
 import br.com.forgefit.dominio.professor.ProfessorId;
 import br.com.forgefit.dominio.aula.AulaId;
 import br.com.forgefit.dominio.aluno.Matricula;
+import br.com.forgefit.dominio.treino.PlanoDeTreinoId;
+import br.com.forgefit.dominio.treino.enums.LetraDoTreino;
+import br.com.forgefit.dominio.treino.enums.TipoDoTreino;
+import br.com.forgefit.dominio.treino.enums.Exercicio;
+import br.com.forgefit.dominio.treino.Repeticao;
 import java.time.LocalDateTime;
 
 @Component
@@ -110,6 +115,209 @@ class JpaMapeador extends ModelMapper {
             }
         });
 
+        addConverter(new AbstractConverter<Integer, PlanoDeTreinoId>() {
+            @Override
+            protected PlanoDeTreinoId convert(Integer source) {
+                return source != null ? new PlanoDeTreinoId(source) : null;
+            }
+        });
+
+        // Converters para enums de Treino (Domínio -> String para JPA)
+        addConverter(new AbstractConverter<LetraDoTreino, String>() {
+            @Override
+            protected String convert(LetraDoTreino source) {
+                return source != null ? source.name() : null;
+            }
+        });
+
+        addConverter(new AbstractConverter<TipoDoTreino, String>() {
+            @Override
+            protected String convert(TipoDoTreino source) {
+                return source != null ? source.name() : null;
+            }
+        });
+
+        addConverter(new AbstractConverter<Exercicio, String>() {
+            @Override
+            protected String convert(Exercicio source) {
+                return source != null ? source.name() : null;
+            }
+        });
+
+        // Converter customizado para PlanoDeTreino JPA -> Domínio
+        addConverter(new AbstractConverter<PlanoDeTreino, br.com.forgefit.dominio.treino.PlanoDeTreino>() {
+            @Override
+            protected br.com.forgefit.dominio.treino.PlanoDeTreino convert(PlanoDeTreino source) {
+                if (source == null) return null;
+
+                try {
+                    System.out.println("Convertendo PlanoDeTreino JPA para Domínio - ID: " + source.getId());
+                    
+                    PlanoDeTreinoId id = new PlanoDeTreinoId(source.getId());
+                    
+                    // Verificar se o professor está presente
+                    if (source.getProfessorResponsavel() == null) {
+                        throw new IllegalStateException("Professor responsável não pode ser nulo");
+                    }
+                    System.out.println("Professor ID: " + source.getProfessorResponsavel().id);
+                    ProfessorId professorId = new ProfessorId(source.getProfessorResponsavel().id);
+                    
+                    // Converter data de criação (pode ser java.sql.Date ou java.util.Date)
+                    LocalDate dataCriacao;
+                    if (source.getDataCriacao() != null) {
+                        if (source.getDataCriacao() instanceof java.sql.Date) {
+                            dataCriacao = ((java.sql.Date) source.getDataCriacao()).toLocalDate();
+                        } else {
+                            dataCriacao = source.getDataCriacao().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                        }
+                    } else {
+                        dataCriacao = LocalDate.now();
+                    }
+                    System.out.println("Data criação: " + dataCriacao);
+                    
+                    // Converter data de validade (pode ser java.sql.Date ou java.util.Date)
+                    LocalDate dataValidadeSugerida = null;
+                    if (source.getDataValidadeSugerida() != null) {
+                        if (source.getDataValidadeSugerida() instanceof java.sql.Date) {
+                            dataValidadeSugerida = ((java.sql.Date) source.getDataValidadeSugerida()).toLocalDate();
+                        } else {
+                            dataValidadeSugerida = source.getDataValidadeSugerida().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                        }
+                    }
+                    System.out.println("Data validade: " + dataValidadeSugerida);
+
+                    // Mapear treinos diários
+                    java.util.List<br.com.forgefit.dominio.treino.TreinoDiario> treinos = new java.util.ArrayList<>();
+                    if (source.getTreinosDaSemana() != null) {
+                        System.out.println("Número de treinos: " + source.getTreinosDaSemana().size());
+                        for (TreinoDiario treinoJpa : source.getTreinosDaSemana()) {
+                            if (treinoJpa != null) {
+                                System.out.println("Convertendo treino: " + treinoJpa.getLetra());
+                                // Converter manualmente cada treino diário
+                                LetraDoTreino letra = LetraDoTreino.valueOf(treinoJpa.getLetra());
+                                TipoDoTreino tipo = TipoDoTreino.valueOf(treinoJpa.getTipo());
+                                
+                                java.util.List<br.com.forgefit.dominio.treino.ItemDeExercicio> exercicios = new java.util.ArrayList<>();
+                                if (treinoJpa.getExercicios() != null) {
+                                    System.out.println("  Número de exercícios: " + treinoJpa.getExercicios().size());
+                                    for (ItemDeExercicio exercicioJpa : treinoJpa.getExercicios()) {
+                                        if (exercicioJpa != null) {
+                                            System.out.println("    Exercício: " + exercicioJpa.getExercicio());
+                                            Exercicio exercicio = Exercicio.valueOf(exercicioJpa.getExercicio());
+                                            Repeticao repeticao = new Repeticao(
+                                                exercicioJpa.getSeries(), 
+                                                exercicioJpa.getRepeticoes()
+                                            );
+                                            exercicios.add(new br.com.forgefit.dominio.treino.ItemDeExercicio(exercicio, repeticao));
+                                        }
+                                    }
+                                }
+                                
+                                treinos.add(new br.com.forgefit.dominio.treino.TreinoDiario(letra, tipo, exercicios));
+                            }
+                        }
+                    }
+
+                    System.out.println("Criando PlanoDeTreino de domínio");
+                    br.com.forgefit.dominio.treino.PlanoDeTreino resultado = new br.com.forgefit.dominio.treino.PlanoDeTreino(
+                        id, professorId, dataCriacao, dataValidadeSugerida, treinos
+                    );
+                    System.out.println("Conversão concluída com sucesso");
+                    return resultado;
+                } catch (Exception e) {
+                    System.err.println("ERRO ao converter PlanoDeTreino: " + e.getClass().getName() + " - " + e.getMessage());
+                    e.printStackTrace();
+                    throw new RuntimeException("Erro ao converter PlanoDeTreino JPA para Domínio: " + e.getMessage(), e);
+                }
+            }
+        });
+
+        // Converter customizado para PlanoDeTreino Domínio -> JPA
+        addConverter(new AbstractConverter<br.com.forgefit.dominio.treino.PlanoDeTreino, PlanoDeTreino>() {
+            @Override
+            protected PlanoDeTreino convert(br.com.forgefit.dominio.treino.PlanoDeTreino source) {
+                if (source == null) return null;
+
+                try {
+                    System.out.println("Convertendo PlanoDeTreino Domínio para JPA - ID: " + source.getId().getId());
+                    
+                    PlanoDeTreino planoJpa = new PlanoDeTreino();
+                    planoJpa.setId(source.getId().getId());
+                    planoJpa.setProfessorResponsavelId(source.getProfessorId().getId());
+                    
+                    // Converter datas
+                    if (source.getDataCriacao() != null) {
+                        planoJpa.setDataCriacao(Date.from(source.getDataCriacao().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+                    }
+                    if (source.getDataValidadeSugerida() != null) {
+                        planoJpa.setDataValidadeSugerida(Date.from(source.getDataValidadeSugerida().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+                    }
+                    
+                    // Converter treinos diários
+                    java.util.List<TreinoDiario> treinosJpa = new java.util.ArrayList<>();
+                    if (source.getTreinosDaSemana() != null) {
+                        for (br.com.forgefit.dominio.treino.TreinoDiario treinoDominio : source.getTreinosDaSemana()) {
+                            TreinoDiario treinoJpa = new TreinoDiario();
+                            treinoJpa.setLetra(treinoDominio.getLetra().name());
+                            treinoJpa.setTipo(treinoDominio.getTipo().name());
+                            treinoJpa.setPlanoDeTreino(planoJpa);
+                            
+                            // Converter exercícios
+                            java.util.List<ItemDeExercicio> exerciciosJpa = new java.util.ArrayList<>();
+                            if (treinoDominio.getExercicios() != null) {
+                                int posicao = 0;
+                                for (br.com.forgefit.dominio.treino.ItemDeExercicio itemDominio : treinoDominio.getExercicios()) {
+                                    ItemDeExercicio itemJpa = new ItemDeExercicio();
+                                    itemJpa.setExercicio(itemDominio.getExercicio().name());
+                                    itemJpa.setSeries(itemDominio.getRepeticao().getSeries());
+                                    itemJpa.setRepeticoes(itemDominio.getRepeticao().getContagem());
+                                    itemJpa.setPosicao(posicao++);
+                                    itemJpa.setTreinoDiario(treinoJpa);
+                                    exerciciosJpa.add(itemJpa);
+                                }
+                            }
+                            treinoJpa.setExercicios(exerciciosJpa);
+                            treinosJpa.add(treinoJpa);
+                        }
+                    }
+                    planoJpa.setTreinosDaSemana(treinosJpa);
+                    
+                    System.out.println("Conversão Domínio -> JPA concluída com sucesso");
+                    return planoJpa;
+                } catch (Exception e) {
+                    System.err.println("ERRO ao converter PlanoDeTreino Domínio para JPA: " + e.getClass().getName() + " - " + e.getMessage());
+                    e.printStackTrace();
+                    throw new RuntimeException("Erro ao converter PlanoDeTreino Domínio para JPA: " + e.getMessage(), e);
+                }
+            }
+        });
+
+        // Configurar referências bidirecionais ao mapear PlanoDeTreino Domínio -> JPA
+        typeMap(br.com.forgefit.dominio.treino.PlanoDeTreino.class, PlanoDeTreino.class)
+            .setPostConverter(context -> {
+                PlanoDeTreino planoJpa = context.getDestination();
+                if (planoJpa != null && planoJpa.getTreinosDaSemana() != null) {
+                    // Configurar referência bidirecional nos treinos diários
+                    for (TreinoDiario treinoDiario : planoJpa.getTreinosDaSemana()) {
+                        if (treinoDiario != null) {
+                            treinoDiario.setPlanoDeTreino(planoJpa);
+                            
+                            // Configurar referência bidirecional nos exercícios
+                            if (treinoDiario.getExercicios() != null) {
+                                int posicao = 0;
+                                for (ItemDeExercicio exercicio : treinoDiario.getExercicios()) {
+                                    if (exercicio != null) {
+                                        exercicio.setTreinoDiario(treinoDiario);
+                                        exercicio.setPosicao(posicao++);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                return planoJpa;
+            });
+
         // Custom converter for Aula JPA -> Domain
         addConverter(new AbstractConverter<br.com.forgefit.persistencia.jpa.Aula, br.com.forgefit.dominio.aula.Aula>() {
             @Override
@@ -142,12 +350,15 @@ class JpaMapeador extends ModelMapper {
                             new br.com.forgefit.dominio.aula.Reserva(matricula, dataReserva);
                         
                         // Se a reserva foi cancelada, atualizar o status
-                        @SuppressWarnings("deprecation")
                         var statusAtual = reservaJpa.getStatus();
                         if (statusAtual == br.com.forgefit.persistencia.jpa.enums.StatusReserva.CANCELADA_PELO_ALUNO) {
-                            reservaDominio.cancelarPeloAluno();
+                            @SuppressWarnings("deprecation")
+                            Runnable r = () -> reservaDominio.cancelarPeloAluno();
+                            r.run();
                         } else if (statusAtual == br.com.forgefit.persistencia.jpa.enums.StatusReserva.CANCELADA_PELA_ACADEMIA) {
-                            reservaDominio.cancelarPelaAcademia();
+                            @SuppressWarnings("deprecation")
+                            Runnable r = () -> reservaDominio.cancelarPelaAcademia();
+                            r.run();
                         }
                         
                         // Adicionar reserva à aula (só se estiver confirmada ou queremos todas)

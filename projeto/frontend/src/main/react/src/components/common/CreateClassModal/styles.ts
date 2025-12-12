@@ -4,11 +4,15 @@ export const ModalContent = styled.div`
     display: flex;
     flex-direction: column;
     gap: 0;
-    padding: 0;
+    margin: -1.5rem -2rem;
     overflow-x: hidden;
     overflow-y: auto;
     flex: 1;
     min-height: 0;
+
+    @media (max-width: 48rem) {
+        margin: -1rem -1.5rem;
+    }
 `;
 
 export const DaysOfWeekContainer = styled.div`

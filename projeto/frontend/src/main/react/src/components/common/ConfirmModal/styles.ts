@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const ModalContent = styled.div`
-    padding: 1.5rem;
+    /* Padding now comes from ModalBody */
 `;
 
 export const Message = styled.p`
@@ -15,6 +15,7 @@ export const ModalFooter = styled.div`
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
-    padding: 1.5rem;
+    padding-top: 1.5rem;
+    margin-top: 1rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 `;

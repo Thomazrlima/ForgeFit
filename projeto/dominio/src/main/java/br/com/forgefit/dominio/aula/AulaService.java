@@ -89,6 +89,36 @@ public class AulaService {
         aulaRepositorio.salvar(aula);
     }
 
+    public void alterarCapacidade(AulaId aulaId, int novaCapacidade) {
+        Aula aula = obterAula(aulaId);
+        aula.alterarCapacidade(novaCapacidade);
+        aulaRepositorio.salvar(aula);
+    }
+
+    public void alterarModalidade(AulaId aulaId, Modalidade novaModalidade) {
+        Aula aula = obterAula(aulaId);
+        aula.alterarModalidade(novaModalidade);
+        aulaRepositorio.salvar(aula);
+    }
+
+    public void alterarEspaco(AulaId aulaId, Espaco novoEspaco, LocalDateTime inicio, LocalDateTime fim) {
+        Aula aula = obterAula(aulaId);
+        verificarConflitoHorario(novoEspaco, aula.getProfessorId(), inicio, fim, aulaId);
+        aula.alterarEspaco(novoEspaco);
+        aulaRepositorio.salvar(aula);
+    }
+
+    public void alterarAulaCompleta(AulaId aulaId, Modalidade modalidade, Espaco espaco, 
+                                    int capacidade, LocalDateTime novoInicio, LocalDateTime novoFim) {
+        Aula aula = obterAula(aulaId);
+        verificarConflitoHorario(espaco, aula.getProfessorId(), novoInicio, novoFim, aulaId);
+        aula.alterarModalidade(modalidade);
+        aula.alterarEspaco(espaco);
+        aula.alterarCapacidade(capacidade);
+        aula.alterarHorarioPrincipal(novoInicio, novoFim);
+        aulaRepositorio.salvar(aula);
+    }
+
     public void reagendarOcorrenciaUnica(AulaId aulaId, LocalDate dataOriginal, LocalDateTime novoInicio, LocalDateTime novoFim) {
         Aula aula = obterAula(aulaId);
 
@@ -210,6 +240,18 @@ public class AulaService {
             return "Horário principal alterado com sucesso";
         } catch (IllegalStateException e) {
             return "Conflito de horário";
+        }
+    }
+
+    public String alterarAulaCompletaComMensagem(AulaId aulaId, Modalidade modalidade, Espaco espaco, 
+                                                  int capacidade, LocalDateTime novoInicio, LocalDateTime novoFim) {
+        try {
+            alterarAulaCompleta(aulaId, modalidade, espaco, capacidade, novoInicio, novoFim);
+            return "Aula atualizada com sucesso";
+        } catch (IllegalStateException e) {
+            return "Conflito de horário: " + e.getMessage();
+        } catch (IllegalArgumentException e) {
+            return "Dados inválidos: " + e.getMessage();
         }
     }
     

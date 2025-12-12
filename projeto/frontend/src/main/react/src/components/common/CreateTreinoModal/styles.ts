@@ -3,7 +3,6 @@ import styled from "styled-components";
 export const ModalContent = styled.div`
     max-height: 80vh;
     overflow-y: auto;
-    padding: 1rem;
 `;
 
 export const FormSection = styled.div`

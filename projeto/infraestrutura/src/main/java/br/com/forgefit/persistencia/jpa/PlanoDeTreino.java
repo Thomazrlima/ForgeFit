@@ -29,7 +29,7 @@ class PlanoDeTreino {
 	private Date dataValidadeSugerida;
 
 	@OneToMany(mappedBy = "planoDeTreino", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OrderColumn(name = "POSICAO")
+	@OrderBy("letra ASC")
 	private List<TreinoDiario> treinosDaSemana = new ArrayList<>();
 
 	public Integer getId() {
@@ -104,7 +104,7 @@ class TreinoDiario {
 	private String tipo;
 
 	@OneToMany(mappedBy = "treinoDiario", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OrderColumn(name = "POSICAO")
+	@OrderBy("posicao ASC")
 	private List<ItemDeExercicio> exercicios = new ArrayList<>();
 
 	public Integer getId() {
@@ -161,6 +161,9 @@ class ItemDeExercicio {
 	@JoinColumn(name = "TRD_ID", nullable = false)
 	private TreinoDiario treinoDiario;
 
+	@Column(name = "POSICAO")
+	private Integer posicao;
+
 	@Column(name = "EXERCICIO", nullable = false, length = 255)
 	private String exercicio;
 
@@ -170,10 +173,11 @@ class ItemDeExercicio {
 	@Column(name = "REPETICOES", length = 50)
 	private String repeticoes;
 
-	@Column(name = "CARGA", length = 50)
+	// Campos não mapeados no banco (futuras expansões)
+	@Transient
 	private String carga;
 
-	@Column(name = "OBSERVACOES", length = 500)
+	@Transient
 	private String observacoes;
 
 	public Integer getId() {
@@ -190,6 +194,14 @@ class ItemDeExercicio {
 
 	public void setTreinoDiario(TreinoDiario treinoDiario) {
 		this.treinoDiario = treinoDiario;
+	}
+
+	public Integer getPosicao() {
+		return posicao;
+	}
+
+	public void setPosicao(Integer posicao) {
+		this.posicao = posicao;
 	}
 
 	public String getExercicio() {
@@ -234,6 +246,11 @@ class ItemDeExercicio {
 }
 
 interface PlanoDeTreinoJpaRepository extends JpaRepository<PlanoDeTreino, Integer> {
+	@org.springframework.data.jpa.repository.Query("SELECT p FROM PlanoDeTreino p WHERE p.professorResponsavel.id = :professorId")
+	List<PlanoDeTreino> findByProfessorId(@org.springframework.data.repository.query.Param("professorId") Integer professorId);
+	
+	@org.springframework.data.jpa.repository.Query("SELECT p FROM PlanoDeTreino p JOIN Aluno a ON a.planoAtivoId = p.id WHERE a.matricula = :matricula")
+	java.util.Optional<PlanoDeTreino> findPlanoAtivoByAlunoMatricula(@org.springframework.data.repository.query.Param("matricula") String matricula);
 }
 
 @org.springframework.stereotype.Repository("treinoRepositorio")
@@ -254,5 +271,77 @@ class PlanoDeTreinoRepositorioImpl implements br.com.forgefit.dominio.treino.Tre
 	public java.util.Optional<br.com.forgefit.dominio.treino.PlanoDeTreino> obterPorId(br.com.forgefit.dominio.treino.PlanoDeTreinoId id) {
 		return repositorio.findById(id.getId())
 			.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.treino.PlanoDeTreino.class));
+	}
+}
+
+@org.springframework.stereotype.Repository("treinoRepositorioAplicacao")
+class TreinoRepositorioAplicacaoImpl implements br.com.forgefit.aplicacao.treino.TreinoRepositorioAplicacao {
+	@org.springframework.beans.factory.annotation.Autowired
+	PlanoDeTreinoJpaRepository repositorio;
+	
+	@org.springframework.beans.factory.annotation.Autowired
+	JpaMapeador mapeador;
+
+	@Override
+	public List<br.com.forgefit.aplicacao.treino.PlanoTreinoResumo> pesquisarPorProfessor(Integer professorId) {
+		List<PlanoDeTreino> planosJpa = repositorio.findByProfessorId(professorId);
+		return planosJpa.stream()
+				.map(this::converterParaResumo)
+				.collect(java.util.stream.Collectors.toList());
+	}
+
+	@Override
+	public br.com.forgefit.aplicacao.treino.PlanoTreinoResumo buscarPlanoAtivoPorAluno(String matricula) {
+		return repositorio.findPlanoAtivoByAlunoMatricula(matricula)
+				.map(this::converterParaResumo)
+				.orElse(null);
+	}
+
+	private br.com.forgefit.aplicacao.treino.PlanoTreinoResumo converterParaResumo(PlanoDeTreino planoJpa) {
+		br.com.forgefit.aplicacao.treino.PlanoTreinoResumo resumo = new br.com.forgefit.aplicacao.treino.PlanoTreinoResumo();
+		resumo.setId(planoJpa.getId());
+		resumo.setProfessorId(planoJpa.getProfessorResponsavel().id);
+		
+		// Converte Date para LocalDate
+		if (planoJpa.getDataCriacao() != null) {
+			resumo.setDataCriacao(new java.sql.Date(planoJpa.getDataCriacao().getTime()).toLocalDate());
+		}
+		if (planoJpa.getDataValidadeSugerida() != null) {
+			resumo.setDataValidadeSugerida(new java.sql.Date(planoJpa.getDataValidadeSugerida().getTime()).toLocalDate());
+			resumo.setAtivo(!java.time.LocalDate.now().isAfter(resumo.getDataValidadeSugerida()));
+		} else {
+			resumo.setAtivo(true);
+		}
+		
+		resumo.setQuantidadeTreinos(planoJpa.getTreinosDaSemana().size());
+
+		List<br.com.forgefit.aplicacao.treino.TreinoDiarioResumo> treinosResumo = planoJpa.getTreinosDaSemana().stream()
+				.map(this::converterTreinoParaResumo)
+				.collect(java.util.stream.Collectors.toList());
+		resumo.setTreinos(treinosResumo);
+
+		return resumo;
+	}
+
+	private br.com.forgefit.aplicacao.treino.TreinoDiarioResumo converterTreinoParaResumo(TreinoDiario treinoJpa) {
+		br.com.forgefit.aplicacao.treino.TreinoDiarioResumo resumo = new br.com.forgefit.aplicacao.treino.TreinoDiarioResumo();
+		resumo.setLetra(treinoJpa.getLetra());
+		resumo.setTipo(treinoJpa.getTipo());
+		resumo.setQuantidadeExercicios(treinoJpa.getExercicios().size());
+
+		List<br.com.forgefit.aplicacao.treino.ExercicioResumo> exerciciosResumo = treinoJpa.getExercicios().stream()
+				.map(this::converterExercicioParaResumo)
+				.collect(java.util.stream.Collectors.toList());
+		resumo.setExercicios(exerciciosResumo);
+
+		return resumo;
+	}
+
+	private br.com.forgefit.aplicacao.treino.ExercicioResumo converterExercicioParaResumo(ItemDeExercicio itemJpa) {
+		br.com.forgefit.aplicacao.treino.ExercicioResumo resumo = new br.com.forgefit.aplicacao.treino.ExercicioResumo();
+		resumo.setExercicio(itemJpa.getExercicio());
+		resumo.setSeries(itemJpa.getSeries());
+		resumo.setContagem(itemJpa.getRepeticoes());
+		return resumo;
 	}
 }

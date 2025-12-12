@@ -1,5 +1,6 @@
 import api from "./api";
-import { Modalidade, Espaco, TipoAula } from "../components/common/CreateClassModal";
+import { Modalidade, Espaco, TipoAula, modalidadeLabels, espacoLabels } from "../components/common/CreateClassModal";
+import { getModalidadeImage } from "../utils/modalidadeImages";
 
 export interface MinhaAulaResponse {
     id: number;
@@ -159,11 +160,11 @@ class AulaService {
 
     /**
      * Lista aulas do professor autenticado
-     * @returns Lista de aulas
+     * @returns Lista de aulas com informações completas
      */
-    async listarAulasDoProfessor(): Promise<AulaResponse[]> {
+    async listarAulasDoProfessor(): Promise<MinhaAulaResponse[]> {
         try {
-            const response = await api.get<AulaResponse[]>(`/aulas/professor`);
+            const response = await api.get<MinhaAulaResponse[]>(`/aulas/professor`);
             return response.data;
         } catch (error: any) {
             const mensagemErro = error.response?.data?.message || "Erro ao listar aulas";
@@ -186,10 +187,10 @@ class AulaService {
     }
 
     /**
-     * Método auxiliar para construir data/hora em ISO 8601
+     * Método auxiliar para construir data/hora em ISO 8601 LOCAL
      * @param classData Dados do formulário
      * @param tipo "inicio" ou "fim"
-     * @returns String no formato ISO 8601
+     * @returns String no formato ISO 8601 sem conversão de timezone
      */
     private construirDataHora(classData: any, tipo: "inicio" | "fim"): string {
         let data: string;
@@ -204,15 +205,18 @@ class AulaService {
 
         const hora = classData.time; // Formato: "HH:mm"
 
-        // Combinar data e hora
-        const dateObj = new Date(`${data}T${hora}:00`);
-
+        // Combinar data e hora - mantendo o horário local sem conversão UTC
+        let horaInicio = hora;
+        
         if (tipo === "fim") {
             // Adicionar 1 hora para horário de fim
-            dateObj.setHours(dateObj.getHours() + 1);
+            const [h, m] = hora.split(":").map(Number);
+            const novaHora = (h + 1) % 24;
+            horaInicio = `${novaHora.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
         }
 
-        return dateObj.toISOString();
+        // Retornar no formato ISO 8601 LOCAL (sem 'Z' no final para evitar conversão UTC)
+        return `${data}T${horaInicio}:00`;
     }
 
     /**
@@ -279,28 +283,38 @@ class AulaService {
     }
 
     private converterParaAulaFrontend(aula: MinhaAulaResponse, enrollmentStatus: "not_enrolled" | "enrolled" | "waiting_list" | "to_evaluate"): AulaFrontend {
-        const inicio = new Date(aula.inicio);
-        const diaSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][inicio.getDay()];
-        const horario = inicio.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+        // Extrair data e hora diretamente da string ISO para evitar conversão de timezone
+        const inicioStr = aula.inicio || "";
+        const [dataParte, horaParte] = inicioStr.split("T");
+        const horaFormatada = horaParte ? horaParte.substring(0, 5) : "00:00"; // "HH:mm"
+        
+        // Formatar a data para exibição (dd/mm/yyyy)
+        const [ano, mes, dia] = (dataParte || "").split("-");
+        const dataFormatada = dataParte ? `${dia}/${mes}/${ano}` : "";
 
         return {
             id: aula.id,
             instructor: aula.professorNome,
             instructorId: aula.professorId,
             category: this.formatarModalidade(aula.modalidade),
-            schedule: `${diaSemana} - ${horario}`,
+            schedule: `${dataFormatada} - ${horaFormatada}`,
             capacity: aula.capacidade,
             enrolled: aula.vagasOcupadas,
             location: this.formatarEspaco(aula.espaco),
-            image: this.obterImagemModalidade(aula.modalidade),
+            image: getModalidadeImage(aula.modalidade),
             enrollmentStatus,
             waitingList: aula.tamanhoListaEspera,
             isClassFinished: aula.status === "CONCLUIDA",
-            classDate: aula.inicio.split("T")[0],
+            classDate: dataParte,
         };
     }
 
     private formatarModalidade(modalidade: string): string {
+        // Usar os labels padronizados do CreateClassModal
+        if (modalidade in Modalidade) {
+            return modalidadeLabels[modalidade as Modalidade] || modalidade;
+        }
+        // Fallback para modalidades não mapeadas
         const mapa: Record<string, string> = {
             YOGA: "Yoga",
             SPINNING: "Spinning",
@@ -308,35 +322,32 @@ class AulaService {
             PILATES: "Pilates",
             DANCA: "Dança",
             LUTA: "Luta",
-            CROSSFIT: "CrossFit",
+            CROSSFIT: "Crossfit",
             MUSCULACAO: "Musculação",
         };
         return mapa[modalidade] || modalidade;
     }
 
     private formatarEspaco(espaco: string): string {
+        // Usar os labels padronizados do CreateClassModal
+        if (espaco in Espaco) {
+            return espacoLabels[espaco as Espaco] || espaco;
+        }
+        // Fallback para espaços não mapeados
         const mapa: Record<string, string> = {
-            SALA01_MULTIUSO: "Sala 1",
-            SALA02_SPINNING: "Sala 2",
-            SALA03_PILATES: "Sala 3",
-            SALA04_FUNCIONAL: "Sala 4",
+            SALA01_MULTIUSO: "Sala 01 - Multiuso",
+            SALA02_MULTIUSO: "Sala 02 - Multiuso",
+            SALA02_SPINNING: "Sala 02 - Spinning",
+            SALA03_SPINNING: "Sala 03 - Spinning",
+            SALA03_PILATES: "Sala 03 - Pilates",
+            SALA04_FUNCIONAL: "Sala 04 - Funcional",
+            ESTUDIO_PILATES: "Estúdio Pilates",
+            AREA_DE_LUTAS: "Área de Lutas",
             AREA_EXTERNA: "Área Externa",
             RING_LUTA: "Ring de Luta",
+            AREA_DE_PESO_LIVRE: "Área de Peso Livre",
         };
         return mapa[espaco] || espaco;
-    }
-
-    private obterImagemModalidade(modalidade: string): string {
-        const imagens: Record<string, string> = {
-            YOGA: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=500",
-            SPINNING: "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?w=500",
-            FUNCIONAL: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500",
-            PILATES: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=500",
-            LUTA: "https://images.unsplash.com/photo-1555597408-26bc8e548a46?w=500",
-            CROSSFIT: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500",
-            MUSCULACAO: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500",
-        };
-        return imagens[modalidade] || "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=500";
     }
 }
 

@@ -1,4 +1,13 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+
+const spin = keyframes`
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+`;
 
 export const Container = styled.div`
     min-height: 100vh;
@@ -229,6 +238,10 @@ export const EmptyIcon = styled.div`
     font-size: 5rem;
     margin-bottom: 1.5rem;
     opacity: 0.3;
+
+    svg.animate-spin {
+        animation: ${spin} 1s linear infinite;
+    }
 
     @media (max-width: 48rem) {
         font-size: 4rem;

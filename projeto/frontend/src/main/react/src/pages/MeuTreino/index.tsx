@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { Dumbbell, Calendar } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Dumbbell, Calendar, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
     Container,
@@ -23,20 +23,67 @@ import {
     EmptySubtext,
 } from "./styles";
 import { useUser } from "../../contexts/UserContext";
-import { treinosVigentesMock } from "../Treinos/mockData";
 import { TipoDoTreinoLabels, ExercicioLabels } from "../Treinos/types";
-import type { TreinoVigente } from "../Treinos/types";
+import type { TreinoVigente, TreinoDiario, LetraTreino, TipoDoTreino, Exercicio } from "../Treinos/types";
+import { buscarPlanoAtivoPorAluno, type PlanoTreino } from "../../services/treinoService";
+
+// Função para converter PlanoTreino da API para TreinoVigente usado na UI
+const converterPlanoParaTreinoVigente = (plano: PlanoTreino, alunoId: number): TreinoVigente => {
+    const treinosDiarios: TreinoDiario[] = plano.treinos.map(treino => ({
+        letra: treino.letra as LetraTreino,
+        tipo: treino.tipo as TipoDoTreino,
+        exercicios: treino.exercicios.map(ex => ({
+            exercicio: ex.exercicio as Exercicio,
+            repeticao: {
+                series: ex.series,
+                contagem: ex.contagem,
+            },
+        })),
+    }));
+
+    return {
+        id: plano.id,
+        professorId: plano.professorId,
+        alunoId: alunoId,
+        validadeSugerida: plano.dataValidadeSugerida,
+        treinosDiarios: treinosDiarios,
+        dataCriacao: plano.dataCriacao,
+    };
+};
 
 const MeuTreino = () => {
     const { user } = useUser();
+    const [treinoAtual, setTreinoAtual] = useState<TreinoVigente | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    // Mock: treino fixo para qualquer estudante logado
-    const treinoAtual: TreinoVigente | null = useMemo(() => {
-        if (!user || user.role !== "student") return null;
-        
-        // Retornar sempre o primeiro treino do mock para qualquer estudante
-        const primeiroAlunoComTreino = Array.from(treinosVigentesMock.values())[0];
-        return primeiroAlunoComTreino || null;
+    useEffect(() => {
+        const carregarTreino = async () => {
+            if (!user || user.role !== "student" || !user.matricula) {
+                setLoading(false);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                setError(null);
+                const plano = await buscarPlanoAtivoPorAluno(user.matricula);
+                
+                if (plano) {
+                    const treinoVigente = converterPlanoParaTreinoVigente(plano, user.id);
+                    setTreinoAtual(treinoVigente);
+                } else {
+                    setTreinoAtual(null);
+                }
+            } catch (err) {
+                console.error("Erro ao carregar treino:", err);
+                setError("Erro ao carregar seu treino. Tente novamente mais tarde.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        carregarTreino();
     }, [user]);
 
     const formatDate = (dateString: string) => {
@@ -57,7 +104,22 @@ const MeuTreino = () => {
                 </HeaderContent>
             </Header>
 
-            {!treinoAtual ? (
+            {loading ? (
+                <EmptyState>
+                    <EmptyIcon>
+                        <Loader2 size={80} className="animate-spin" />
+                    </EmptyIcon>
+                    <EmptyText>Carregando seu treino...</EmptyText>
+                </EmptyState>
+            ) : error ? (
+                <EmptyState>
+                    <EmptyIcon>
+                        <Dumbbell size={80} />
+                    </EmptyIcon>
+                    <EmptyText>Erro ao carregar treino</EmptyText>
+                    <EmptySubtext>{error}</EmptySubtext>
+                </EmptyState>
+            ) : !treinoAtual ? (
                 <EmptyState>
                     <EmptyIcon>
                         <Dumbbell size={80} />

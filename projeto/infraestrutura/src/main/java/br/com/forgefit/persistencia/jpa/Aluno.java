@@ -199,7 +199,12 @@ class AlunoRepositorioImpl implements br.com.forgefit.dominio.aluno.AlunoReposit
 			alunoJpa.setBloqueioAte(aluno.getBloqueioAte() != null 
 				? java.sql.Date.valueOf(aluno.getBloqueioAte()) 
 				: null);
-			// Não atualiza relacionamentos complexos como planoAtual, avaliacoes, etc.
+			// Atualiza o plano de treino ativo do aluno
+			if (aluno.getPlanoAtivoId() != null) {
+				alunoJpa.setPlanoAtivoId(aluno.getPlanoAtivoId().getId());
+			} else {
+				alunoJpa.setPlanoAtivoId(null);
+			}
 		}
 		
 		repositorio.save(alunoJpa);

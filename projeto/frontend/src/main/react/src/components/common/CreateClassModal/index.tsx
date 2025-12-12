@@ -112,8 +112,13 @@ const CreateClassModal = ({ isOpen, onClose, onConfirm, isLoading = false, editi
         return entry ? entry[0] : "";
     };
 
-    // Função auxiliar para extrair horário do schedule
-    const extractTimeFromSchedule = (schedule: string): string => {
+    // Função auxiliar para extrair horário do schedule ou usar classTime
+    const extractTimeFromSchedule = (schedule: string, classTime?: string): string => {
+        // Se temos classTime diretamente, usar ele (mais confiável)
+        if (classTime) {
+            return classTime;
+        }
+        // Fallback: tentar extrair do schedule
         const timeMatch = schedule.match(/(\d{2}:\d{2})/);
         return timeMatch ? timeMatch[1] : "";
     };
@@ -148,7 +153,7 @@ const CreateClassModal = ({ isOpen, onClose, onConfirm, isLoading = false, editi
         if (editingClass) {
             const modalidade = getModalidadeFromCategory(editingClass.category);
             const espaco = getEspacoFromLocation(editingClass.location);
-            const time = extractTimeFromSchedule(editingClass.schedule);
+            const time = extractTimeFromSchedule(editingClass.schedule, editingClass.classTime);
             const tipoAula = determineTipoAula(editingClass.schedule, editingClass.classDate);
             const selectedDays = tipoAula !== TipoAula.UNICA ? extractDaysFromSchedule(editingClass.schedule) : [];
 

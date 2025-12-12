@@ -22,6 +22,7 @@ export interface Class {
     isClassFinished?: boolean; // Se a aula já terminou
     userRating?: ClassRating; // Avaliação do usuário
     classDate?: string; // Data da ocorrência da aula (ISO format YYYY-MM-DD)
+    classTime?: string; // Horário da aula (HH:mm)
 }
 
 export const mockClasses: Class[] = [

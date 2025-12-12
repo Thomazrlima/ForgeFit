@@ -877,6 +877,9 @@ class AulaRepositorioImpl implements br.com.forgefit.dominio.aula.AulaRepositori
 			aulaExistente.setStatus(StatusAula.valueOf(aula.getStatus().name()));
 			aulaExistente.setInicio(java.util.Date.from(aula.getInicio().atZone(java.time.ZoneId.systemDefault()).toInstant()));
 			aulaExistente.setFim(java.util.Date.from(aula.getFim().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+			aulaExistente.setCapacidade(aula.getCapacidade());
+			aulaExistente.setModalidade(Modalidade.valueOf(aula.getModalidade().name()));
+			aulaExistente.setEspaco(Espaco.valueOf(aula.getEspaco().name()));
 			
 			// Criar map das reservas existentes no banco por matrícula
 			java.util.Map<String, Aula.Reserva> reservasExistentes = new java.util.HashMap<>();

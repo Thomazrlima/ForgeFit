@@ -22,9 +22,9 @@ import br.com.forgefit.dominio.professor.ProfessorId;
 public class Aula {
     private final AulaId id;
     private final ProfessorId professorId;
-    private final Modalidade modalidade;
-    private final Espaco espaco;
-    private final int capacidade;
+    private Modalidade modalidade;
+    private Espaco espaco;
+    private int capacidade;
     private LocalDateTime inicio;
     private LocalDateTime fim;
     private Recorrencia recorrencia; // Pode ser nulo para aulas únicas
@@ -133,6 +133,30 @@ public class Aula {
         isTrue(novoFim.isAfter(novoInicio), "A hora de fim deve ser após a hora de início");
         this.inicio = novoInicio;
         this.fim = novoFim;
+    }
+
+    public void alterarCapacidade(int novaCapacidade) {
+        isTrue(novaCapacidade > 0, "A capacidade deve ser maior que zero");
+        long reservasConfirmadas = reservas.stream()
+                .filter(r -> r.getStatus() == StatusReserva.CONFIRMADA)
+                .count();
+        isTrue(novaCapacidade >= reservasConfirmadas, 
+                "A nova capacidade não pode ser menor que o número de reservas confirmadas");
+        this.capacidade = novaCapacidade;
+    }
+
+    public void alterarModalidade(Modalidade novaModalidade) {
+        notNull(novaModalidade, "A modalidade não pode ser nula");
+        this.modalidade = novaModalidade;
+    }
+
+    public void alterarEspaco(Espaco novoEspaco) {
+        notNull(novoEspaco, "O espaço não pode ser nulo");
+        this.espaco = novoEspaco;
+    }
+
+    public void alterarRecorrencia(Recorrencia novaRecorrencia) {
+        this.recorrencia = novaRecorrencia;
     }
 
     public boolean isRecorrente() {

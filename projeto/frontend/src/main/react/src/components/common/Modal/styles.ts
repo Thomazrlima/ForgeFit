@@ -130,13 +130,17 @@ export const CloseButton = styled.button`
 `;
 
 export const ModalBody = styled.div`
-    padding: 0;
+    padding: 1.5rem 2rem;
     overflow-x: hidden;
     overflow-y: auto;
     flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;
+
+    @media (max-width: 48rem) {
+        padding: 1rem 1.5rem;
+    }
 `;
 
 export const ModalFooter = styled.div`

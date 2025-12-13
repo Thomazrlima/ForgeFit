@@ -2,18 +2,16 @@ import { useState, useEffect } from "react";
 import { X, Calendar, Image as ImageIcon, Dumbbell, MessageSquare } from "lucide-react";
 import { Button } from "../Button";
 import Modal from "../Modal";
-import { FormGroup, Label, Select, Input, TextArea, ImagePreviewSection, ImagePreview, RemoveImageButton, ImagePlaceholder, IconWrapper, CancelButton } from "./styles";
+import { FormGroup, Label, Select, Input, TextArea, ImagePreviewSection, ImagePreview, RemoveImageButton, ImagePlaceholder, IconWrapper, CancelButton, TreinoCard, TreinoHeader, LetraBadge, TipoLabel, ExerciciosList, ExercicioItem, ExercicioNome, RepeticaoInfo, SeriesBadge } from "./styles";
+import { TipoDoTreinoLabels, ExercicioLabels } from "../../../pages/Treinos/types";
+import type { PlanoTreino, TreinoDiario } from "../../../services/treinoService";
 
 interface CheckinModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: CheckinData) => void;
-    workouts: Workout[];
-}
-
-export interface Workout {
-    id: string;
-    name: string;
+    treinos: TreinoDiario[];
+    planoTreino: PlanoTreino | null;
 }
 
 export interface CheckinData {
@@ -24,7 +22,16 @@ export interface CheckinData {
     imageUrl?: string;
 }
 
-const CheckinModal = ({ isOpen, onClose, onSubmit, workouts }: CheckinModalProps) => {
+// Função auxiliar para obter a data de hoje no formato yyyy-MM-dd (timezone local)
+const getTodayLocalDate = (): string => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+const CheckinModal = ({ isOpen, onClose, onSubmit, treinos, planoTreino }: CheckinModalProps) => {
     const [selectedWorkout, setSelectedWorkout] = useState("");
     const [date, setDate] = useState("");
     const [description, setDescription] = useState("");
@@ -32,11 +39,12 @@ const CheckinModal = ({ isOpen, onClose, onSubmit, workouts }: CheckinModalProps
     const [imagePreview, setImagePreview] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const selectedTreino = treinos.find((t) => t.letra === selectedWorkout);
+
     useEffect(() => {
         if (isOpen) {
-            // Set today's date as default
-            const today = new Date().toISOString().split("T")[0];
-            setDate(today);
+            // Set today's date as default (usando timezone local)
+            setDate(getTodayLocalDate());
         }
     }, [isOpen]);
 
@@ -65,11 +73,11 @@ const CheckinModal = ({ isOpen, onClose, onSubmit, workouts }: CheckinModalProps
 
         setIsSubmitting(true);
 
-        const selectedWorkoutData = workouts.find((w) => w.id === selectedWorkout);
+        const selectedTreinoData = treinos.find((t) => t.letra === selectedWorkout);
 
         const checkinData: CheckinData = {
             workoutId: selectedWorkout,
-            workoutName: selectedWorkoutData?.name || "",
+            workoutName: selectedTreinoData ? `Treino ${selectedTreinoData.letra} - ${TipoDoTreinoLabels[selectedTreinoData.tipo as keyof typeof TipoDoTreinoLabels] || selectedTreinoData.tipo}` : "",
             date,
             description: description.trim() || undefined,
             imageUrl: imagePreview || undefined,
@@ -125,13 +133,42 @@ const CheckinModal = ({ isOpen, onClose, onSubmit, workouts }: CheckinModalProps
                     </Label>
                     <Select value={selectedWorkout} onChange={(e) => setSelectedWorkout(e.target.value)} required>
                         <option value="">Selecione um treino</option>
-                        {workouts.map((workout) => (
-                            <option key={workout.id} value={workout.id}>
-                                {workout.name}
+                        {treinos.map((treino) => (
+                            <option key={treino.letra} value={treino.letra}>
+                                Treino {treino.letra} - {TipoDoTreinoLabels[treino.tipo as keyof typeof TipoDoTreinoLabels] || treino.tipo}
                             </option>
                         ))}
                     </Select>
                 </FormGroup>
+
+                {selectedTreino && (
+                    <FormGroup>
+                        <TreinoCard>
+                            <TreinoHeader>
+                                <LetraBadge>{selectedTreino.letra}</LetraBadge>
+                                <TipoLabel>
+                                    {TipoDoTreinoLabels[selectedTreino.tipo as keyof typeof TipoDoTreinoLabels] || selectedTreino.tipo}
+                                </TipoLabel>
+                            </TreinoHeader>
+
+                            <ExerciciosList>
+                                {selectedTreino.exercicios.map((item, idx) => (
+                                    <ExercicioItem key={idx}>
+                                        <ExercicioNome>
+                                            {ExercicioLabels[item.exercicio as keyof typeof ExercicioLabels] || item.exercicio}
+                                        </ExercicioNome>
+                                        <RepeticaoInfo>
+                                            <SeriesBadge>
+                                                {item.series}x
+                                            </SeriesBadge>
+                                            <span>{item.contagem}</span>
+                                        </RepeticaoInfo>
+                                    </ExercicioItem>
+                                ))}
+                            </ExerciciosList>
+                        </TreinoCard>
+                    </FormGroup>
+                )}
 
                 <FormGroup>
                     <Label>
@@ -140,7 +177,22 @@ const CheckinModal = ({ isOpen, onClose, onSubmit, workouts }: CheckinModalProps
                         </IconWrapper>
                         Data *
                     </Label>
-                    <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} max={new Date().toISOString().split("T")[0]} required />
+                    <Input 
+                        type="date" 
+                        value={date} 
+                        onChange={(e) => {
+                            const selectedDate = e.target.value;
+                            const todayStr = getTodayLocalDate();
+                            
+                            // Validar que a data selecionada não é futura
+                            if (selectedDate > todayStr) {
+                                return; // Não atualiza se for data futura
+                            }
+                            setDate(selectedDate);
+                        }} 
+                        max={getTodayLocalDate()} 
+                        required 
+                    />
                 </FormGroup>
 
                 <FormGroup>

@@ -29,16 +29,25 @@ public class RankingService {
     public Ranking obterRanking(PeriodoRanking periodo) {
         return rankingRepositorio.obterPorPeriodo(periodo)
             .orElseGet(() -> {
+                // Criar novo ranking apenas se realmente não existir no banco
                 Ranking novoRanking = new Ranking(periodo);
-                rankingRepositorio.salvar(novoRanking);
-                return novoRanking;
+                try {
+                    rankingRepositorio.salvar(novoRanking);
+                    // Buscar novamente após salvar para garantir que temos a versão persistida
+                    return rankingRepositorio.obterPorPeriodo(periodo)
+                        .orElse(novoRanking);
+                } catch (Exception e) {
+                    // Se falhar ao salvar (ex: constraint violation), tentar buscar novamente
+                    return rankingRepositorio.obterPorPeriodo(periodo)
+                        .orElseThrow(() -> new IllegalStateException(
+                            "Não foi possível criar ou obter o ranking do período " + periodo, e));
+                }
             });
     }
 
     public void registrarPontosFrequencia(Matricula alunoMatricula, int pontosBase, int aulasConsecutivas, PeriodoRanking periodo) {
         Ranking ranking = obterRanking(periodo);
-        ranking.adicionarOuAtualizar(alunoMatricula);
-        ItemRanking item = ranking.getItemPorMatricula(alunoMatricula);
+        ItemRanking item = ranking.obterOuCriarItem(alunoMatricula);
         
         int pontosCalculados = calculoPontuacaoStrategy.calcularPontosFrequencia(pontosBase, aulasConsecutivas);
         item.adicionarPontosFrequencia(pontosCalculados);
@@ -51,8 +60,7 @@ public class RankingService {
 
     public void registrarPontosGuilda(Matricula alunoMatricula, int pontosBase, int nivelGuilda, PeriodoRanking periodo) {
         Ranking ranking = obterRanking(periodo);
-        ranking.adicionarOuAtualizar(alunoMatricula);
-        ItemRanking item = ranking.getItemPorMatricula(alunoMatricula);
+        ItemRanking item = ranking.obterOuCriarItem(alunoMatricula);
         
         int pontosCalculados = calculoPontuacaoStrategy.calcularPontosGuilda(pontosBase, nivelGuilda);
         item.adicionarPontosGuilda(pontosCalculados);
@@ -65,8 +73,7 @@ public class RankingService {
 
     public void registrarPontosPerformance(Matricula alunoMatricula, int pontosBase, double nota, PeriodoRanking periodo) {
         Ranking ranking = obterRanking(periodo);
-        ranking.adicionarOuAtualizar(alunoMatricula);
-        ItemRanking item = ranking.getItemPorMatricula(alunoMatricula);
+        ItemRanking item = ranking.obterOuCriarItem(alunoMatricula);
         
         int pontosCalculados = calculoPontuacaoStrategy.calcularPontosPerformance(pontosBase, nota);
         item.adicionarPontosPerformance(pontosCalculados, nota);

@@ -24,6 +24,10 @@ import br.com.forgefit.dominio.torneio.TorneioId;
 import br.com.forgefit.dominio.torneio.Premio;
 import br.com.forgefit.dominio.torneio.enums.StatusTorneio;
 import br.com.forgefit.dominio.guilda.GuildaId;
+import br.com.forgefit.dominio.checkin.Checkin;
+import br.com.forgefit.dominio.checkin.CheckinId;
+import br.com.forgefit.dominio.checkin.ContextoDoCheckin;
+import br.com.forgefit.dominio.checkin.enums.TipoDeCheckin;
 import java.time.LocalDateTime;
 
 @Component
@@ -115,7 +119,14 @@ class JpaMapeador extends ModelMapper {
         addConverter(new AbstractConverter<String, Matricula>() {
             @Override
             protected Matricula convert(String source) {
-                return new Matricula(source);
+                return source != null ? new Matricula(source) : null;
+            }
+        });
+
+        addConverter(new AbstractConverter<Matricula, String>() {
+            @Override
+            protected String convert(Matricula source) {
+                return source != null ? source.getValor() : null;
             }
         });
 
@@ -470,6 +481,136 @@ class JpaMapeador extends ModelMapper {
             }
         });
 
+        // Conversores para GuildaId (bidirecional)
+        addConverter(new AbstractConverter<Integer, GuildaId>() {
+            @Override
+            protected GuildaId convert(Integer source) {
+                return source != null && source > 0 ? new GuildaId(source) : null;
+            }
+        });
+
+        addConverter(new AbstractConverter<GuildaId, Integer>() {
+            @Override
+            protected Integer convert(GuildaId source) {
+                return source != null ? source.getId() : null;
+            }
+        });
+
+        // Conversores para CheckinId (bidirecional)
+        addConverter(new AbstractConverter<Integer, CheckinId>() {
+            @Override
+            protected CheckinId convert(Integer source) {
+                return source != null && source > 0 ? new CheckinId(source) : null;
+            }
+        });
+
+        addConverter(new AbstractConverter<CheckinId, Integer>() {
+            @Override
+            protected Integer convert(CheckinId source) {
+                return source != null ? source.getId() : null;
+            }
+        });
+
+        // Conversores para TipoDeCheckin (enum domínio ↔ enum JPA)
+        addConverter(new AbstractConverter<br.com.forgefit.persistencia.jpa.enums.TipoDeCheckin, TipoDeCheckin>() {
+            @Override
+            protected TipoDeCheckin convert(br.com.forgefit.persistencia.jpa.enums.TipoDeCheckin source) {
+                if (source == null) return null;
+                return TipoDeCheckin.valueOf(source.name());
+            }
+        });
+
+        addConverter(new AbstractConverter<TipoDeCheckin, br.com.forgefit.persistencia.jpa.enums.TipoDeCheckin>() {
+            @Override
+            protected br.com.forgefit.persistencia.jpa.enums.TipoDeCheckin convert(TipoDeCheckin source) {
+                if (source == null) return null;
+                return br.com.forgefit.persistencia.jpa.enums.TipoDeCheckin.valueOf(source.name());
+            }
+        });
+
+        // Conversor para Checkin JPA → Domínio
+        addConverter(new AbstractConverter<br.com.forgefit.persistencia.jpa.Checkin, br.com.forgefit.dominio.checkin.Checkin>() {
+            @Override
+            protected br.com.forgefit.dominio.checkin.Checkin convert(br.com.forgefit.persistencia.jpa.Checkin source) {
+                if (source == null) return null;
+
+                CheckinId id = new CheckinId(source.getId());
+                Matricula alunoMatricula = new Matricula(source.getAlunoMatricula());
+                GuildaId guildaId = source.getGuildaId() != null ? new GuildaId(source.getGuildaId()) : null;
+                LocalDate dataDoCheckin = map(source.getDataCheckin(), LocalDate.class);
+                int pontuacaoGerada = source.getPontuacaoTotal() != null ? source.getPontuacaoTotal() : 0;
+                String mensagem = source.getMensagem();
+                String urlImagem = source.getUrlImagem();
+
+                // Construir ContextoDoCheckin baseado no tipo
+                ContextoDoCheckin contexto;
+                br.com.forgefit.persistencia.jpa.enums.TipoDeCheckin tipoJpa = source.getTipo();
+                TipoDeCheckin tipo = map(tipoJpa, TipoDeCheckin.class);
+
+                if (tipo == TipoDeCheckin.TREINO) {
+                    PlanoDeTreinoId planoId = source.getPlanoDeTreinoId() != null 
+                        ? new PlanoDeTreinoId(source.getPlanoDeTreinoId()) 
+                        : null;
+                    LetraDoTreino letra = source.getLetraTreino() != null 
+                        ? LetraDoTreino.valueOf(source.getLetraTreino()) 
+                        : null;
+                    contexto = ContextoDoCheckin.deTreino(planoId, letra);
+                } else if (tipo == TipoDeCheckin.AULA) {
+                    AulaId aulaId = source.getAulaId() != null 
+                        ? new AulaId(source.getAulaId()) 
+                        : null;
+                    contexto = ContextoDoCheckin.deAula(aulaId);
+                } else {
+                    throw new IllegalArgumentException("Tipo de check-in desconhecido: " + tipo);
+                }
+
+                return new br.com.forgefit.dominio.checkin.Checkin(
+                    id, alunoMatricula, guildaId, dataDoCheckin,
+                    pontuacaoGerada, mensagem, urlImagem, contexto
+                );
+            }
+        });
+
+        // Conversor para Checkin Domínio → JPA
+        addConverter(new AbstractConverter<br.com.forgefit.dominio.checkin.Checkin, br.com.forgefit.persistencia.jpa.Checkin>() {
+            @Override
+            protected br.com.forgefit.persistencia.jpa.Checkin convert(br.com.forgefit.dominio.checkin.Checkin source) {
+                if (source == null) return null;
+
+                br.com.forgefit.persistencia.jpa.Checkin checkinJpa = new br.com.forgefit.persistencia.jpa.Checkin();
+                checkinJpa.setId(source.getId().getId());
+                checkinJpa.setAlunoMatricula(source.getAlunoMatricula().getValor());
+                checkinJpa.setGuildaId(source.getGuildaId() != null ? source.getGuildaId().getId() : null);
+                checkinJpa.setDataCheckin(map(source.getDataDoCheckin(), Date.class));
+                checkinJpa.setPontuacaoTotal(source.getPontuacaoGerada());
+                checkinJpa.setMensagem(source.getMensagem());
+                checkinJpa.setUrlImagem(source.getUrlImagem());
+
+                // Mapear contexto para campos JPA
+                ContextoDoCheckin contexto = source.getContexto();
+                TipoDeCheckin tipo = contexto.getTipo();
+                checkinJpa.setTipo(map(tipo, br.com.forgefit.persistencia.jpa.enums.TipoDeCheckin.class));
+
+                if (tipo == TipoDeCheckin.TREINO) {
+                    checkinJpa.setPlanoDeTreinoId(
+                        contexto.getPlanoDeTreinoId() != null ? contexto.getPlanoDeTreinoId().getId() : null
+                    );
+                    checkinJpa.setLetraTreino(
+                        contexto.getLetraDoTreino() != null ? contexto.getLetraDoTreino().name() : null
+                    );
+                    checkinJpa.setAulaId(null);
+                } else if (tipo == TipoDeCheckin.AULA) {
+                    checkinJpa.setAulaId(
+                        contexto.getAulaId() != null ? contexto.getAulaId().getId() : null
+                    );
+                    checkinJpa.setPlanoDeTreinoId(null);
+                    checkinJpa.setLetraTreino(null);
+                }
+
+                return checkinJpa;
+            }
+        });
+
         // Conversor para PosicaoRanking (JPA -> Domínio)
         addConverter(new AbstractConverter<br.com.forgefit.persistencia.jpa.PosicaoRankingJpa, br.com.forgefit.dominio.torneio.PosicaoRanking>() {
             @Override
@@ -481,6 +622,127 @@ class JpaMapeador extends ModelMapper {
                     guildaId, 
                     source.getPontuacaoNoTorneio()
                 );
+            }
+        });
+
+        // Conversor para ItemRanking (JPA -> Domínio)
+        addConverter(new AbstractConverter<br.com.forgefit.persistencia.jpa.ItemRanking, br.com.forgefit.dominio.ranking.ItemRanking>() {
+            @Override
+            protected br.com.forgefit.dominio.ranking.ItemRanking convert(br.com.forgefit.persistencia.jpa.ItemRanking source) {
+                if (source == null) return null;
+                
+                Matricula matricula = new Matricula(source.getAlunoMatricula());
+                br.com.forgefit.dominio.ranking.ItemRanking item = new br.com.forgefit.dominio.ranking.ItemRanking(matricula);
+                
+                // Usar reflexão para definir campos privados
+                try {
+                    java.lang.reflect.Field pontosFrequenciaField = br.com.forgefit.dominio.ranking.ItemRanking.class.getDeclaredField("pontosFrequencia");
+                    pontosFrequenciaField.setAccessible(true);
+                    pontosFrequenciaField.setInt(item, source.getPontosFrequencia() != null ? source.getPontosFrequencia() : 0);
+                    
+                    java.lang.reflect.Field pontosGuildaField = br.com.forgefit.dominio.ranking.ItemRanking.class.getDeclaredField("pontosGuilda");
+                    pontosGuildaField.setAccessible(true);
+                    pontosGuildaField.setInt(item, source.getPontosGuilda() != null ? source.getPontosGuilda() : 0);
+                    
+                    java.lang.reflect.Field pontosPerformanceField = br.com.forgefit.dominio.ranking.ItemRanking.class.getDeclaredField("pontosPerformance");
+                    pontosPerformanceField.setAccessible(true);
+                    pontosPerformanceField.setInt(item, source.getPontosPerformance() != null ? source.getPontosPerformance() : 0);
+                    
+                    java.lang.reflect.Field pontuacaoTotalField = br.com.forgefit.dominio.ranking.ItemRanking.class.getDeclaredField("pontuacaoTotal");
+                    pontuacaoTotalField.setAccessible(true);
+                    pontuacaoTotalField.setInt(item, source.getPontuacaoTotal() != null ? source.getPontuacaoTotal() : 0);
+                    
+                    java.lang.reflect.Field posicaoField = br.com.forgefit.dominio.ranking.ItemRanking.class.getDeclaredField("posicao");
+                    posicaoField.setAccessible(true);
+                    posicaoField.setInt(item, source.getPosicao() != null ? source.getPosicao() : 0);
+                    
+                    java.lang.reflect.Field numeroAulasField = br.com.forgefit.dominio.ranking.ItemRanking.class.getDeclaredField("numeroDeAulasParticipadas");
+                    numeroAulasField.setAccessible(true);
+                    numeroAulasField.setInt(item, source.getNumeroAulasParticipadas() != null ? source.getNumeroAulasParticipadas() : 0);
+                    
+                    java.lang.reflect.Field mediaPerformanceField = br.com.forgefit.dominio.ranking.ItemRanking.class.getDeclaredField("mediaPerformance");
+                    mediaPerformanceField.setAccessible(true);
+                    mediaPerformanceField.setDouble(item, source.getMediaPerformance() != null ? source.getMediaPerformance() : 0.0);
+                    
+                    java.lang.reflect.Field numeroAvaliacoesField = br.com.forgefit.dominio.ranking.ItemRanking.class.getDeclaredField("numeroDeAvaliacoes");
+                    numeroAvaliacoesField.setAccessible(true);
+                    numeroAvaliacoesField.setInt(item, source.getNumeroAvaliacoes() != null ? source.getNumeroAvaliacoes() : 0);
+                } catch (Exception e) {
+                    throw new RuntimeException("Erro ao mapear ItemRanking", e);
+                }
+                
+                return item;
+            }
+        });
+
+        // Conversor para Ranking (JPA -> Domínio)
+        addConverter(new AbstractConverter<br.com.forgefit.persistencia.jpa.Ranking, br.com.forgefit.dominio.ranking.Ranking>() {
+            @Override
+            protected br.com.forgefit.dominio.ranking.Ranking convert(br.com.forgefit.persistencia.jpa.Ranking source) {
+                if (source == null) return null;
+                
+                br.com.forgefit.dominio.ranking.enums.PeriodoRanking periodo = 
+                    br.com.forgefit.dominio.ranking.enums.PeriodoRanking.valueOf(source.getPeriodo().name());
+                
+                br.com.forgefit.dominio.ranking.Ranking ranking = new br.com.forgefit.dominio.ranking.Ranking(periodo);
+                
+                // Mapear itens
+                if (source.getItens() != null) {
+                    for (br.com.forgefit.persistencia.jpa.ItemRanking itemJpa : source.getItens()) {
+                        if (itemJpa == null || itemJpa.getAlunoMatricula() == null) {
+                            continue; // Pular itens inválidos
+                        }
+                        br.com.forgefit.dominio.ranking.ItemRanking item = map(itemJpa, br.com.forgefit.dominio.ranking.ItemRanking.class);
+                        if (item != null) {
+                            // Usar reflexão para adicionar à lista privada
+                            try {
+                                java.lang.reflect.Field itensField = br.com.forgefit.dominio.ranking.Ranking.class.getDeclaredField("itens");
+                                itensField.setAccessible(true);
+                                @SuppressWarnings("unchecked")
+                                java.util.List<br.com.forgefit.dominio.ranking.ItemRanking> itens = 
+                                    (java.util.List<br.com.forgefit.dominio.ranking.ItemRanking>) itensField.get(ranking);
+                                itens.add(item);
+                            } catch (Exception e) {
+                                throw new RuntimeException("Erro ao adicionar item ao ranking", e);
+                            }
+                        }
+                    }
+                }
+                
+                return ranking;
+            }
+        });
+
+        // Conversor para Ranking (Domínio -> JPA)
+        addConverter(new AbstractConverter<br.com.forgefit.dominio.ranking.Ranking, br.com.forgefit.persistencia.jpa.Ranking>() {
+            @Override
+            protected br.com.forgefit.persistencia.jpa.Ranking convert(br.com.forgefit.dominio.ranking.Ranking source) {
+                if (source == null) return null;
+                
+                br.com.forgefit.persistencia.jpa.Ranking rankingJpa = new br.com.forgefit.persistencia.jpa.Ranking();
+                rankingJpa.setPeriodo(br.com.forgefit.persistencia.jpa.enums.PeriodoRanking.valueOf(source.getPeriodo().name()));
+                
+                // Mapear itens
+                if (source.getItens() != null) {
+                    java.util.List<br.com.forgefit.persistencia.jpa.ItemRanking> itensJpa = new java.util.ArrayList<>();
+                    for (br.com.forgefit.dominio.ranking.ItemRanking item : source.getItens()) {
+                        br.com.forgefit.persistencia.jpa.ItemRanking itemJpa = new br.com.forgefit.persistencia.jpa.ItemRanking();
+                        itemJpa.setRanking(rankingJpa);
+                        itemJpa.setAlunoMatricula(item.getAlunoMatricula().getValor());
+                        itemJpa.setPontosFrequencia(item.getPontosFrequencia());
+                        itemJpa.setPontosGuilda(item.getPontosGuilda());
+                        itemJpa.setPontosPerformance(item.getPontosPerformance());
+                        itemJpa.setPontuacaoTotal(item.getPontuacaoTotal());
+                        itemJpa.setPosicao(item.getPosicao());
+                        itemJpa.setNumeroAulasParticipadas(item.getNumeroDeAulasParticipadas());
+                        itemJpa.setMediaPerformance(item.getMediaPerformance());
+                        itemJpa.setNumeroAvaliacoes(0); // Campo não existe no domínio, usar 0
+                        itensJpa.add(itemJpa);
+                    }
+                    rankingJpa.setItens(itensJpa);
+                }
+                
+                return rankingJpa;
             }
         });
 

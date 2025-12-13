@@ -84,11 +84,13 @@ class GuildaMembroId implements Serializable {
 
 interface GuildaMembroRepository extends org.springframework.data.jpa.repository.JpaRepository<GuildaMembro, GuildaMembroId> {
     
-    @org.springframework.data.jpa.repository.Query("""
-        SELECT gm.id.guildaId
-        FROM br.com.forgefit.persistencia.jpa.GuildaMembro gm
-        WHERE gm.id.alunoMatricula = :matricula
-        """)
+    @org.springframework.data.jpa.repository.Query(value = """
+        SELECT gm.guilda_id 
+        FROM guilda_membros gm
+        JOIN guilda g ON g.id = gm.guilda_id
+        WHERE gm.aluno_matricula = :matricula
+          AND g.status = 'ATIVA'
+        """, nativeQuery = true)
     java.util.Optional<Integer> findGuildaIdByAlunoMatricula(@org.springframework.data.repository.query.Param("matricula") String matricula);
     
     @org.springframework.data.jpa.repository.Query("""

@@ -214,3 +214,88 @@ export const CancelButton = styled.button`
         min-width: unset;
     }
 `;
+
+export const TreinoCard = styled.div`
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border-left: 4px solid ${({ theme }) => theme.colors.primary};
+    margin-top: 0.5rem;
+`;
+
+export const TreinoHeader = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+`;
+
+export const LetraBadge = styled.div`
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, ${({ theme }) => theme.colors.primary}, ${({ theme }) => theme.colors.secondary});
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    flex-shrink: 0;
+`;
+
+export const TipoLabel = styled.div`
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: ${({ theme }) => theme.colors.text};
+`;
+
+export const ExerciciosList = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+`;
+
+export const ExercicioItem = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.875rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    gap: 1rem;
+    transition: background 0.2s;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.4);
+    }
+
+    @media (max-width: 48rem) {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+`;
+
+export const ExercicioNome = styled.div`
+    font-weight: 500;
+    color: ${({ theme }) => theme.colors.text};
+    flex: 1;
+    font-size: 0.9375rem;
+`;
+
+export const RepeticaoInfo = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 0.9375rem;
+`;
+
+export const SeriesBadge = styled.span`
+    background: ${({ theme }) => theme.colors.primary}40;
+    color: ${({ theme }) => theme.colors.primary};
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.875rem;
+`;

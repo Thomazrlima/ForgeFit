@@ -55,9 +55,11 @@ class GuildaJpa {
 }
 
 interface GuildaJpaRepository extends JpaRepository<GuildaJpa, Integer> {
-	GuildaJpa findByCodigoConvite(String codigoConvite);
+	@org.springframework.data.jpa.repository.Query("SELECT g FROM GuildaJpa g WHERE g.codigoConvite = :codigoConvite AND g.status = br.com.forgefit.persistencia.jpa.enums.StatusGuilda.ATIVA")
+	GuildaJpa findByCodigoConvite(@org.springframework.data.repository.query.Param("codigoConvite") String codigoConvite);
 
-	GuildaJpa findByNome(String nome);
+	@org.springframework.data.jpa.repository.Query("SELECT g FROM GuildaJpa g WHERE g.nome = :nome AND g.status = br.com.forgefit.persistencia.jpa.enums.StatusGuilda.ATIVA")
+	GuildaJpa findByNome(@org.springframework.data.repository.query.Param("nome") String nome);
 
 	List<GuildaJpa> findByStatus(StatusGuilda status);
 
@@ -66,11 +68,16 @@ interface GuildaJpaRepository extends JpaRepository<GuildaJpa, Integer> {
 			   g.nome as nome,
 			   g.descricao as descricao,
 			   g.imagemURL as imagemURL,
-			   g.pontuacaoTotal as pontuacaoTotal,
+			   COALESCE(SUM(i.pontuacaoTotal), 0) as pontuacaoTotal,
 			   (SELECT COUNT(m) FROM GuildaMembro m WHERE m.id.guildaId = g.id) as numeroMembros
 		FROM GuildaJpa g
+		LEFT JOIN GuildaMembro gm ON gm.id.guildaId = g.id
+		LEFT JOIN Aluno a ON a.matricula = gm.id.alunoMatricula
+		LEFT JOIN ItemRanking i ON i.alunoMatricula = a.matricula 
+			AND i.ranking.periodo = br.com.forgefit.persistencia.jpa.enums.PeriodoRanking.GERAL
 		WHERE g.status = 'ATIVA'
-		ORDER BY g.pontuacaoTotal DESC, g.nome ASC
+		GROUP BY g.id, g.nome, g.descricao, g.imagemURL
+		ORDER BY pontuacaoTotal DESC, g.nome ASC
 		""")
 	List<GuildaResumo> listarGuildasAtivasOrdenadas();
 
@@ -79,14 +86,51 @@ interface GuildaJpaRepository extends JpaRepository<GuildaJpa, Integer> {
 			   g.nome as nome,
 			   g.descricao as descricao,
 			   g.imagemURL as imagemURL,
-			   g.pontuacaoTotal as pontuacaoTotal,
+			   COALESCE(SUM(i.pontuacaoTotal), 0) as pontuacaoTotal,
 			   (SELECT COUNT(m) FROM GuildaMembro m WHERE m.id.guildaId = g.id) as numeroMembros
 		FROM GuildaJpa g
+		LEFT JOIN GuildaMembro gm ON gm.id.guildaId = g.id
+		LEFT JOIN Aluno a ON a.matricula = gm.id.alunoMatricula
+		LEFT JOIN ItemRanking i ON i.alunoMatricula = a.matricula 
+			AND i.ranking.periodo = br.com.forgefit.persistencia.jpa.enums.PeriodoRanking.GERAL
 		WHERE g.nome = :nome
+		  AND g.status = 'ATIVA'
+		GROUP BY g.id, g.nome, g.descricao, g.imagemURL
 		""")
 	GuildaResumo buscarPorNome(@Param("nome") String nome);
 	
 	java.util.Optional<GuildaJpa> findByMestreMatricula(String mestreMatricula);
+	
+	@org.springframework.data.jpa.repository.Query(value = """
+		SELECT COALESCE(SUM(i.pontuacao_total), 0) as pontuacaoTotal
+		FROM guilda_membros gm
+		JOIN aluno a ON a.matricula = gm.aluno_matricula
+		LEFT JOIN ranking r ON r.periodo = 'GERAL'
+		LEFT JOIN item_ranking i ON i.aluno_matricula = a.matricula 
+			AND i.ranking_id = r.id
+		WHERE gm.guilda_id = :guildaId
+		""", nativeQuery = true)
+	Integer calcularPontuacaoTotalPorGuildaId(@org.springframework.data.repository.query.Param("guildaId") Integer guildaId);
+	
+	@org.springframework.data.jpa.repository.Query(value = """
+		SELECT 
+			a.matricula as matricula,
+			a.nome as nome,
+			u.avatar as avatarUrl,
+			COALESCE(i.pontuacao_total, 0) as pontuacao,
+			gm.data_entrada as dataEntrada
+		FROM guilda_membros gm
+		JOIN aluno a ON a.matricula = gm.aluno_matricula
+		JOIN guilda g ON g.id = gm.guilda_id
+		LEFT JOIN usuarios_mock u ON CAST(u.id AS VARCHAR) = a.user_id AND u.role = 'student'
+		LEFT JOIN ranking r ON r.periodo = 'GERAL'
+		LEFT JOIN item_ranking i ON i.aluno_matricula = a.matricula 
+			AND i.ranking_id = r.id
+		WHERE gm.guilda_id = :guildaId
+		  AND g.status = 'ATIVA'
+		ORDER BY COALESCE(i.pontuacao_total, 0) DESC, gm.data_entrada ASC
+		""", nativeQuery = true)
+	java.util.List<br.com.forgefit.aplicacao.guilda.MembroResumo> buscarMembrosPorGuildaId(@org.springframework.data.repository.query.Param("guildaId") Integer guildaId);
 }
 
 @org.springframework.stereotype.Repository("guildaRepositorio")
@@ -102,6 +146,9 @@ class GuildaRepositorioImpl implements br.com.forgefit.dominio.guilda.GuildaRepo
 	
 	@org.springframework.beans.factory.annotation.Autowired
 	br.com.forgefit.persistencia.jpa.CheckinJpaRepository checkinRepository;
+	
+	@org.springframework.beans.factory.annotation.Autowired
+	br.com.forgefit.persistencia.jpa.AlunoJpaRepository alunoRepository;
 
 	// Métodos do GuildaRepositorio (domínio)
 	@Override
@@ -113,15 +160,70 @@ class GuildaRepositorioImpl implements br.com.forgefit.dominio.guilda.GuildaRepo
 		// Caso contrário, é INSERT (criação)
 		br.com.forgefit.persistencia.jpa.GuildaMembroId membroId = 
 			new br.com.forgefit.persistencia.jpa.GuildaMembroId(
-				guildaJpa.id, 
+				guilda.getId().getId(), 
 				guilda.getMestreDaGuilda().getValor()
 			);
 		
-		boolean isUpdate = guildaMembroRepository.existsById(membroId);
+		boolean isUpdate = guilda.getId().getId() > 0 && guildaMembroRepository.existsById(membroId);
 		
 		if (isUpdate) {
 			// É uma edição - mantém o ID existente e usa save()
 			repositorio.save(guildaJpa);
+			
+			// Se a guilda foi inativada, remover todos os membros e atualizar GUILDA_ID dos alunos
+			if (guilda.getStatus() == br.com.forgefit.dominio.guilda.enums.StatusGuilda.INATIVA) {
+				// Buscar todos os membros da guilda
+				java.util.List<br.com.forgefit.persistencia.jpa.GuildaMembro> membrosParaRemover = 
+					guildaMembroRepository.findAll().stream()
+						.filter(m -> m.getId().getGuildaId().equals(guilda.getId().getId()))
+						.collect(java.util.stream.Collectors.toList());
+				
+				// Remover todos os membros da tabela GUILDA_MEMBROS
+				for (br.com.forgefit.persistencia.jpa.GuildaMembro membro : membrosParaRemover) {
+					guildaMembroRepository.deleteById(membro.getId());
+				}
+				
+				// Atualizar GUILDA_ID de todos os alunos dessa guilda para NULL
+				// Buscar todos os alunos com essa guilda e atualizar
+				java.util.List<br.com.forgefit.persistencia.jpa.Aluno> alunosComGuilda = 
+					alunoRepository.findAll().stream()
+						.filter(a -> a.getGuildaId() != null && a.getGuildaId().equals(guilda.getId().getId()))
+						.collect(java.util.stream.Collectors.toList());
+				
+				for (br.com.forgefit.persistencia.jpa.Aluno aluno : alunosComGuilda) {
+					aluno.setGuildaId(null);
+					alunoRepository.save(aluno);
+				}
+			} else {
+				// Sincronizar membros: buscar membros atuais no banco e comparar com o domínio
+				java.util.Set<String> membrosAtuais = guildaMembroRepository.findAll().stream()
+					.filter(m -> m.getId().getGuildaId().equals(guilda.getId().getId()))
+					.map(m -> m.getId().getAlunoMatricula())
+					.collect(java.util.stream.Collectors.toSet());
+				
+				java.util.Set<String> membrosDominio = guilda.getMembros().stream()
+					.map(m -> m.getValor())
+					.collect(java.util.stream.Collectors.toSet());
+				
+				// Adicionar novos membros
+				for (br.com.forgefit.dominio.aluno.Matricula matricula : guilda.getMembros()) {
+					if (!membrosAtuais.contains(matricula.getValor())) {
+						br.com.forgefit.persistencia.jpa.GuildaMembro novoMembro = new br.com.forgefit.persistencia.jpa.GuildaMembro();
+						novoMembro.setId(new br.com.forgefit.persistencia.jpa.GuildaMembroId(guilda.getId().getId(), matricula.getValor()));
+						novoMembro.setDataEntrada(new java.util.Date());
+						guildaMembroRepository.save(novoMembro);
+					}
+				}
+				
+				// Remover membros que não estão mais no domínio (exceto o mestre)
+				for (String matricula : membrosAtuais) {
+					if (!membrosDominio.contains(matricula) && !matricula.equals(guilda.getMestreDaGuilda().getValor())) {
+						br.com.forgefit.persistencia.jpa.GuildaMembroId idParaRemover = 
+							new br.com.forgefit.persistencia.jpa.GuildaMembroId(guilda.getId().getId(), matricula);
+						guildaMembroRepository.deleteById(idParaRemover);
+					}
+				}
+			}
 		} else {
 			// É uma criação - força ID=0 para INSERT com auto-increment
 			guildaJpa.id = 0;
@@ -132,6 +234,16 @@ class GuildaRepositorioImpl implements br.com.forgefit.dominio.guilda.GuildaRepo
 			mestre.setId(new br.com.forgefit.persistencia.jpa.GuildaMembroId(saved.id, guilda.getMestreDaGuilda().getValor()));
 			mestre.setDataEntrada(new java.util.Date());
 			guildaMembroRepository.save(mestre);
+			
+			// Adiciona outros membros se houver (normalmente só o mestre na criação)
+			for (br.com.forgefit.dominio.aluno.Matricula matricula : guilda.getMembros()) {
+				if (!matricula.equals(guilda.getMestreDaGuilda())) {
+					br.com.forgefit.persistencia.jpa.GuildaMembro novoMembro = new br.com.forgefit.persistencia.jpa.GuildaMembro();
+					novoMembro.setId(new br.com.forgefit.persistencia.jpa.GuildaMembroId(saved.id, matricula.getValor()));
+					novoMembro.setDataEntrada(new java.util.Date());
+					guildaMembroRepository.save(novoMembro);
+				}
+			}
 		}
 	}
 
@@ -154,6 +266,52 @@ class GuildaRepositorioImpl implements br.com.forgefit.dominio.guilda.GuildaRepo
 					codigoConvite,
 					mestreMatricula
 				);
+				
+				// Carregar membros do banco e adicionar à guilda (exceto o mestre que já está)
+				java.util.List<br.com.forgefit.persistencia.jpa.GuildaMembro> membrosJpa = guildaMembroRepository.findAll().stream()
+					.filter(m -> m.getId().getGuildaId().equals(jpa.id))
+					.toList();
+				
+				for (br.com.forgefit.persistencia.jpa.GuildaMembro membroJpa : membrosJpa) {
+					br.com.forgefit.dominio.aluno.Matricula matricula = 
+						new br.com.forgefit.dominio.aluno.Matricula(membroJpa.getId().getAlunoMatricula());
+					// O mestre já está na lista, então só adicionamos se não for o mestre
+					if (!matricula.equals(mestreMatricula) && !guilda.isMembro(matricula)) {
+						try {
+							guilda.adicionarMembro(matricula);
+						} catch (IllegalArgumentException e) {
+							// Já é membro, ignorar
+						}
+					}
+				}
+				
+				// Restaurar pontuação do banco usando reflexão (já que não há método público)
+				if (jpa.pontuacaoTotal != null && jpa.pontuacaoTotal > 0) {
+					try {
+						java.lang.reflect.Field pontuacaoField = br.com.forgefit.dominio.guilda.Guilda.class.getDeclaredField("pontuacaoTotal");
+						pontuacaoField.setAccessible(true);
+						pontuacaoField.setInt(guilda, jpa.pontuacaoTotal);
+					} catch (Exception e) {
+						// Se falhar, a pontuação ficará em 0 e será atualizada pelos check-ins
+						System.err.println("Erro ao restaurar pontuação da guilda: " + e.getMessage());
+					}
+				}
+				
+				// Atualizar status se necessário
+				if (jpa.status != null && jpa.status == br.com.forgefit.persistencia.jpa.enums.StatusGuilda.INATIVA) {
+					try {
+						java.lang.reflect.Field statusField = br.com.forgefit.dominio.guilda.Guilda.class.getDeclaredField("status");
+						statusField.setAccessible(true);
+						statusField.set(guilda, br.com.forgefit.dominio.guilda.enums.StatusGuilda.INATIVA);
+					} catch (Exception e) {
+						// Se falhar, tentar usar o método excluir
+						try {
+							guilda.excluir(mestreMatricula);
+						} catch (IllegalStateException ex) {
+							// Já está inativa, ignorar
+						}
+					}
+				}
 				
 				return guilda;
 			});
@@ -184,8 +342,12 @@ class GuildaRepositorioImpl implements br.com.forgefit.dominio.guilda.GuildaRepo
 	@Override
 	public java.util.Optional<br.com.forgefit.dominio.guilda.Guilda> buscarPorCodigoConvite(br.com.forgefit.dominio.guilda.CodigoConvite codigo) {
 		GuildaJpa guildaJpa = repositorio.findByCodigoConvite(codigo.getValor());
-		return java.util.Optional.ofNullable(guildaJpa)
-			.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.guilda.Guilda.class));
+		if (guildaJpa == null) {
+			return java.util.Optional.empty();
+		}
+		
+		// Usar o mesmo padrão de obterPorId para carregar membros corretamente
+		return obterPorId(new br.com.forgefit.dominio.guilda.GuildaId(guildaJpa.id));
 	}
 
 	@Override
@@ -229,25 +391,27 @@ class GuildaRepositorioImpl implements br.com.forgefit.dominio.guilda.GuildaRepo
 				public String getMestreMatricula() { return guilda.mestreMatricula; }
 				
 				@Override
-				public Integer getPontuacaoTotal() { return guilda.pontuacaoTotal; }
+				public Integer getPontuacaoTotal() { 
+					// Calcula pontuação a partir do ItemRanking (fonte única de verdade)
+					Integer pontuacao = repositorio.calcularPontuacaoTotalPorGuildaId(guildaId);
+					return pontuacao == null ? Integer.valueOf(0) : pontuacao;
+				}
 				
 				@Override
 				public java.util.List<br.com.forgefit.aplicacao.guilda.MembroResumo> getMembros() {
-					return java.util.Collections.emptyList(); // TODO: Implementar busca de membros
+					return buscarMembrosPorGuildaId(guildaId);
 				}
 			});
 	}
 	
 	@Override
 	public java.util.List<br.com.forgefit.aplicacao.guilda.MembroResumo> buscarMembrosPorGuildaId(Integer guildaId) {
-		// TODO: Implementar busca de membros com join em ALUNO para pegar nome, avatar, pontuação
-		return java.util.Collections.emptyList();
+		return repositorio.buscarMembrosPorGuildaId(guildaId);
 	}
 	
 	@Override
 	public java.util.List<br.com.forgefit.aplicacao.guilda.CheckinResumo> buscarCheckinsPorGuildaId(Integer guildaId) {
-		// TODO: Implementar busca de checkins com joins em ALUNO e contexto
-		return java.util.Collections.emptyList();
+		return checkinRepository.buscarCheckinsPorGuildaId(guildaId);
 	}
 	
 	@Override

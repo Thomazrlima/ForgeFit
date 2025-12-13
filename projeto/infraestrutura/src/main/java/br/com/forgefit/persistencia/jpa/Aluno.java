@@ -205,6 +205,17 @@ class AlunoRepositorioImpl implements br.com.forgefit.dominio.aluno.AlunoReposit
 			} else {
 				alunoJpa.setPlanoAtivoId(null);
 			}
+			// Atualiza a guilda do aluno
+			if (aluno.getGuildaId() != null) {
+				alunoJpa.setGuildaId(aluno.getGuildaId().getId());
+			} else {
+				alunoJpa.setGuildaId(null);
+			}
+		} else {
+			// Para novo aluno, também precisa setar guildaId
+			if (aluno.getGuildaId() != null) {
+				alunoJpa.setGuildaId(aluno.getGuildaId().getId());
+			}
 		}
 		
 		repositorio.save(alunoJpa);
@@ -262,6 +273,13 @@ class AlunoRepositorioImpl implements br.com.forgefit.dominio.aluno.AlunoReposit
 			}
 			if (alunoJpa.getCreditos() != null && alunoJpa.getCreditos() > 0) {
 				alunoDominio.adicionarCreditos(alunoJpa.getCreditos());
+			}
+			
+			// Adicionar guildaId se existir
+			if (alunoJpa.getGuildaId() != null) {
+				br.com.forgefit.dominio.guilda.GuildaId guildaId = 
+					new br.com.forgefit.dominio.guilda.GuildaId(alunoJpa.getGuildaId());
+				alunoDominio.setGuildaId(guildaId);
 			}
 			
 			return java.util.Optional.of(alunoDominio);

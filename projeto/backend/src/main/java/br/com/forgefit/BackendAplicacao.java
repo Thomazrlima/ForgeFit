@@ -32,8 +32,8 @@ import br.com.forgefit.dominio.torneio.TorneioRepositorio;
 import br.com.forgefit.dominio.torneio.TorneioService;
 import br.com.forgefit.dominio.avaliacao.AvaliacaoRepositorio;
 import br.com.forgefit.dominio.avaliacao.AvaliacaoService;
-import br.com.forgefit.dominio.frequencia.FrequenciaRepositorio;
-import br.com.forgefit.dominio.frequencia.FrequenciaService;
+import br.com.forgefit.dominio.ranking.RankingRepositorio;
+import br.com.forgefit.dominio.ranking.RankingService;
 
 @SpringBootApplication
 @EnableScheduling
@@ -66,10 +66,16 @@ public class BackendAplicacao {
     }
 
     @Bean
+    public RankingService rankingService(RankingRepositorio rankingRepositorio) {
+        return new RankingService(rankingRepositorio);
+    }
+
+    @Bean
     public CheckinService checkinService(CheckinRepositorio checkinRepositorio,
             AlunoRepositorio alunoRepositorio,
-            GuildaRepositorio guildaRepositorio) {
-        return new CheckinService(checkinRepositorio, alunoRepositorio, guildaRepositorio);
+            GuildaRepositorio guildaRepositorio,
+            RankingService rankingService) {
+        return new CheckinService(checkinRepositorio, alunoRepositorio, guildaRepositorio, rankingService);
     }
 
     @Bean

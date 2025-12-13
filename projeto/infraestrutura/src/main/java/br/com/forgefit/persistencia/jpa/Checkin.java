@@ -36,16 +36,16 @@ class Checkin {
 	private String urlImagem;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "TIPO", nullable = false)
+	@Column(name = "CONTEXTO_TIPO", nullable = false)
 	private TipoDeCheckin tipo;
 
-	@Column(name = "AULA_ID")
+	@Column(name = "CONTEXTO_AULA_ID")
 	private Integer aulaId;
 
-	@Column(name = "PLANO_TREINO_ID")
+	@Column(name = "CONTEXTO_PLANO_TREINO_ID")
 	private Integer planoDeTreinoId;
 
-	@Column(name = "LETRA_TREINO", length = 20)
+	@Column(name = "CONTEXTO_LETRA_TREINO", length = 20)
 	private String letraTreino;
 
 	public Integer getId() {
@@ -153,19 +153,44 @@ interface CheckinJpaRepository extends JpaRepository<Checkin, Integer> {
 		@org.springframework.data.repository.query.Param("inicio") java.util.Date inicio,
 		@org.springframework.data.repository.query.Param("fim") java.util.Date fim);
 	
-	@org.springframework.data.jpa.repository.Query("""
-		SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END
-		FROM Checkin c
-		WHERE c.alunoMatricula = :matricula
-		  AND c.planoDeTreinoId = :planoId
-		  AND c.letraTreino = :letra
-		  AND CAST(c.dataCheckin AS date) = :data
-		""")
+	@org.springframework.data.jpa.repository.Query(value = """
+		SELECT CASE WHEN COUNT(c.id) > 0 THEN true ELSE false END
+		FROM checkin c
+		WHERE c.aluno_matricula = :matricula
+		  AND c.contexto_plano_treino_id = :planoId
+		  AND c.contexto_letra_treino = :letra
+		  AND CAST(c.data_checkin AS date) = :data
+		""", nativeQuery = true)
 	boolean existeCheckinDeTreino(
 		@org.springframework.data.repository.query.Param("matricula") String matricula,
 		@org.springframework.data.repository.query.Param("planoId") Integer planoId,
 		@org.springframework.data.repository.query.Param("letra") String letra,
 		@org.springframework.data.repository.query.Param("data") java.util.Date data);
+	
+	@org.springframework.data.jpa.repository.Query(value = """
+		SELECT 
+			c.id as id,
+			c.aluno_matricula as alunoMatricula,
+			a.nome as alunoNome,
+			u.avatar as alunoAvatarUrl,
+			CASE 
+				WHEN c.contexto_tipo = 'TREINO' THEN 
+					CONCAT('Treino ', COALESCE(c.contexto_letra_treino, ''))
+				WHEN c.contexto_tipo = 'AULA' THEN 
+					'Aula'
+				ELSE 'Check-in'
+			END as nomeContexto,
+			c.mensagem as mensagem,
+			c.url_imagem as urlImagem,
+			c.data_checkin as dataCheckin,
+			c.pontuacao_total as pontuacao
+		FROM checkin c
+		JOIN aluno a ON a.matricula = c.aluno_matricula
+		LEFT JOIN usuarios_mock u ON CAST(u.id AS VARCHAR) = a.user_id AND u.role = 'student'
+		WHERE c.guilda_id = :guildaId
+		ORDER BY c.data_checkin DESC
+		""", nativeQuery = true)
+	java.util.List<br.com.forgefit.aplicacao.guilda.CheckinResumo> buscarCheckinsPorGuildaId(@org.springframework.data.repository.query.Param("guildaId") Integer guildaId);
 }
 
 @org.springframework.stereotype.Repository("checkinRepositorio")
@@ -179,6 +204,15 @@ class CheckinRepositorioImpl implements br.com.forgefit.dominio.checkin.CheckinR
 	@Override
 	public void salvar(br.com.forgefit.dominio.checkin.Checkin checkin) {
 		Checkin checkinJpa = mapeador.map(checkin, Checkin.class);
+		
+		// SEMPRE deixar o banco gerar o ID para novos check-ins
+		// O contador do domínio (AtomicInteger) reinicia a cada inicialização da aplicação
+		// e pode gerar IDs que já existem no banco, causando sobrescrita
+		// Por isso, sempre setamos como null para garantir que o banco gere um ID único via SERIAL
+		checkinJpa.setId(null);
+		
+		// O JPA vai fazer INSERT (não UPDATE) porque o ID é null
+		// e o @GeneratedValue(strategy = GenerationType.IDENTITY) vai gerar um novo ID
 		repositorio.save(checkinJpa);
 	}
 

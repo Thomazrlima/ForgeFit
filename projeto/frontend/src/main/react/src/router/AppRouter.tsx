@@ -51,6 +51,25 @@ const ProfessorRoute = ({ children }: ProtectedRouteProps) => {
     return user.role === "professor" ? <>{children}</> : <Navigate to="/aulas" replace />;
 };
 
+const StudentRoute = ({ children }: ProtectedRouteProps) => {
+    const { user, loading } = useUser();
+
+    if (loading) {
+        return <LoadingScreen />;
+    }
+
+    if (!user) {
+        return <Navigate to="/login" replace />;
+    }
+
+    // Bloqueia professores e permite apenas alunos (students)
+    if (user.role === "professor") {
+        return <Navigate to="/aulas" replace />;
+    }
+
+    return <>{children}</>;
+};
+
 const AppRouter = () => {
     return (
         <Router>
@@ -77,8 +96,22 @@ const AppRouter = () => {
                     <Route path="/torneio/" element={<TorneiosDetalhes />} />
                     <Route path="/ranking" element={<Ranking />} />
                     <Route path="/evolucao" element={<Evolucao />} />
-                    <Route path="/guilda" element={<Guilda />} />
-                    <Route path="/guilda/:id" element={<GuildaDetalhes />} />
+                    <Route
+                        path="/guilda"
+                        element={
+                            <StudentRoute>
+                                <Guilda />
+                            </StudentRoute>
+                        }
+                    />
+                    <Route
+                        path="/guilda/:id"
+                        element={
+                            <StudentRoute>
+                                <GuildaDetalhes />
+                            </StudentRoute>
+                        }
+                    />
                 </Route>
 
                 <Route

@@ -9,7 +9,7 @@ import { animationVariants } from "../../hooks/useScrollAnimation";
 import { useCriarGuilda } from "../../hooks/useGuildaDetalhes";
 import { useUser } from "../../contexts/UserContext";
 import { useToast } from "../../contexts/ToastContext";
-import { verificarMembroGuilda } from "../../services/guildaService";
+import { verificarMembroGuilda, entrarGuilda } from "../../services/guildaService";
 
 const Guilda = () => {
     const { user } = useUser();
@@ -18,6 +18,7 @@ const Guilda = () => {
     const [guildCode, setGuildCode] = useState("");
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isCheckingMembership, setIsCheckingMembership] = useState(true);
+    const [isJoiningGuild, setIsJoiningGuild] = useState(false);
     
     const { mutate: criarGuilda, isPending: isCreatingGuild } = useCriarGuilda();
 
@@ -45,13 +46,42 @@ const Guilda = () => {
         verificarGuilda();
     }, [user?.matricula, navigate]);
 
-    const handleJoinGuild = () => {
+    const handleJoinGuild = async () => {
         if (!guildCode.trim()) {
             error("Digite um código válido");
             return;
         }
-        console.log("Entrar em uma guilda com código:", guildCode);
-        // TODO: Implementar lógica de entrada na guilda
+        
+        if (!user?.matricula) {
+            error("Você precisa estar logado para entrar em uma guilda");
+            return;
+        }
+        
+        setIsJoiningGuild(true);
+        
+        try {
+            const response = await entrarGuilda({
+                codigoConvite: guildCode.trim().toUpperCase(),
+                alunoMatricula: user.matricula,
+            });
+            
+            if (response.sucesso) {
+                success("Você entrou na guilda com sucesso!");
+                setGuildCode("");
+                
+                // Redirecionar para página de detalhes da guilda
+                if (response.guildaId) {
+                    navigate(`/guilda/${response.guildaId}`);
+                }
+            } else {
+                error(response.mensagem || "Erro ao entrar na guilda");
+            }
+        } catch (err) {
+            console.error("Erro ao entrar em guilda:", err);
+            error("Erro ao entrar em guilda. Verifique o código e tente novamente.");
+        } finally {
+            setIsJoiningGuild(false);
+        }
     };
 
     const handleCreateGuild = () => {
@@ -133,9 +163,9 @@ const Guilda = () => {
                         <ActionDescription>Digite o código da guilda fornecido pelo líder para se juntar. Participe de desafios coletivos e conquiste recompensas ao lado do seu clã.</ActionDescription>
                         <InputWrapper>
                             <GuildInput type="text" placeholder="Digite o código da guilda" value={guildCode} onChange={(e) => setGuildCode(e.target.value)} />
-                            <Button onClick={handleJoinGuild} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", whiteSpace: "nowrap" }}>
+                            <Button onClick={handleJoinGuild} disabled={isJoiningGuild} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", whiteSpace: "nowrap" }}>
                                 <LogIn size={20} />
-                                Entrar
+                                {isJoiningGuild ? "Entrando..." : "Entrar"}
                             </Button>
                         </InputWrapper>
                     </ActionCard>

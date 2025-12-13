@@ -16,6 +16,8 @@ import { useGuildaDetalhes } from "../../hooks/useGuildaDetalhes";
 import { Container, Header, HeaderLeft, GuildAvatar, GuildInfo, GuildName, GuildCode, CodeWrapper, CopyButton, Tooltip, HeaderActions, TabsMenu, TabButton, ActiveIndicator, ContentSection, MessagesContainer, MessageWrapper, CheckinCard, CheckinHeader, CheckinUserInfo, CheckinUserName, CheckinTime, CheckinContent, CheckinWorkout, CheckinDescription, CheckinImage, RankingContainer, SkeletonAvatar, SkeletonText } from "./styles.ts";
 import Spinner from "../../components/common/Spinner";
 import { useToast } from "../../contexts/ToastContext";
+import { excluirGuilda, fazerCheckinTreino } from "../../services/guildaService";
+import { buscarPlanoAtivoPorAluno, type PlanoTreino } from "../../services/treinoService";
 
 type SectionType = "messages" | "ranking" | "checkin";
 
@@ -56,7 +58,8 @@ const GuildaDetalhes = () => {
     // React Query para buscar detalhes da guilda
     const { data: guildaDetalhes, isLoading: isLoadingGuild, error: guildaError } = useGuildaDetalhes(guildaId);
     
-    const [availableWorkouts, setAvailableWorkouts] = useState<{ id: string; name: string }[]>([]);
+    const [availableWorkouts, setAvailableWorkouts] = useState<PlanoTreino["treinos"]>([]);
+    const [planoTreino, setPlanoTreino] = useState<PlanoTreino | null>(null);
 
     const [copied, setCopied] = useState(false);
     const [isCheckinModalOpen, setIsCheckinModalOpen] = useState(false);
@@ -69,6 +72,11 @@ const GuildaDetalhes = () => {
             navigate("/guilda", { replace: true });
         }
     }, [guildaId, isLoadingGuild, navigate, showError]);
+
+    // Verifica se o usuário é o mestre da guilda
+    const isMestre = useMemo(() => {
+        return guildaDetalhes && user?.matricula && guildaDetalhes.mestreMatricula === user.matricula;
+    }, [guildaDetalhes, user?.matricula]);
 
     // Converte membros para o formato esperado pelo componente
     const members = useMemo<GuildMember[]>(() => {
@@ -115,16 +123,28 @@ const GuildaDetalhes = () => {
     }, [activeSection]);
 
     useEffect(() => {
-        // TODO: Implementar endpoint para buscar treinos disponíveis
-        setAvailableWorkouts([
-            { id: "1", name: "Peito e Tríceps" },
-            { id: "2", name: "Costas e Bíceps" },
-            { id: "3", name: "Pernas" },
-            { id: "4", name: "Ombros e Abdômen" },
-            { id: "5", name: "Cardio Matinal" },
-            { id: "6", name: "Treino Funcional" },
-        ]);
-    }, []);
+        const carregarTreinos = async () => {
+            if (!user?.matricula) return;
+            
+            try {
+                const plano = await buscarPlanoAtivoPorAluno(user.matricula);
+                if (plano && plano.treinos) {
+                    setPlanoTreino(plano);
+                    setAvailableWorkouts(plano.treinos);
+                } else {
+                    // Se não houver plano, manter lista vazia ou mostrar mensagem
+                    setPlanoTreino(null);
+                    setAvailableWorkouts([]);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar treinos:", error);
+                setPlanoTreino(null);
+                setAvailableWorkouts([]);
+            }
+        };
+        
+        carregarTreinos();
+    }, [user?.matricula]);
 
     useEffect(() => {
         if (guildaError) {
@@ -183,9 +203,25 @@ const GuildaDetalhes = () => {
     };
 
     const handleDeleteGuild = async () => {
-        console.log("Guilda excluída");
-        // TODO: Enviar para API e redirecionar para página de guildas
-        // Exemplo: navigate('/guilda');
+        if (!guildaId || !user?.matricula) {
+            showError("Não foi possível excluir a guilda");
+            return;
+        }
+        
+        try {
+            const response = await excluirGuilda(guildaId, user.matricula);
+            
+            if (response.sucesso) {
+                // Invalidar cache e redirecionar
+                queryClient.invalidateQueries({ queryKey: ["guilda"] });
+                navigate("/guilda");
+            } else {
+                showError(response.mensagem || "Erro ao excluir guilda");
+            }
+        } catch (error) {
+            console.error("Erro ao excluir guilda:", error);
+            showError("Erro ao excluir guilda. Tente novamente.");
+        }
     };
 
     const handleCheckin = () => {
@@ -193,10 +229,44 @@ const GuildaDetalhes = () => {
     };
 
     const handleCheckinSubmit = async (data: CheckinData) => {
-        console.log("Check-in realizado:", data);
-        // TODO: Enviar para API
-        // Após sucesso, invalidar cache do React Query para recarregar dados
-        queryClient.invalidateQueries({ queryKey: ["guilda", "detalhes", guildaId] });
+        if (!guildaId || !user?.matricula) {
+            showError("Não foi possível fazer check-in");
+            return;
+        }
+        
+        try {
+            // Buscar plano de treino do aluno para obter o ID
+            const plano = await buscarPlanoAtivoPorAluno(user.matricula);
+            if (!plano) {
+                showError("Você não tem um plano de treino ativo");
+                return;
+            }
+            
+            // O workoutId deve estar no formato "letra" (ex: "A", "B", "C")
+            // ou podemos usar o nome do treino para identificar a letra
+            const letraTreino = data.workoutId.toUpperCase();
+            
+            const response = await fazerCheckinTreino(guildaId, {
+                alunoMatricula: user.matricula,
+                planoDeTreinoId: plano.id,
+                letraTreino: letraTreino,
+                mensagem: data.description,
+                urlImagem: data.imageUrl,
+                dataCheckin: data.date, // Enviar a data selecionada pelo usuário
+            });
+            
+            if (response.sucesso) {
+                // Invalidar cache para recarregar dados
+                queryClient.invalidateQueries({ queryKey: ["guilda", "detalhes", guildaId] });
+                setIsCheckinModalOpen(false);
+            } else {
+                showError(response.mensagem || "Erro ao fazer check-in");
+            }
+        } catch (error: any) {
+            console.error("Erro ao fazer check-in:", error);
+            const errorMessage = error?.response?.data?.mensagem || error?.message || "Erro ao fazer check-in. Tente novamente.";
+            showError(errorMessage);
+        }
     };
 
     const formatTimestamp = (date: Date) => {
@@ -259,10 +329,12 @@ const GuildaDetalhes = () => {
                             </GuildInfo>
                         </HeaderLeft>
                         <HeaderActions>
-                            <Button variant="secondary" size="md" onClick={handleEdit}>
-                                <Edit size={20} />
-                                Editar
-                            </Button>
+                            {isMestre && (
+                                <Button variant="secondary" size="md" onClick={handleEdit}>
+                                    <Edit size={20} />
+                                    Editar
+                                </Button>
+                            )}
                             <Button variant="primary" size="md" onClick={handleCheckin}>
                                 <Plus size={20} />
                                 Check-in
@@ -347,7 +419,13 @@ const GuildaDetalhes = () => {
                 </AnimatePresence>
             </ContentSection>
 
-            <CheckinModal isOpen={isCheckinModalOpen} onClose={() => setIsCheckinModalOpen(false)} onSubmit={handleCheckinSubmit} workouts={availableWorkouts} />
+            <CheckinModal 
+                isOpen={isCheckinModalOpen} 
+                onClose={() => setIsCheckinModalOpen(false)} 
+                onSubmit={handleCheckinSubmit} 
+                treinos={availableWorkouts}
+                planoTreino={planoTreino}
+            />
 
             {guildaDetalhes && (
                 <EditGuildModal

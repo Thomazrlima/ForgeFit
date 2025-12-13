@@ -1,9 +1,11 @@
 package br.com.forgefit.apresentacao.guilda;
 
+import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +18,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.forgefit.aplicacao.guilda.GuildaResumo;
 import br.com.forgefit.aplicacao.guilda.GuildaServicoAplicacao;
+import br.com.forgefit.dominio.aluno.AlunoRepositorio;
 import br.com.forgefit.dominio.aluno.Matricula;
+import br.com.forgefit.dominio.checkin.Checkin;
+import br.com.forgefit.dominio.checkin.CheckinService;
+import br.com.forgefit.dominio.guilda.CodigoConvite;
 import br.com.forgefit.dominio.guilda.Guilda;
 import br.com.forgefit.dominio.guilda.GuildaId;
+import br.com.forgefit.dominio.guilda.GuildaRepositorio;
 import br.com.forgefit.dominio.guilda.GuildaService;
+import br.com.forgefit.dominio.treino.PlanoDeTreinoId;
+import br.com.forgefit.dominio.treino.TreinoRepositorio;
+import br.com.forgefit.dominio.treino.enums.LetraDoTreino;
+import br.com.forgefit.persistencia.jpa.GuildaMembroService;
 
 @RestController
 @RequestMapping("api/guildas")
@@ -30,6 +41,21 @@ class GuildaControlador {
     
     @Autowired
     private GuildaService guildaService;
+    
+    @Autowired
+    private AlunoRepositorio alunoRepositorio;
+    
+    @Autowired
+    private GuildaRepositorio guildaRepositorio;
+    
+    @Autowired
+    private CheckinService checkinService;
+    
+    @Autowired
+    private TreinoRepositorio treinoRepositorio;
+    
+    @Autowired
+    private GuildaMembroService guildaMembroService;
 
     @RequestMapping(method = GET, path = "/ativas")
     List<GuildaResumo> listarGuildasAtivas() {
@@ -43,8 +69,8 @@ class GuildaControlador {
     
     @RequestMapping(method = GET, path = "/membro/{matricula}")
     ResponseEntity<VerificarMembroResponse> verificarMembroGuilda(@PathVariable String matricula) {
-        // Busca guilda por matricula do mestre via camada de aplicação
-        java.util.Optional<Integer> guildaIdOpt = guildaServicoAplicacao.buscarIdGuildaPorMatriculaMestre(matricula);
+        // Busca guilda por matricula do aluno (membro ou mestre) via tabela GUILDA_MEMBROS
+        java.util.Optional<Integer> guildaIdOpt = guildaMembroService.buscarGuildaIdPorMatricula(matricula);
         if (guildaIdOpt.isPresent()) {
             return ResponseEntity.ok(new VerificarMembroResponse(true, guildaIdOpt.get()));
         }
@@ -189,6 +215,182 @@ class GuildaControlador {
                 .body(new AlterarGuildaResponse(false, "Erro ao alterar guilda: " + e.getMessage()));
         }
     }
+    
+    @RequestMapping(method = POST, path = "/entrar")
+    ResponseEntity<EntrarGuildaResponse> entrarGuilda(@RequestBody EntrarGuildaRequest request) {
+        try {
+            if (request.codigoConvite() == null || request.codigoConvite().trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(new EntrarGuildaResponse(false, "Código de convite é obrigatório", null));
+            }
+            
+            if (request.alunoMatricula() == null || request.alunoMatricula().trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(new EntrarGuildaResponse(false, "Matrícula do aluno é obrigatória", null));
+            }
+            
+            // Verificar se o aluno já está em uma guilda
+            var alunoOpt = alunoRepositorio.obterPorMatricula(new Matricula(request.alunoMatricula().trim()));
+            if (alunoOpt.isPresent() && alunoOpt.get().getGuildaId() != null) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new EntrarGuildaResponse(false, "Aluno já está em uma guilda", null));
+            }
+            
+            CodigoConvite codigoConvite = new CodigoConvite(request.codigoConvite().trim());
+            Matricula alunoMatricula = new Matricula(request.alunoMatricula().trim());
+            
+            // Buscar guilda pelo código antes de entrar (para obter o ID)
+            var guildaOpt = guildaRepositorio.buscarPorCodigoConvite(codigoConvite);
+            if (guildaOpt.isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(new EntrarGuildaResponse(false, "Código de convite inválido", null));
+            }
+            
+            GuildaId guildaId = guildaOpt.get().getId();
+            
+            guildaService.entrarEmGuilda(alunoMatricula, codigoConvite);
+            
+            // Atualizar GUILDA_ID do aluno
+            var aluno = alunoOpt.orElseThrow(() -> new IllegalArgumentException("Aluno não encontrado"));
+            aluno.setGuildaId(guildaId);
+            alunoRepositorio.salvar(aluno);
+            
+            return ResponseEntity.ok(new EntrarGuildaResponse(
+                true,
+                "Aluno entrou na guilda com sucesso",
+                guildaId.getId()
+            ));
+                
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                .body(new EntrarGuildaResponse(false, e.getMessage(), null));
+        } catch (Exception e) {
+            System.err.println("Erro ao entrar em guilda: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new EntrarGuildaResponse(false, "Erro ao entrar em guilda: " + e.getMessage(), null));
+        }
+    }
+    
+    @RequestMapping(method = DELETE, path = "/{id}")
+    ResponseEntity<ExcluirGuildaResponse> excluirGuilda(
+            @PathVariable Integer id,
+            @RequestBody ExcluirGuildaRequest request) {
+        try {
+            System.out.println("Tentando excluir guilda ID: " + id);
+            System.out.println("Matrícula recebida: '" + request.mestreMatricula() + "'");
+            
+            if (request.mestreMatricula() == null || request.mestreMatricula().trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(new ExcluirGuildaResponse(false, "Matrícula do mestre é obrigatória"));
+            }
+            
+            GuildaId guildaId = new GuildaId(id);
+            Matricula mestreMatricula = new Matricula(request.mestreMatricula().trim());
+            
+            System.out.println("Chamando guildaService.excluirGuilda com guildaId: " + guildaId.getId() + ", matricula: " + mestreMatricula.getValor());
+            
+            guildaService.excluirGuilda(guildaId, mestreMatricula);
+            
+            System.out.println("Guilda excluída com sucesso");
+            return ResponseEntity.ok(new ExcluirGuildaResponse(true, "Guilda excluída com sucesso"));
+                
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            System.err.println("Erro de validação ao excluir guilda: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest()
+                .body(new ExcluirGuildaResponse(false, e.getMessage()));
+        } catch (Exception e) {
+            System.err.println("Erro ao excluir guilda: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ExcluirGuildaResponse(false, "Erro ao excluir guilda: " + e.getMessage()));
+        }
+    }
+    
+    @RequestMapping(method = POST, path = "/{guildaId}/checkins/treino")
+    ResponseEntity<CheckinTreinoResponse> fazerCheckinTreino(
+            @PathVariable Integer guildaId,
+            @RequestBody CheckinTreinoRequest request) {
+        try {
+            if (request.alunoMatricula() == null || request.alunoMatricula().trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(new CheckinTreinoResponse(false, "Matrícula do aluno é obrigatória", null));
+            }
+            
+            if (request.planoDeTreinoId() == null) {
+                return ResponseEntity.badRequest()
+                    .body(new CheckinTreinoResponse(false, "ID do plano de treino é obrigatório", null));
+            }
+            
+            if (request.letraTreino() == null || request.letraTreino().trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(new CheckinTreinoResponse(false, "Letra do treino é obrigatória", null));
+            }
+            
+            Matricula alunoMatricula = new Matricula(request.alunoMatricula().trim());
+            PlanoDeTreinoId planoId = new PlanoDeTreinoId(request.planoDeTreinoId());
+            LetraDoTreino letraTreino;
+            
+            try {
+                letraTreino = LetraDoTreino.valueOf(request.letraTreino().trim().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest()
+                    .body(new CheckinTreinoResponse(false, "Letra do treino inválida", null));
+            }
+            
+            var planoOpt = treinoRepositorio.obterPorId(planoId);
+            if (planoOpt.isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(new CheckinTreinoResponse(false, "Plano de treino não encontrado", null));
+            }
+            
+            // Parse da data do check-in (formato ISO: yyyy-MM-dd)
+            LocalDate dataCheckin;
+            if (request.dataCheckin() != null && !request.dataCheckin().trim().isEmpty()) {
+                try {
+                    dataCheckin = LocalDate.parse(request.dataCheckin().trim());
+                } catch (Exception e) {
+                    return ResponseEntity.badRequest()
+                        .body(new CheckinTreinoResponse(false, "Data do check-in inválida. Use o formato yyyy-MM-dd", null));
+                }
+            } else {
+                dataCheckin = LocalDate.now(); // Se não fornecida, usa a data atual
+            }
+            
+            // Validar que a data não é futura
+            LocalDate hoje = LocalDate.now();
+            if (dataCheckin.isAfter(hoje)) {
+                return ResponseEntity.badRequest()
+                    .body(new CheckinTreinoResponse(false, "Não é possível fazer check-in para datas futuras", null));
+            }
+            
+            Checkin checkin = checkinService.realizarCheckinDeTreino(
+                alunoMatricula,
+                planoOpt.get(),
+                letraTreino,
+                request.mensagem(),
+                request.urlImagem(),
+                dataCheckin
+            );
+            
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new CheckinTreinoResponse(
+                    true,
+                    "Check-in realizado com sucesso",
+                    checkin.getId().getId()
+                ));
+                
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest()
+                .body(new CheckinTreinoResponse(false, e.getMessage(), null));
+        } catch (Exception e) {
+            System.err.println("Erro ao fazer check-in: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new CheckinTreinoResponse(false, "Erro ao fazer check-in: " + e.getMessage(), null));
+        }
+    }
 }
 
 record CriarGuildaRequest(
@@ -233,4 +435,39 @@ record AlterarGuildaRequest(
 record AlterarGuildaResponse(
     boolean sucesso,
     String mensagem
+) {}
+
+record EntrarGuildaRequest(
+    String codigoConvite,
+    String alunoMatricula
+) {}
+
+record EntrarGuildaResponse(
+    boolean sucesso,
+    String mensagem,
+    Integer guildaId
+) {}
+
+record ExcluirGuildaRequest(
+    String mestreMatricula
+) {}
+
+record ExcluirGuildaResponse(
+    boolean sucesso,
+    String mensagem
+) {}
+
+record CheckinTreinoRequest(
+    String alunoMatricula,
+    Integer planoDeTreinoId,
+    String letraTreino,
+    String mensagem,
+    String urlImagem,
+    String dataCheckin
+) {}
+
+record CheckinTreinoResponse(
+    boolean sucesso,
+    String mensagem,
+    Integer checkinId
 ) {}

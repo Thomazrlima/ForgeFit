@@ -89,7 +89,7 @@ class ItemRanking {
 	@Column(name = "MEDIA_PERFORMANCE")
 	private Double mediaPerformance = 0.0;
 
-	@Column(name = "NUM_AVALIACOES")
+	@Column(name = "NUMERO_AVALIACOES")
 	private Integer numeroAvaliacoes = 0;
 
 	public Integer getId() {
@@ -257,8 +257,69 @@ class RankingRepositorioImpl implements br.com.forgefit.dominio.ranking.RankingR
 
 	@Override
 	public void salvar(br.com.forgefit.dominio.ranking.Ranking ranking) {
-		Ranking rankingJpa = mapeador.map(ranking, Ranking.class);
-		repositorio.save(rankingJpa);
+		// Verificar se o ranking já existe no banco
+		PeriodoRanking periodoJpa = PeriodoRanking.valueOf(ranking.getPeriodo().name());
+		Ranking rankingJpaExistente = repositorio.findByPeriodo(periodoJpa);
+		
+		if (rankingJpaExistente != null) {
+			// Atualizar ranking existente - atualizar ou criar itens conforme necessário
+			// Criar um mapa dos itens existentes por matrícula para busca rápida
+			java.util.Map<String, ItemRanking> itensExistentesPorMatricula = new java.util.HashMap<>();
+			if (rankingJpaExistente.getItens() != null) {
+				for (ItemRanking itemExistente : rankingJpaExistente.getItens()) {
+					if (itemExistente != null && itemExistente.getAlunoMatricula() != null) {
+						itensExistentesPorMatricula.put(itemExistente.getAlunoMatricula(), itemExistente);
+					}
+				}
+			}
+			
+			// Processar itens do domínio
+			if (ranking.getItens() != null) {
+				java.util.Set<String> matriculaProcessadas = new java.util.HashSet<>();
+				
+				for (br.com.forgefit.dominio.ranking.ItemRanking item : ranking.getItens()) {
+					String matricula = item.getAlunoMatricula().getValor();
+					matriculaProcessadas.add(matricula);
+					
+					ItemRanking itemJpa = itensExistentesPorMatricula.get(matricula);
+					
+					if (itemJpa != null) {
+						// Atualizar item existente
+						itemJpa.setPontosFrequencia(item.getPontosFrequencia());
+						itemJpa.setPontosGuilda(item.getPontosGuilda());
+						itemJpa.setPontosPerformance(item.getPontosPerformance());
+						itemJpa.setPontuacaoTotal(item.getPontuacaoTotal());
+						itemJpa.setPosicao(item.getPosicao());
+						itemJpa.setNumeroAulasParticipadas(item.getNumeroDeAulasParticipadas());
+						itemJpa.setMediaPerformance(item.getMediaPerformance());
+						// Manter numeroAvaliacoes existente ou usar 0 se não houver
+					} else {
+						// Criar novo item
+						itemJpa = new ItemRanking();
+						itemJpa.setRanking(rankingJpaExistente);
+						itemJpa.setAlunoMatricula(matricula);
+						itemJpa.setPontosFrequencia(item.getPontosFrequencia());
+						itemJpa.setPontosGuilda(item.getPontosGuilda());
+						itemJpa.setPontosPerformance(item.getPontosPerformance());
+						itemJpa.setPontuacaoTotal(item.getPontuacaoTotal());
+						itemJpa.setPosicao(item.getPosicao());
+						itemJpa.setNumeroAulasParticipadas(item.getNumeroDeAulasParticipadas());
+						itemJpa.setMediaPerformance(item.getMediaPerformance());
+						itemJpa.setNumeroAvaliacoes(0);
+						rankingJpaExistente.getItens().add(itemJpa);
+					}
+				}
+				
+				// Remover itens que não estão mais no domínio
+				rankingJpaExistente.getItens().removeIf(item -> !matriculaProcessadas.contains(item.getAlunoMatricula()));
+			}
+			
+			repositorio.save(rankingJpaExistente);
+		} else {
+			// Criar novo ranking
+			Ranking rankingJpa = mapeador.map(ranking, Ranking.class);
+			repositorio.save(rankingJpa);
+		}
 	}
 
 	@Override
@@ -266,8 +327,17 @@ class RankingRepositorioImpl implements br.com.forgefit.dominio.ranking.RankingR
 			br.com.forgefit.dominio.ranking.enums.PeriodoRanking periodo) {
 		PeriodoRanking periodoJpa = PeriodoRanking.valueOf(periodo.name());
 		Ranking rankingJpa = repositorio.findByPeriodo(periodoJpa);
-		return java.util.Optional.ofNullable(rankingJpa)
-				.map(jpa -> mapeador.map(jpa, br.com.forgefit.dominio.ranking.Ranking.class));
+		if (rankingJpa == null) {
+			return java.util.Optional.empty();
+		}
+		try {
+			br.com.forgefit.dominio.ranking.Ranking ranking = mapeador.map(rankingJpa, br.com.forgefit.dominio.ranking.Ranking.class);
+			return java.util.Optional.ofNullable(ranking);
+		} catch (Exception e) {
+			// Se o mapeamento falhar, retornar empty ao invés de criar um novo ranking
+			System.err.println("Erro ao mapear ranking do período " + periodo + ": " + e.getMessage());
+			return java.util.Optional.empty();
+		}
 	}
 }
 

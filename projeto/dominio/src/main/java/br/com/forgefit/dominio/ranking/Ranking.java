@@ -26,10 +26,20 @@ public class Ranking {
     }
 
     public ItemRanking getItemPorMatricula(Matricula alunoMatricula) {
+        notNull(alunoMatricula, "A matrícula do aluno não pode ser nula");
         return itens.stream()
-                .filter(item -> item.getAlunoMatricula().equals(alunoMatricula))
+                .filter(item -> item != null && item.getAlunoMatricula() != null && item.getAlunoMatricula().equals(alunoMatricula))
                 .findFirst()
                 .orElse(null);
+    }
+    
+    public ItemRanking obterOuCriarItem(Matricula alunoMatricula) {
+        ItemRanking item = getItemPorMatricula(alunoMatricula);
+        if (item == null) {
+            item = new ItemRanking(alunoMatricula);
+            itens.add(item);
+        }
+        return item;
     }
 
     public void recalcular() {

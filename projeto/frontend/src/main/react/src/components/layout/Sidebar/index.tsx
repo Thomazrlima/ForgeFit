@@ -75,6 +75,11 @@ const Sidebar = () => {
                             return null;
                         }
 
+                        // Ocultar guilda para professores
+                        if (item.path === "/guilda" && user?.role === "professor") {
+                            return null;
+                        }
+
                         const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + "/");
                         return (
                             <NavItem key={item.path}>

@@ -756,6 +756,7 @@ interface AulaJpaRepository extends JpaRepository<Aula, Integer> {
 			JOIN professor p ON p.id = a.professor_id
 			LEFT JOIN reserva r ON r.aula_id = a.id AND r.status = 'CONFIRMADA'
 			WHERE a.professor_id = :professorId
+			  AND a.status IN ('ATIVA', 'CONCLUIDA')
 			GROUP BY a.id, a.modalidade, a.espaco, a.inicio, a.fim, a.capacidade, a.status, a.professor_id, p.nome
 			ORDER BY a.inicio DESC
 			""", nativeQuery = true)

@@ -371,37 +371,7 @@ class GuildaRepositorioImpl implements br.com.forgefit.dominio.guilda.GuildaRepo
 	@Override
 	public java.util.Optional<br.com.forgefit.aplicacao.guilda.GuildaDetalhesResumo> buscarDetalhesPorId(Integer guildaId) {
 		return repositorio.findById(guildaId)
-			.map(guilda -> new br.com.forgefit.aplicacao.guilda.GuildaDetalhesResumo() {
-				@Override
-				public Integer getId() { return guilda.id; }
-				
-				@Override
-				public String getNome() { return guilda.nome; }
-				
-				@Override
-				public String getDescricao() { return guilda.descricao; }
-				
-				@Override
-				public String getImagemUrl() { return guilda.imagemURL; }
-				
-				@Override
-				public String getCodigoConvite() { return guilda.codigoConvite; }
-				
-				@Override
-				public String getMestreMatricula() { return guilda.mestreMatricula; }
-				
-				@Override
-				public Integer getPontuacaoTotal() { 
-					// Calcula pontuação a partir do ItemRanking (fonte única de verdade)
-					Integer pontuacao = repositorio.calcularPontuacaoTotalPorGuildaId(guildaId);
-					return pontuacao == null ? Integer.valueOf(0) : pontuacao;
-				}
-				
-				@Override
-				public java.util.List<br.com.forgefit.aplicacao.guilda.MembroResumo> getMembros() {
-					return buscarMembrosPorGuildaId(guildaId);
-				}
-			});
+			.map(guilda -> new GuildaDetalhesResumoProxy(guilda, repositorio, guildaId));
 	}
 	
 	@Override

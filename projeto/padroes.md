@@ -209,3 +209,55 @@ O padrão Template Method é utilizado no **registro de avaliações físicas** 
 3. **Centralizar persistência**: O salvamento no repositório é feito no template, garantindo que todas as avaliações sejam persistidas
 
 ---
+
+## 5. Proxy (Proxy)
+
+**Autor**: Paulo Rosado ([@paulorosadodev](https://github.com/paulorosadodev))
+
+**Contexto**: Consulta de Detalhes de Guilda
+
+**Objetivo**: Controlar o acesso aos dados "pesados" (pontuação total e lista de membros) de uma guilda através de lazy-loading, carregando esses dados do banco apenas quando realmente acessados e utilizando cache para evitar múltiplas consultas desnecessárias.
+
+**Implementação**:
+
+### Subject (Sujeito)
+
+- **`GuildaDetalhesResumo`** (`aplicacao/src/main/java/br/com/forgefit/aplicacao/guilda/GuildaDetalhesResumo.java`)
+  - Interface que define o contrato para objetos que representam detalhes de uma guilda
+  - Métodos: `getId()`, `getNome()`, `getDescricao()`, `getImagemUrl()`, `getCodigoConvite()`, `getMestreMatricula()`, `getPontuacaoTotal()`, `getMembros()`
+  - Métodos auxiliares: `isValid()`, `getNomeTrimmed()`, `getNumeroMembros()`, `getPontuacaoTotalOuZero()`
+
+### Proxy (Proxy)
+
+- **`GuildaDetalhesResumoProxy`** (`infraestrutura/src/main/java/br/com/forgefit/persistencia/jpa/GuildaDetalhesResumoProxy.java`)
+  - Implementa `GuildaDetalhesResumo`
+  - Armazena dados "baratos" diretamente (id, nome, descrição, imagemUrl, codigoConvite, mestreMatricula)
+  - Implementa lazy-loading para dados "pesados":
+    - `pontuacaoTotal`: Carregado sob demanda via `GuildaJpaRepository.calcularPontuacaoTotalPorGuildaId()`
+    - `membros`: Carregado sob demanda via `GuildaJpaRepository.buscarMembrosPorGuildaId()`
+  - Utiliza cache interno para evitar múltiplas consultas ao banco quando os getters são chamados repetidamente
+  - Flags `pontuacaoCarregada` e `membrosCarregados` controlam quando a primeira carga ocorre
+
+### RealSubject (Sujeito Real - Conceitual)
+
+- **Consultas ao Banco de Dados**:
+  - `GuildaJpaRepository.calcularPontuacaoTotalPorGuildaId()`: Consulta SQL agregada que calcula a pontuação total da guilda a partir do ranking
+  - `GuildaJpaRepository.buscarMembrosPorGuildaId()`: Consulta SQL complexa que retorna lista de membros com suas informações (matrícula, nome, avatar, pontuação, data de entrada)
+
+### Client (Cliente)
+
+- **`GuildaRepositorioImpl`** (`infraestrutura/src/main/java/br/com/forgefit/persistencia/jpa/GuildaJpa.java`)
+  - Método `buscarDetalhesPorId()` cria e retorna uma instância de `GuildaDetalhesResumoProxy`
+  - Substituiu a implementação anterior que usava um objeto anônimo com lazy-load implícito
+  - O cliente não precisa conhecer os detalhes de quando os dados pesados são carregados
+
+### Uso no Sistema
+
+O padrão Proxy é utilizado na **consulta de detalhes de guilda** (`GET api/guildas/{id}/detalhes`) para:
+
+1. **Otimização de performance**: Dados pesados (pontuação e membros) só são carregados quando realmente necessários, evitando consultas desnecessárias ao banco
+2. **Cache transparente**: Múltiplas chamadas aos getters `getPontuacaoTotal()` e `getMembros()` não geram consultas repetidas, utilizando valores em cache
+3. **Transparência**: O cliente (controlador, serviço de aplicação) não precisa saber que está lidando com um Proxy - a interface `GuildaDetalhesResumo` permanece a mesma
+4. **Separação de responsabilidades**: O Proxy encapsula a lógica de lazy-loading e cache, mantendo o código do repositório limpo e focado na persistência
+
+---

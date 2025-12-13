@@ -174,6 +174,9 @@ interface AvaliacaoJpaRepository extends JpaRepository<Avaliacao, Integer> {
 
 	boolean existsByAlunoMatriculaAndAulaIdAndDataOcorrenciaAula(
 			String alunoMatricula, Integer aulaId, Date dataOcorrencia);
+
+	@org.springframework.data.jpa.repository.Query("SELECT COALESCE(MAX(a.id), 0) FROM Avaliacao a")
+	Integer findMaxId();
 }
 
 @org.springframework.stereotype.Repository("avaliacaoRepositorio")
@@ -187,6 +190,9 @@ class AvaliacaoRepositorioImpl implements br.com.forgefit.dominio.avaliacao.Aval
 	@Override
 	public void salvar(br.com.forgefit.dominio.avaliacao.Avaliacao avaliacao) {
 		Avaliacao avaliacaoJpa = mapeador.map(avaliacao, Avaliacao.class);
+		// Define o ID como null para que o banco de dados gere automaticamente
+		// o próximo ID, evitando conflitos com dados mockados existentes
+		avaliacaoJpa.setId(null);
 		repositorio.save(avaliacaoJpa);
 	}
 

@@ -13,7 +13,7 @@ const Login = () => {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const { login } = useUser();
+    const { login, user } = useUser();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -24,6 +24,17 @@ const Login = () => {
         return () => clearInterval(interval);
     }, []);
 
+    // Redirecionar após login bem-sucedido baseado no role
+    useEffect(() => {
+        if (user && !isLoading) {
+            if (user.role === "admin") {
+                navigate("/torneio/");
+            } else {
+                navigate("/aulas");
+            }
+        }
+    }, [user, navigate, isLoading]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
@@ -31,10 +42,9 @@ const Login = () => {
 
         try {
             await login(email, password);
-            navigate("/aulas");
+            // O redirecionamento será feito pelo useEffect quando o user for atualizado
         } catch (err) {
             setError("Email ou senha inválidos. Tente novamente.");
-        } finally {
             setIsLoading(false);
         }
     };

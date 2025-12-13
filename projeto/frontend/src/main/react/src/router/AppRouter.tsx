@@ -34,7 +34,12 @@ const PublicRoute = ({ children }: ProtectedRouteProps) => {
         return <LoadingScreen />;
     }
 
-    return user ? <Navigate to="/aulas" replace /> : <>{children}</>;
+    if (user) {
+        // Redirecionar admins para torneio, outros para aulas
+        return user.role === "admin" ? <Navigate to="/torneio/" replace /> : <Navigate to="/aulas" replace />;
+    }
+
+    return <>{children}</>;
 };
 
 const ProfessorRoute = ({ children }: ProtectedRouteProps) => {

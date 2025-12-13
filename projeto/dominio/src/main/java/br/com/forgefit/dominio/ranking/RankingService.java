@@ -64,6 +64,10 @@ public class RankingService {
         
         int pontosCalculados = calculoPontuacaoStrategy.calcularPontosGuilda(pontosBase, nivelGuilda);
         item.adicionarPontosGuilda(pontosCalculados);
+        
+        // Recalcular posições antes de salvar para garantir que são únicas
+        ranking.recalcular();
+        
         rankingRepositorio.salvar(ranking);
     }
 

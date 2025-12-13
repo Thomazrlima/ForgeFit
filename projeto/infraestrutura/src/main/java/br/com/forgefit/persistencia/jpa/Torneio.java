@@ -243,7 +243,6 @@ interface TorneioJpaRepository extends JpaRepository<Torneio, Integer> {
 			SELECT 1 FROM GUILDA_MEMBROS gm WHERE gm.guilda_id = g.id
 		)
 		GROUP BY g.id, g.nome, g.imagem_url
-		HAVING COALESCE(SUM(c.pontuacao_total), 0) > 0
 		ORDER BY pontuacaoNoTorneio DESC
 		""", nativeQuery = true)
 	List<br.com.forgefit.aplicacao.torneio.RankingGuildaNoTorneioResumo> buscarRankingPorTorneioAtivo(

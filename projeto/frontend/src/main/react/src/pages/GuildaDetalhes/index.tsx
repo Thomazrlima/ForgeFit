@@ -41,7 +41,7 @@ interface CheckinMessage {
 
 const GuildaDetalhes = () => {
     const { user } = useUser();
-    const { error: showError } = useToast();
+    const { success, error: showError } = useToast();
     const queryClient = useQueryClient();
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
@@ -259,6 +259,7 @@ const GuildaDetalhes = () => {
                 // Invalidar cache para recarregar dados
                 queryClient.invalidateQueries({ queryKey: ["guilda", "detalhes", guildaId] });
                 setIsCheckinModalOpen(false);
+                success("Check-in realizado com sucesso!");
             } else {
                 showError(response.mensagem || "Erro ao fazer check-in");
             }

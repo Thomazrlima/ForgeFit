@@ -209,9 +209,10 @@ public class Repositorio implements AlunoRepositorio,
     private Map<TorneioId, Torneio> torneios = new HashMap<>();
 
     @Override
-    public void salvar(Torneio torneio) {
+    public Torneio salvar(Torneio torneio) {
         notNull(torneio, "O torneio não pode ser nulo");
         torneios.put(torneio.getId(), torneio);
+        return torneio;
     }
 
     @Override

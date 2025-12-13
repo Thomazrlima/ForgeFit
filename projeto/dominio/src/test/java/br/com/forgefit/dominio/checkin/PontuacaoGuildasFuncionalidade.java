@@ -83,7 +83,8 @@ public class PontuacaoGuildasFuncionalidade {
                 planoAtivo, 
                 letraTreino, 
                 mensagem, 
-                null
+                null,
+                LocalDate.now()
             );
             
             // Atualiza referências
@@ -165,7 +166,7 @@ public class PontuacaoGuildasFuncionalidade {
         
         // Realiza o primeiro check-in
         LetraDoTreino letraTreino = LetraDoTreino.valueOf(letra);
-        contexto.checkinService.realizarCheckinDeTreino(matriculaAluno, planoAtivo, letraTreino, "Primeiro check-in", null);
+        contexto.checkinService.realizarCheckinDeTreino(matriculaAluno, planoAtivo, letraTreino, "Primeiro check-in", null, LocalDate.now());
         
         // Atualiza referências
         guilda = contexto.guildaService.obter(guilda.getId());
@@ -179,7 +180,7 @@ public class PontuacaoGuildasFuncionalidade {
         
         try {
             LetraDoTreino letraTreino = LetraDoTreino.valueOf(letra);
-            contexto.checkinService.realizarCheckinDeTreino(matriculaAluno, planoAtivo, letraTreino, "Tentativa duplicada", null);
+            contexto.checkinService.realizarCheckinDeTreino(matriculaAluno, planoAtivo, letraTreino, "Tentativa duplicada", null, LocalDate.now());
         } catch (Exception e) {
             contexto.excecao = e;
         }

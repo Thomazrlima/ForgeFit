@@ -53,13 +53,13 @@ public class AcademiaFuncionalidade implements EventoBarramento {
 
         // Inicializa serviços implementados
         this.guildaService = new GuildaService(this.repositorio);
-        this.checkinService = new CheckinService(this.repositorio, this.repositorio, this.repositorio);
+        this.alunoService = new AlunoService(this.repositorio);
+        this.rankingService = new RankingService(this.repositorio);
+        this.checkinService = new CheckinService(this.repositorio, this.repositorio, this.repositorio, this.rankingService);
         this.torneioService = new TorneioService(this.repositorio);
         this.aulaService = new AulaService(this.repositorio);
         this.reembolsoService = new ReembolsoService();
-        this.alunoService = new AlunoService(this.repositorio);
         this.reservaService = new ReservaService(this.repositorio, this.alunoService, this.reembolsoService);
-        this.rankingService = new RankingService(this.repositorio);
         this.avaliacaoService = new AvaliacaoService(this.repositorio);
         this.treinoService = new TreinoService(this.repositorio);
         this.frequenciaService = new FrequenciaService(this.repositorio, this.repositorio, this.repositorio);

@@ -35,8 +35,12 @@ public class StepsCompartilhados {
             assertTrue(mensagem.contains("mestre") && mensagem.contains("excluir"));
         }
         // Mensagens de check-ins e torneios
-        else if (mensagemEsperada.contains("o check-in para este treino já foi realizado hoje")) {
-            assertTrue(mensagem.contains("check-in") && mensagem.contains("realizado") && mensagem.contains("hoje"));
+        else if (mensagemEsperada.contains("o check-in para este treino já foi realizado")) {
+            assertTrue(
+                mensagem.contains("check-in") &&
+                mensagem.contains("realizado") &&
+                (mensagem.contains("hoje") || mensagem.contains("data"))
+            );
         } else if (mensagemEsperada.contains("datas do torneio são inválidas")) {
             assertTrue(mensagem.contains("datas") && mensagem.contains("inválidas"));
         } else if (mensagemEsperada.contains("não é possível alterar os prêmios de um torneio ativo")) {

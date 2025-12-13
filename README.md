@@ -147,15 +147,15 @@ O **MailHog** é um servidor SMTP de teste que captura emails enviados durante o
 
    ```powershell
    # Primeira falta (aula 1)
-   $body = @{alunoMatricula='ALU-TESTE-001'; aulaId=1; data='2025-12-10'; tipoRegistro='FALTA'} | ConvertTo-Json
+   $body = @{alunoMatricula='ALU005'; aulaId=1; data='2025-12-10'; tipoRegistro='FALTA'} | ConvertTo-Json
    Invoke-RestMethod -Uri 'http://localhost:8080/api/frequencia' -Method Post -ContentType 'application/json' -Body $body
 
    # Segunda falta (aula 2)
-   $body = @{alunoMatricula='ALU-TESTE-001'; aulaId=2; data='2025-12-09'; tipoRegistro='FALTA'} | ConvertTo-Json
+   $body = @{alunoMatricula='ALU005'; aulaId=2; data='2025-12-09'; tipoRegistro='FALTA'} | ConvertTo-Json
    Invoke-RestMethod -Uri 'http://localhost:8080/api/frequencia' -Method Post -ContentType 'application/json' -Body $body
 
    # Terceira falta (aula 3) - Aciona o bloqueio!
-   $body = @{alunoMatricula='ALU-TESTE-001'; aulaId=3; data='2025-12-08'; tipoRegistro='FALTA'} | ConvertTo-Json
+   $body = @{alunoMatricula='ALU005'; aulaId=3; data='2025-12-08'; tipoRegistro='FALTA'} | ConvertTo-Json
    Invoke-RestMethod -Uri 'http://localhost:8080/api/frequencia' -Method Post -ContentType 'application/json' -Body $body
    ```
 
